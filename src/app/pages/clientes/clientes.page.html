@@ -1,0 +1,49 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Directorio de Clientes</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="header-card ion-padding ion-margin-bottom">
+    <h2>Directorio Telefónico 👥</h2>
+    <p>Contacta rápidamente a tus clientes desde la app móvil</p>
+  </div>
+
+  <div *ngIf="loading" class="ion-text-center ion-padding">
+    <ion-spinner name="dots" color="primary"></ion-spinner>
+    <p>Cargando clientes...</p>
+  </div>
+
+  <ion-card *ngIf="!loading && clientes.length === 0" class="ion-text-center ion-padding">
+    <ion-icon name="people-outline" style="font-size: 48px; color: #999;"></ion-icon>
+    <h3>No hay clientes registrados</h3>
+    <p>Agrega clientes desde el backend para verlos aquí.</p>
+  </ion-card>
+
+  <ion-list *ngIf="!loading && clientes.length > 0">
+    <ion-item *ngFor="let cli of clientes" class="cliente-item">
+      <ion-icon name="person-outline" slot="start" color="secondary" style="font-size: 28px;"></ion-icon>
+      <ion-label>
+        <h2>{{ cli.nombre }}</h2>
+        <p>Doc: {{ cli.documento || 'N/A' }}</p>
+        <ion-note color="medium" *ngIf="cli.direccion">{{ cli.direccion }}</ion-note>
+      </ion-label>
+      <div slot="end" class="action-buttons">
+        <ion-button *ngIf="cli.telefono" fill="clear" color="success" [href]="'tel:' + cli.telefono">
+          <ion-icon slot="icon-only" name="call-outline"></ion-icon>
+        </ion-button>
+        <ion-button *ngIf="cli.email" fill="clear" color="primary" [href]="'mailto:' + cli.email">
+          <ion-icon slot="icon-only" name="mail-outline"></ion-icon>
+        </ion-button>
+      </div>
+    </ion-item>
+  </ion-list>
+</ion-content>

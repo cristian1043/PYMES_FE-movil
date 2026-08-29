@@ -11,6 +11,8 @@ import { ProductosService, Producto } from '../../services/productos.service';
 })
 export class ProductosPage implements OnInit {
   productos: Producto[] = [];
+  productosFiltrados: Producto[] = [];
+  searchTerm = '';
   loading = true;
   usuario: any = null;
 
@@ -41,6 +43,7 @@ export class ProductosPage implements OnInit {
         } else {
           this.productos = [];
         }
+        this.filtrarProductos();
       },
       error: (err) => {
         this.loading = false;
@@ -48,6 +51,19 @@ export class ProductosPage implements OnInit {
         console.error('Error al cargar productos:', err);
       }
     });
+  }
+
+  filtrarProductos(): void {
+    if (!this.searchTerm || this.searchTerm.trim() === '') {
+      this.productosFiltrados = [...this.productos];
+    } else {
+      const query = this.searchTerm.toLowerCase();
+      this.productosFiltrados = this.productos.filter(p =>
+        (p.nombre && p.nombre.toLowerCase().includes(query)) ||
+        (p.codigo && p.codigo.toLowerCase().includes(query)) ||
+        (p.descripcion && p.descripcion.toLowerCase().includes(query))
+      );
+    }
   }
 
   handleRefresh(event: any): void {

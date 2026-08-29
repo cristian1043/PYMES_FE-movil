@@ -22,19 +22,26 @@
     <p>Consulta los productos de tu negocio registrados en PYMES Backend</p>
   </div>
 
+  <ion-searchbar
+    [(ngModel)]="searchTerm"
+    (ionInput)="filtrarProductos()"
+    placeholder="Buscar por nombre o código..."
+    class="ion-margin-bottom">
+  </ion-searchbar>
+
   <div *ngIf="loading" class="spinner-container ion-text-center ion-padding">
     <ion-spinner name="dots" color="primary"></ion-spinner>
     <p>Cargando productos...</p>
   </div>
 
-  <ion-card *ngIf="!loading && productos.length === 0" class="ion-text-center ion-padding">
+  <ion-card *ngIf="!loading && productosFiltrados.length === 0" class="ion-text-center ion-padding">
     <ion-icon name="cube-outline" style="font-size: 48px; color: #999;"></ion-icon>
-    <h3>No hay productos registrados</h3>
-    <p>Añade productos desde el backend para verlos aquí.</p>
+    <h3>No hay productos encontrados</h3>
+    <p>Intenta cambiar el término de búsqueda o añade más productos desde el backend.</p>
   </ion-card>
 
-  <ion-list *ngIf="!loading && productos.length > 0">
-    <ion-item *ngFor="let prod of productos" class="product-item">
+  <ion-list *ngIf="!loading && productosFiltrados.length > 0">
+    <ion-item *ngFor="let prod of productosFiltrados" class="product-item">
       <ion-icon name="cube-outline" slot="start" color="secondary" style="font-size: 28px;"></ion-icon>
       <ion-label>
         <h2>{{ prod.nombre }}</h2>

@@ -1,0 +1,26 @@
+.header-card {
+  background: linear-gradient(135deg, #0f2b5c 0%, #1e3c72 100%);
+  color: #ffffff;
+  border-radius: 14px;
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+  p {
+    font-size: 13px;
+    opacity: 0.9;
+    margin: 0;
+  }
+}
+
+.cliente-item {
+  margin-bottom: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.action-buttons {
+  display: flex;
+  gap: 2px;
+}

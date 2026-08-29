@@ -1,0 +1,45 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Facturas y Ventas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="header-card ion-padding ion-margin-bottom">
+    <h2>Historial de Facturación 📄</h2>
+    <p>Revisa las facturas registradas en PYMEsoft Backend</p>
+  </div>
+
+  <div *ngIf="loading" class="ion-text-center ion-padding">
+    <ion-spinner name="dots" color="primary"></ion-spinner>
+    <p>Cargando facturas...</p>
+  </div>
+
+  <ion-card *ngIf="!loading && facturas.length === 0" class="ion-text-center ion-padding">
+    <ion-icon name="document-text-outline" style="font-size: 48px; color: #999;"></ion-icon>
+    <h3>No hay facturas registradas</h3>
+    <p>Crea tu primera factura desde el backend o panel de ventas.</p>
+  </ion-card>
+
+  <ion-list *ngIf="!loading && facturas.length > 0">
+    <ion-item *ngFor="let fact of facturas" class="factura-item">
+      <ion-icon name="receipt-outline" slot="start" color="primary" style="font-size: 28px;"></ion-icon>
+      <ion-label>
+        <h2>Factura #{{ fact.numero_factura || fact.id }}</h2>
+        <p>Cliente: {{ fact.cliente_nombre || 'Cliente General' }}</p>
+        <ion-note color="medium" *ngIf="fact.fecha">Fecha: {{ fact.fecha }}</ion-note>
+      </ion-label>
+      <div slot="end" class="ion-text-right">
+        <ion-badge color="success">${{ fact.total | number:'1.2-2' }}</ion-badge>
+        <p style="font-size: 11px; margin-top: 4px; color: #666;">{{ fact.estado || 'Completada' }}</p>
+      </div>
+    </ion-item>
+  </ion-list>
+</ion-content>

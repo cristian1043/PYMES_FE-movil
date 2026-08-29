@@ -1,0 +1,75 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Reportes y Métricas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="header-card ion-padding ion-margin-bottom">
+    <h2>Dashboard Ejecutivo 📊</h2>
+    <p>Resumen táctil del estado del negocio en tiempo real</p>
+  </div>
+
+  <div *ngIf="loading" class="ion-text-center ion-padding">
+    <ion-spinner name="dots" color="primary"></ion-spinner>
+    <p>Cargando reportes...</p>
+  </div>
+
+  <div *ngIf="!loading">
+    <!-- Grid de KPIs Executive Cards -->
+    <div class="kpi-grid">
+      <ion-card class="kpi-card bg-primary-gradient">
+        <ion-card-content>
+          <div class="kpi-icon">
+            <ion-icon name="cash-outline"></ion-icon>
+          </div>
+          <div class="kpi-data">
+            <p class="kpi-title">Ventas Totales</p>
+            <h3 class="kpi-value">${{ totalVentas | number:'1.2-2' }}</h3>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="kpi-card bg-secondary-gradient">
+        <ion-card-content>
+          <div class="kpi-icon">
+            <ion-icon name="cube-outline"></ion-icon>
+          </div>
+          <div class="kpi-data">
+            <p class="kpi-title">Productos en Stock</p>
+            <h3 class="kpi-value">{{ totalProductos }}</h3>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="kpi-card bg-warning-gradient">
+        <ion-card-content>
+          <div class="kpi-icon">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+          </div>
+          <div class="kpi-data">
+            <p class="kpi-title">Stock Bajo (<5)</p>
+            <h3 class="kpi-value">{{ stockBajoCount }}</h3>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Sección de Detalle / Inventario -->
+    <ion-card class="ion-margin-top">
+      <ion-card-header>
+        <ion-card-title style="font-size: 16px;">Resumen de Inventario</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p>Los datos están sincronizados directamente con la base de datos de <strong>PYMES_BE</strong>.</p>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

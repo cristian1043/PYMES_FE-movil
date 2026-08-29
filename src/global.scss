@@ -35,3 +35,27 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
+
+/* PYMEsoft Custom Global Ergonomics */
+ion-card {
+  border-radius: 14px;
+  box-shadow: 0 4px 15px rgba(15, 43, 92, 0.08);
+  border: 1px solid rgba(30, 60, 114, 0.06);
+}
+
+ion-button {
+  --border-radius: 10px;
+  font-weight: 600;
+  min-height: 44px;
+}
+
+ion-item {
+  --border-radius: 10px;
+}
+
+.badge-role {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 12px;
+}
+
