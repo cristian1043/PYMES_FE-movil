@@ -27,6 +27,11 @@ export class ProductosPage implements OnInit {
     this.cargarProductos();
   }
 
+  ionViewWillEnter(): void {
+    this.usuario = this.authService.getUsuario();
+    this.cargarProductos();
+  }
+
   cargarProductos(event?: any): void {
     this.loading = !event;
     this.productosService.getProductos().subscribe({

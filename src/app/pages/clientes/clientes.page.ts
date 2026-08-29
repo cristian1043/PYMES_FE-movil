@@ -17,6 +17,10 @@ export class ClientesPage implements OnInit {
     this.cargarClientes();
   }
 
+  ionViewWillEnter(): void {
+    this.cargarClientes();
+  }
+
   cargarClientes(event?: any): void {
     this.loading = !event;
     this.clientesService.getClientes().subscribe({

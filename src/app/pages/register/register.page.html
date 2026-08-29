@@ -1,0 +1,86 @@
+<ion-content class="ion-padding register-background">
+  <div class="register-container">
+    <div class="header-section ion-text-center">
+      <ion-icon name="storefront-outline" class="app-logo"></ion-icon>
+      <h1>PYMEsoft Móvil</h1>
+      <p class="subtitle">Crear Nueva Cuenta</p>
+    </div>
+
+    <ion-card class="register-card">
+      <ion-card-header>
+        <ion-card-title class="ion-text-center">Registro de Usuario</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <form (ngSubmit)="onRegister()">
+          <ion-item fill="outline" class="ion-margin-bottom">
+            <ion-label position="floating">Nombre Completo</ion-label>
+            <ion-input
+              type="text"
+              [(ngModel)]="nombre"
+              name="nombre"
+              required
+              placeholder="ej: Juan Pérez">
+            </ion-input>
+            <ion-icon name="person-outline" slot="start"></ion-icon>
+          </ion-item>
+
+          <ion-item fill="outline" class="ion-margin-bottom">
+            <ion-label position="floating">Nombre de Usuario</ion-label>
+            <ion-input
+              type="text"
+              [(ngModel)]="username"
+              name="username"
+              required
+              placeholder="ej: juanperez">
+            </ion-input>
+            <ion-icon name="person-circle-outline" slot="start"></ion-icon>
+          </ion-item>
+
+          <ion-item fill="outline" class="ion-margin-bottom">
+            <ion-label position="floating">Correo Electrónico</ion-label>
+            <ion-input
+              type="email"
+              [(ngModel)]="email"
+              name="email"
+              required
+              placeholder="correo@pyme.com">
+            </ion-input>
+            <ion-icon name="mail-outline" slot="start"></ion-icon>
+          </ion-item>
+
+          <ion-item fill="outline" class="ion-margin-bottom">
+            <ion-label position="floating">Contraseña</ion-label>
+            <ion-input
+              type="password"
+              [(ngModel)]="password"
+              name="password"
+              required
+              placeholder="••••••••">
+            </ion-input>
+            <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
+          </ion-item>
+
+          <div *ngIf="errorMessage" class="error-message ion-margin-bottom">
+            <ion-text color="danger">
+              <p><ion-icon name="alert-circle-outline"></ion-icon> {{ errorMessage }}</p>
+            </ion-text>
+          </div>
+
+          <ion-button
+            expand="block"
+            type="submit"
+            [disabled]="loading || !nombre || !username || !email || !password"
+            class="register-button ion-margin-top">
+            <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+            <span *ngIf="!loading">Crear Cuenta</span>
+          </ion-button>
+
+          <div class="login-link ion-text-center ion-margin-top">
+            <p>¿Ya tienes una cuenta? <a routerLink="/login" class="login-text">Inicia sesión aquí</a></p>
+          </div>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

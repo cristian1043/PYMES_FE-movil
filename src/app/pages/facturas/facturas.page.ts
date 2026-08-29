@@ -17,6 +17,10 @@ export class FacturasPage implements OnInit {
     this.cargarFacturas();
   }
 
+  ionViewWillEnter(): void {
+    this.cargarFacturas();
+  }
+
   cargarFacturas(event?: any): void {
     this.loading = !event;
     this.facturasService.getFacturas().subscribe({

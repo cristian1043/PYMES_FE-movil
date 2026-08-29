@@ -19,6 +19,10 @@ export class ReportesPage implements OnInit {
     this.cargarReportes();
   }
 
+  ionViewWillEnter(): void {
+    this.cargarReportes();
+  }
+
   cargarReportes(event?: any): void {
     this.loading = !event;
 
