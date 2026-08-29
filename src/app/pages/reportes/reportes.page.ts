@@ -32,8 +32,8 @@ export class ReportesPage implements OnInit {
         if (event) event.target.complete();
 
         if (res) {
-          this.totalProductos = res.total_productos || res.length || 0;
-          this.stockBajoCount = res.stock_bajo_count || 0;
+          this.totalProductos = res.total_productos ?? (Array.isArray(res.productos) ? res.productos.length : 0);
+          this.stockBajoCount = res.productos_bajo_stock ?? 0;
         }
       },
       error: (err) => {
@@ -45,7 +45,7 @@ export class ReportesPage implements OnInit {
 
     this.reportesService.getReporteVentas().subscribe({
       next: (res) => {
-        if (res && res.total_ventas) {
+        if (res && res.total_ventas !== undefined) {
           this.totalVentas = res.total_ventas;
         }
       },

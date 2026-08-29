@@ -17,11 +17,11 @@ export class ReportesService {
 
   getReporteInventario(): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/reporte_inventario`, { headers });
+    return this.http.get<any>(`${this.apiUrl}/inventario`, { headers });
   }
 
   getReporteVentas(): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/reporte_ventas`, { headers });
+    return this.http.get<any>(`${this.apiUrl}/ventas`, { headers });
   }
 }

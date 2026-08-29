@@ -11,7 +11,10 @@ import { AuthService } from '../../services/auth.service';
 })
 export class RegisterPage {
   nombre = '';
-  username = '';
+  apellido = '';
+  tipoDocumento = 'CC';
+  documento = '';
+  telefono = '';
   email = '';
   password = '';
   loading = false;
@@ -24,20 +27,34 @@ export class RegisterPage {
   ) {}
 
   onRegister(): void {
-    if (!this.nombre || !this.username || !this.email || !this.password) return;
+    if (
+      !this.nombre ||
+      !this.apellido ||
+      !this.tipoDocumento ||
+      !this.documento ||
+      !this.telefono ||
+      !this.email ||
+      !this.password
+    ) {
+      this.errorMessage = 'Por favor completa todos los campos requeridos.';
+      return;
+    }
 
     this.loading = true;
     this.errorMessage = '';
 
-    const parts = this.nombre.trim().split(' ');
-    const firstNombre = parts[0] || this.nombre;
-    const apellido = parts.slice(1).join(' ') || 'PYME';
+    const usernameGenerated = this.email.includes('@')
+      ? this.email.split('@')[0]
+      : this.email.trim();
 
     const payload = {
-      nombre: firstNombre,
-      apellido: apellido,
-      username: this.username,
-      email: this.email,
+      nombre: this.nombre.trim(),
+      apellido: this.apellido.trim(),
+      tipo_documento: this.tipoDocumento,
+      documento: this.documento.trim(),
+      telefono: this.telefono.trim(),
+      email: this.email.trim(),
+      username: usernameGenerated,
       password: this.password,
       id_rol: 2 // Rol Vendedor / Usuario por defecto
     };
@@ -46,8 +63,8 @@ export class RegisterPage {
       next: async (res) => {
         this.loading = false;
         const toast = await this.toastController.create({
-          message: '¡Cuenta creada con éxito! Inicia sesión con tus credenciales.',
-          duration: 3000,
+          message: '¡Cuenta creada con éxito! Inicia sesión con tu correo y contraseña.',
+          duration: 3500,
           color: 'success',
           position: 'top'
         });
@@ -57,7 +74,7 @@ export class RegisterPage {
       error: async (err) => {
         this.loading = false;
         console.error('Error al registrar usuario:', err);
-        this.errorMessage = err?.error?.mensaje || err?.error?.error || 'No se pudo crear la cuenta. Intenta de nuevo.';
+        this.errorMessage = err?.error?.mensaje || err?.error?.error || 'No se pudo crear la cuenta. Verifica que el documento o correo no estén ya registrados.';
       }
     });
   }

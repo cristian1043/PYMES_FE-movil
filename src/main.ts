@@ -22,7 +22,9 @@ import {
   mailOutline,
   cashOutline,
   alertCircleOutline,
-  personCircleOutline
+  personCircleOutline,
+  cardOutline,
+  fingerPrintOutline
 } from 'ionicons/icons';
 
 // Register all required Ionicons explicitly to avoid URL construction errors
@@ -47,7 +49,9 @@ addIcons({
   'mail-outline': mailOutline,
   'cash-outline': cashOutline,
   'alert-circle-outline': alertCircleOutline,
-  'person-circle-outline': personCircleOutline
+  'person-circle-outline': personCircleOutline,
+  'card-outline': cardOutline,
+  'finger-print-outline': fingerPrintOutline
 });
 
 platformBrowserDynamic().bootstrapModule(AppModule)
