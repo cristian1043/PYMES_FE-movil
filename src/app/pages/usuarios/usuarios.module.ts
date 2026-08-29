@@ -1,0 +1,18 @@
+import { NgModule, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { IonicModule } from '@ionic/angular/lazy';
+import { UsuariosPageRoutingModule } from './usuarios-routing.module';
+import { UsuariosPage } from './usuarios.page';
+
+@NgModule({
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonicModule,
+    UsuariosPageRoutingModule
+  ],
+  declarations: [UsuariosPage],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
+})
+export class UsuariosPageModule {}

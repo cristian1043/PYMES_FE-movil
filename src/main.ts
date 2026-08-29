@@ -24,7 +24,13 @@ import {
   alertCircleOutline,
   personCircleOutline,
   cardOutline,
-  fingerPrintOutline
+  fingerPrintOutline,
+  busOutline,
+  cartOutline,
+  shieldCheckmarkOutline,
+  trashOutline,
+  addOutline,
+  businessOutline
 } from 'ionicons/icons';
 
 // Register all required Ionicons explicitly to avoid URL construction errors
@@ -51,7 +57,13 @@ addIcons({
   'alert-circle-outline': alertCircleOutline,
   'person-circle-outline': personCircleOutline,
   'card-outline': cardOutline,
-  'finger-print-outline': fingerPrintOutline
+  'finger-print-outline': fingerPrintOutline,
+  'bus-outline': busOutline,
+  'cart-outline': cartOutline,
+  'shield-checkmark-outline': shieldCheckmarkOutline,
+  'trash-outline': trashOutline,
+  'add-outline': addOutline,
+  'business-outline': businessOutline
 });
 
 platformBrowserDynamic().bootstrapModule(AppModule)

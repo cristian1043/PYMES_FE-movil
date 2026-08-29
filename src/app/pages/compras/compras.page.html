@@ -1,0 +1,39 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Gestión de Compras</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div *ngIf="loading" class="ion-text-center ion-padding">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando órdenes de compra...</p>
+  </div>
+
+  <div *ngIf="!loading && compras.length === 0" class="ion-text-center ion-padding empty-state">
+    <ion-icon name="cart-outline" class="empty-icon"></ion-icon>
+    <h3>Sin Compras</h3>
+    <p>No hay órdenes de compra registradas.</p>
+  </div>
+
+  <ion-list *ngIf="!loading && compras.length > 0">
+    <ion-item *ngFor="let c of compras" class="compra-item">
+      <ion-icon name="cart-outline" slot="start" color="tertiary" style="font-size: 28px;"></ion-icon>
+      <ion-label>
+        <h2>Compra {{ c.codigo_compra || '#' + c.id }}</h2>
+        <p>Proveedor: {{ c.proveedor_nombre || 'Proveedor Desconocido' }}</p>
+        <ion-note color="medium" *ngIf="c.fecha">{{ c.fecha }}</ion-note>
+      </ion-label>
+      <div slot="end" class="ion-text-right">
+        <ion-badge color="success">${{ c.total | number:'1.2-2' }}</ion-badge>
+      </div>
+    </ion-item>
+  </ion-list>
+</ion-content>

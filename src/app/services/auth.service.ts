@@ -58,6 +58,24 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  getRolId(): number {
+    const u = this.getUsuario();
+    if (!u) return 0;
+    if (u.id_rol !== undefined && u.id_rol !== null) return Number(u.id_rol);
+    if (u.rol_id !== undefined && u.rol_id !== null) return Number(u.rol_id);
+    const rolStr = (u.rol || '').toLowerCase();
+    if (rolStr.includes('admin')) return 1;
+    if (rolStr.includes('almacen')) return 3;
+    if (rolStr.includes('vended') || rolStr.includes('usuario')) return 2;
+    return 2;
+  }
+
+  hasRole(allowedRoles: number[]): boolean {
+    if (!this.isLoggedIn()) return false;
+    const userRol = this.getRolId();
+    return allowedRoles.includes(userRol);
+  }
+
   private getUsuarioDesdeStorage(): any {
     const userStr = localStorage.getItem('usuario');
     if (!userStr) return null;

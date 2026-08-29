@@ -1,0 +1,27 @@
+.compra-item {
+  --padding-start: 12px;
+  --inner-padding-end: 12px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+  h2 {
+    font-weight: 700;
+    color: #1e3c72;
+    font-size: 16px;
+  }
+}
+
+.empty-state {
+  margin-top: 40px;
+
+  .empty-icon {
+    font-size: 64px;
+    color: #a0aec0;
+  }
+
+  h3 {
+    color: #2d3748;
+    font-weight: 600;
+  }
+}

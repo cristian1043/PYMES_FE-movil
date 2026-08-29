@@ -1,0 +1,44 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Directorio de Proveedores</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div *ngIf="loading" class="ion-text-center ion-padding">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando lista de proveedores...</p>
+  </div>
+
+  <div *ngIf="!loading && proveedores.length === 0" class="ion-text-center ion-padding empty-state">
+    <ion-icon name="bus-outline" class="empty-icon"></ion-icon>
+    <h3>Sin Proveedores</h3>
+    <p>No hay proveedores registrados aún.</p>
+  </div>
+
+  <ion-list *ngIf="!loading && proveedores.length > 0">
+    <ion-item *ngFor="let prov of proveedores" class="proveedor-item">
+      <ion-icon name="business-outline" slot="start" color="tertiary" style="font-size: 28px;"></ion-icon>
+      <ion-label>
+        <h2>{{ prov.nombre }}</h2>
+        <p>NIT/Doc: {{ prov.nit_documento || 'N/A' }}</p>
+        <ion-note color="medium" *ngIf="prov.contacto">Contacto: {{ prov.contacto }}</ion-note>
+      </ion-label>
+      <div slot="end" class="action-buttons">
+        <ion-button *ngIf="prov.telefono" fill="clear" color="success" [href]="'tel:' + prov.telefono">
+          <ion-icon slot="icon-only" name="call-outline"></ion-icon>
+        </ion-button>
+        <ion-button *ngIf="prov.email" fill="clear" color="primary" [href]="'mailto:' + prov.email">
+          <ion-icon slot="icon-only" name="mail-outline"></ion-icon>
+        </ion-button>
+      </div>
+    </ion-item>
+  </ion-list>
+</ion-content>
