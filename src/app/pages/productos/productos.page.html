@@ -22,20 +22,16 @@
     <p>Consulta los productos de tu negocio registrados en PYMES Backend</p>
   </div>
 
-  @if (loading) {
-    <div class="spinner-container ion-text-center ion-padding">
-      <ion-spinner name="dots" color="primary"></ion-spinner>
-      <p>Cargando productos...</p>
-    </div>
-  }
+  <div *ngIf="loading" class="spinner-container ion-text-center ion-padding">
+    <ion-spinner name="dots" color="primary"></ion-spinner>
+    <p>Cargando productos...</p>
+  </div>
 
-  @if (!loading && productos.length === 0) {
-    <ion-card class="ion-text-center ion-padding">
-      <ion-icon name="cube-outline" style="font-size: 48px; color: #999;"></ion-icon>
-      <h3>No hay productos registrados</h3>
-      <p>Añade productos desde el backend para verlos aquí.</p>
-    </ion-card>
-  }
+  <ion-card *ngIf="!loading && productos.length === 0" class="ion-text-center ion-padding">
+    <ion-icon name="cube-outline" style="font-size: 48px; color: #999;"></ion-icon>
+    <h3>No hay productos registrados</h3>
+    <p>Añade productos desde el backend para verlos aquí.</p>
+  </ion-card>
 
   <ion-list *ngIf="!loading && productos.length > 0">
     <ion-item *ngFor="let prod of productos" class="product-item">

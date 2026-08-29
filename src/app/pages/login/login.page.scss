@@ -1,13 +1,11 @@
 .login-background {
   --background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .login-container {
   max-width: 420px;
   margin: 40px auto;
+  padding: 16px;
   width: 100%;
 }
 
