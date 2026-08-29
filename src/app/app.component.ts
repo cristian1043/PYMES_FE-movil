@@ -15,20 +15,20 @@ export class AppComponent implements OnInit {
     {
       titulo: 'Gestión Principal',
       items: [
-        { title: 'Productos e Inventario', url: '/productos', icon: 'cube' },
-        { title: 'Facturas y Ventas', url: '/facturas', icon: 'document-text' },
+        { title: 'Productos e Inventario', url: '/productos', icon: 'cube-outline' },
+        { title: 'Facturas y Ventas', url: '/facturas', icon: 'document-text-outline' },
       ]
     },
     {
       titulo: 'Directorio',
       items: [
-        { title: 'Clientes', url: '/clientes', icon: 'people' },
+        { title: 'Clientes', url: '/clientes', icon: 'people-outline' },
       ]
     },
     {
       titulo: 'Analítica',
       items: [
-        { title: 'Reportes y Métricas', url: '/reportes', icon: 'bar-chart' },
+        { title: 'Reportes y Métricas', url: '/reportes', icon: 'bar-chart-outline' },
       ]
     }
   ];

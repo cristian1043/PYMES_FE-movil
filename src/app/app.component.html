@@ -31,7 +31,7 @@
 
           <ion-menu-toggle auto-hide="false" *ngFor="let item of cat.items">
             <ion-item routerDirection="root" [routerLink]="[item.url]" lines="none" routerLinkActive="selected" class="menu-item">
-              <ion-icon aria-hidden="true" slot="start" [ios]="item.icon + '-outline'" [md]="item.icon + '-sharp'"></ion-icon>
+              <ion-icon aria-hidden="true" slot="start" [name]="item.icon"></ion-icon>
               <ion-label>{{ item.title }}</ion-label>
             </ion-item>
           </ion-menu-toggle>
