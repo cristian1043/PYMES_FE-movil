@@ -10,32 +10,49 @@ import { ClientesService, Cliente } from '../../services/clientes.service';
 export class ClientesPage implements OnInit {
   clientes: Cliente[] = [];
   loading = true;
+  currentPage = 1;
+  totalPages = 1;
+  hasMorePages = true;
 
   constructor(private clientesService: ClientesService) {}
 
   ngOnInit(): void {
-    this.cargarClientes();
+    this.cargarClientes(1, true);
   }
 
   ionViewWillEnter(): void {
-    this.cargarClientes();
+    this.cargarClientes(1, true);
   }
 
-  cargarClientes(event?: any): void {
-    this.loading = !event;
-    this.clientesService.getClientes().subscribe({
+  cargarClientes(page: number = 1, isInitial: boolean = false, event?: any): void {
+    if (isInitial) {
+      this.loading = true;
+      this.currentPage = 1;
+      this.clientes = [];
+    }
+
+    this.clientesService.getClientes(page, 15).subscribe({
       next: (res) => {
         this.loading = false;
         if (event) event.target.complete();
 
+        let newItems: Cliente[] = [];
         if (Array.isArray(res)) {
-          this.clientes = res;
+          newItems = res;
+          this.hasMorePages = false;
         } else if (res && res.items && Array.isArray(res.items)) {
-          this.clientes = res.items;
-        } else if (res && res.data && Array.isArray(res.data)) {
-          this.clientes = res.data;
+          newItems = res.items;
+          this.totalPages = res.total_pages || 1;
+          this.hasMorePages = page < this.totalPages;
         } else {
-          this.clientes = [];
+          newItems = [];
+          this.hasMorePages = false;
+        }
+
+        if (isInitial) {
+          this.clientes = newItems;
+        } else {
+          this.clientes = [...this.clientes, ...newItems];
         }
       },
       error: (err) => {
@@ -46,7 +63,17 @@ export class ClientesPage implements OnInit {
     });
   }
 
+  loadMoreData(event: any): void {
+    if (!this.hasMorePages) {
+      event.target.disabled = true;
+      event.target.complete();
+      return;
+    }
+    this.currentPage++;
+    this.cargarClientes(this.currentPage, false, event);
+  }
+
   handleRefresh(event: any): void {
-    this.cargarClientes(event);
+    this.cargarClientes(1, true, event);
   }
 }

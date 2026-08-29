@@ -1,4 +1,4 @@
-<ion-header [translucent]="true">
+<ion-header class="ion-no-border">
   <ion-toolbar color="primary">
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
@@ -7,26 +7,21 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true" class="ion-padding">
+<ion-content class="ion-padding">
   <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
 
-  <div class="header-card ion-padding ion-margin-bottom">
-    <h2>Directorio Telefónico 👥</h2>
-    <p>Contacta rápidamente a tus clientes desde la app móvil</p>
-  </div>
-
   <div *ngIf="loading" class="ion-text-center ion-padding">
-    <ion-spinner name="dots" color="primary"></ion-spinner>
-    <p>Cargando clientes...</p>
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Cargando lista de clientes...</p>
   </div>
 
-  <ion-card *ngIf="!loading && clientes.length === 0" class="ion-text-center ion-padding">
-    <ion-icon name="people-outline" style="font-size: 48px; color: #999;"></ion-icon>
-    <h3>No hay clientes registrados</h3>
-    <p>Agrega clientes desde el backend para verlos aquí.</p>
-  </ion-card>
+  <div *ngIf="!loading && clientes.length === 0" class="ion-text-center ion-padding empty-state">
+    <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+    <h3>Sin Clientes</h3>
+    <p>No hay clientes registrados en el sistema.</p>
+  </div>
 
   <ion-list *ngIf="!loading && clientes.length > 0">
     <ion-item *ngFor="let cli of clientes" class="cliente-item">
@@ -46,4 +41,8 @@
       </div>
     </ion-item>
   </ion-list>
+
+  <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
+    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más clientes..."></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
 </ion-content>

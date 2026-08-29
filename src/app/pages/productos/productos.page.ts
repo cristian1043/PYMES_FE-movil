@@ -15,6 +15,9 @@ export class ProductosPage implements OnInit {
   searchTerm = '';
   loading = true;
   usuario: any = null;
+  currentPage = 1;
+  totalPages = 1;
+  hasMorePages = true;
 
   constructor(
     private authService: AuthService,
@@ -24,29 +27,43 @@ export class ProductosPage implements OnInit {
 
   ngOnInit(): void {
     this.usuario = this.authService.getUsuario();
-    this.cargarProductos();
+    this.cargarProductos(1, true);
   }
 
   ionViewWillEnter(): void {
     this.usuario = this.authService.getUsuario();
-    this.cargarProductos();
+    this.cargarProductos(1, true);
   }
 
-  cargarProductos(event?: any): void {
-    this.loading = !event;
-    this.productosService.getProductos().subscribe({
+  cargarProductos(page: number = 1, isInitial: boolean = false, event?: any): void {
+    if (isInitial) {
+      this.loading = true;
+      this.currentPage = 1;
+      this.productos = [];
+    }
+
+    this.productosService.getProductos(page, 15).subscribe({
       next: (res) => {
         this.loading = false;
         if (event) event.target.complete();
 
+        let newItems: Producto[] = [];
         if (Array.isArray(res)) {
-          this.productos = res;
+          newItems = res;
+          this.hasMorePages = false;
         } else if (res && res.items && Array.isArray(res.items)) {
-          this.productos = res.items;
-        } else if (res && res.data && Array.isArray(res.data)) {
-          this.productos = res.data;
+          newItems = res.items;
+          this.totalPages = res.total_pages || 1;
+          this.hasMorePages = page < this.totalPages;
         } else {
-          this.productos = [];
+          newItems = [];
+          this.hasMorePages = false;
+        }
+
+        if (isInitial) {
+          this.productos = newItems;
+        } else {
+          this.productos = [...this.productos, ...newItems];
         }
         this.filtrarProductos();
       },
@@ -56,6 +73,16 @@ export class ProductosPage implements OnInit {
         console.error('Error al cargar productos:', err);
       }
     });
+  }
+
+  loadMoreData(event: any): void {
+    if (!this.hasMorePages) {
+      event.target.disabled = true;
+      event.target.complete();
+      return;
+    }
+    this.currentPage++;
+    this.cargarProductos(this.currentPage, false, event);
   }
 
   filtrarProductos(): void {
@@ -72,7 +99,7 @@ export class ProductosPage implements OnInit {
   }
 
   handleRefresh(event: any): void {
-    this.cargarProductos(event);
+    this.cargarProductos(1, true, event);
   }
 
   logout(): void {

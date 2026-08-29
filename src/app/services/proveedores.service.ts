@@ -25,9 +25,9 @@ export class ProveedoresService {
     private authService: AuthService
   ) {}
 
-  getProveedores(): Observable<Proveedor[]> {
+  getProveedores(page: number = 1, perPage: number = 15): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<Proveedor[]>(`${this.apiUrl}/`, { headers });
+    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
   }
 
   createProveedor(data: Partial<Proveedor>): Observable<Proveedor> {

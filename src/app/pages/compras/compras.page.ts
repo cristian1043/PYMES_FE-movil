@@ -10,24 +10,50 @@ import { ComprasService, Compra } from '../../services/compras.service';
 export class ComprasPage implements OnInit {
   compras: Compra[] = [];
   loading = true;
+  currentPage = 1;
+  totalPages = 1;
+  hasMorePages = true;
 
   constructor(private comprasService: ComprasService) {}
 
   ngOnInit(): void {
-    this.cargarCompras();
+    this.cargarCompras(1, true);
   }
 
   ionViewWillEnter(): void {
-    this.cargarCompras();
+    this.cargarCompras(1, true);
   }
 
-  cargarCompras(event?: any): void {
-    this.loading = !event;
-    this.comprasService.getCompras().subscribe({
-      next: (data) => {
+  cargarCompras(page: number = 1, isInitial: boolean = false, event?: any): void {
+    if (isInitial) {
+      this.loading = true;
+      this.currentPage = 1;
+      this.compras = [];
+    }
+
+    this.comprasService.getCompras(page, 15).subscribe({
+      next: (res) => {
         this.loading = false;
-        this.compras = Array.isArray(data) ? data : [];
         if (event) event.target.complete();
+
+        let newItems: Compra[] = [];
+        if (Array.isArray(res)) {
+          newItems = res;
+          this.hasMorePages = false;
+        } else if (res && res.items && Array.isArray(res.items)) {
+          newItems = res.items;
+          this.totalPages = res.total_pages || 1;
+          this.hasMorePages = page < this.totalPages;
+        } else {
+          newItems = [];
+          this.hasMorePages = false;
+        }
+
+        if (isInitial) {
+          this.compras = newItems;
+        } else {
+          this.compras = [...this.compras, ...newItems];
+        }
       },
       error: (err) => {
         this.loading = false;
@@ -37,7 +63,17 @@ export class ComprasPage implements OnInit {
     });
   }
 
+  loadMoreData(event: any): void {
+    if (!this.hasMorePages) {
+      event.target.disabled = true;
+      event.target.complete();
+      return;
+    }
+    this.currentPage++;
+    this.cargarCompras(this.currentPage, false, event);
+  }
+
   handleRefresh(event: any): void {
-    this.cargarCompras(event);
+    this.cargarCompras(1, true, event);
   }
 }

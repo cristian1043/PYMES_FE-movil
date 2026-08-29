@@ -27,9 +27,9 @@ export class UsuariosService {
     private authService: AuthService
   ) {}
 
-  getUsuarios(): Observable<any> {
+  getUsuarios(page: number = 1, perPage: number = 15): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/`, { headers });
+    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
   }
 
   deleteUsuario(id: number): Observable<any> {

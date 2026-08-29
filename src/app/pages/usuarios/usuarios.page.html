@@ -38,4 +38,8 @@
       </div>
     </ion-item>
   </ion-list>
+
+  <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
+    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más usuarios..."></ion-infinite-scroll-content>
+  </ion-infinite-scroll>
 </ion-content>

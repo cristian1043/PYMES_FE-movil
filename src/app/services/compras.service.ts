@@ -25,9 +25,9 @@ export class ComprasService {
     private authService: AuthService
   ) {}
 
-  getCompras(): Observable<Compra[]> {
+  getCompras(page: number = 1, perPage: number = 15): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<Compra[]>(`${this.apiUrl}/`, { headers });
+    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
   }
 
   createCompra(data: Partial<Compra>): Observable<Compra> {

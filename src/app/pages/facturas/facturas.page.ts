@@ -10,32 +10,49 @@ import { FacturasService, Factura } from '../../services/facturas.service';
 export class FacturasPage implements OnInit {
   facturas: Factura[] = [];
   loading = true;
+  currentPage = 1;
+  totalPages = 1;
+  hasMorePages = true;
 
   constructor(private facturasService: FacturasService) {}
 
   ngOnInit(): void {
-    this.cargarFacturas();
+    this.cargarFacturas(1, true);
   }
 
   ionViewWillEnter(): void {
-    this.cargarFacturas();
+    this.cargarFacturas(1, true);
   }
 
-  cargarFacturas(event?: any): void {
-    this.loading = !event;
-    this.facturasService.getFacturas().subscribe({
+  cargarFacturas(page: number = 1, isInitial: boolean = false, event?: any): void {
+    if (isInitial) {
+      this.loading = true;
+      this.currentPage = 1;
+      this.facturas = [];
+    }
+
+    this.facturasService.getFacturas(page, 15).subscribe({
       next: (res) => {
         this.loading = false;
         if (event) event.target.complete();
 
+        let newItems: Factura[] = [];
         if (Array.isArray(res)) {
-          this.facturas = res;
+          newItems = res;
+          this.hasMorePages = false;
         } else if (res && res.items && Array.isArray(res.items)) {
-          this.facturas = res.items;
-        } else if (res && res.data && Array.isArray(res.data)) {
-          this.facturas = res.data;
+          newItems = res.items;
+          this.totalPages = res.total_pages || 1;
+          this.hasMorePages = page < this.totalPages;
         } else {
-          this.facturas = [];
+          newItems = [];
+          this.hasMorePages = false;
+        }
+
+        if (isInitial) {
+          this.facturas = newItems;
+        } else {
+          this.facturas = [...this.facturas, ...newItems];
         }
       },
       error: (err) => {
@@ -46,7 +63,17 @@ export class FacturasPage implements OnInit {
     });
   }
 
+  loadMoreData(event: any): void {
+    if (!this.hasMorePages) {
+      event.target.disabled = true;
+      event.target.complete();
+      return;
+    }
+    this.currentPage++;
+    this.cargarFacturas(this.currentPage, false, event);
+  }
+
   handleRefresh(event: any): void {
-    this.cargarFacturas(event);
+    this.cargarFacturas(1, true, event);
   }
 }
