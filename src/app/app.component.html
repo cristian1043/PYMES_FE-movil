@@ -29,22 +29,24 @@
         <ion-list *ngFor="let cat of menuCategoriasPermitidas" class="menu-list">
           <ion-list-header class="menu-category-header">{{ cat.titulo }}</ion-list-header>
 
-          <ion-menu-toggle auto-hide="false" *ngFor="let item of cat.items">
-            <ion-item routerDirection="root" [routerLink]="[item.url]" lines="none" routerLinkActive="selected" class="menu-item">
-              <ion-icon aria-hidden="true" slot="start" [name]="item.icon"></ion-icon>
-              <ion-label>{{ item.title }}</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
+          <ion-item
+            *ngFor="let item of cat.items"
+            button
+            (click)="navegar(item.url)"
+            lines="none"
+            routerLinkActive="selected"
+            class="menu-item">
+            <ion-icon aria-hidden="true" slot="start" [name]="item.icon"></ion-icon>
+            <ion-label>{{ item.title }}</ion-label>
+          </ion-item>
         </ion-list>
 
         <!-- Botón de Cerrar Sesión -->
         <div class="logout-section ion-padding-horizontal ion-margin-top" *ngIf="usuario">
-          <ion-menu-toggle auto-hide="false">
-            <ion-button expand="block" color="danger" fill="outline" (click)="logout()">
-              <ion-icon name="log-out-outline" slot="start"></ion-icon>
-              Cerrar Sesión
-            </ion-button>
-          </ion-menu-toggle>
+          <ion-button expand="block" color="danger" fill="outline" (click)="logout()">
+            <ion-icon name="log-out-outline" slot="start"></ion-icon>
+            Cerrar Sesión
+          </ion-button>
         </div>
       </ion-content>
     </ion-menu>
