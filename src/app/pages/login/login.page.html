@@ -12,7 +12,7 @@
       </ion-card-header>
 
       <ion-card-content>
-        <form (ngSubmit)="onLogin()">
+        <div class="login-form-wrapper">
           <ion-item fill="outline" class="ion-margin-bottom">
             <ion-label position="floating">Usuario o Correo</ion-label>
             <ion-input
@@ -49,7 +49,8 @@
 
           <ion-button
             expand="block"
-            type="submit"
+            type="button"
+            (click)="onLogin()"
             [disabled]="loading"
             class="login-button ion-margin-top">
             <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
@@ -59,7 +60,7 @@
           <div class="register-link ion-text-center ion-margin-top">
             <p>¿No tienes una cuenta? <a routerLink="/register" class="register-text">Regístrate aquí</a></p>
           </div>
-        </form>
+        </div>
       </ion-card-content>
     </ion-card>
   </div>
