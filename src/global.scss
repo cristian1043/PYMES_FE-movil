@@ -25,22 +25,13 @@
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
 
-/**
- * Ionic Dark Mode
- * -----------------------------------------------------
- * For more info, please see:
- * https://ionicframework.com/docs/theming/dark-mode
- */
-
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import "@ionic/angular/css/palettes/dark.system.css";
-
 /* PYMEsoft Custom Global Ergonomics */
 ion-card {
   border-radius: 14px;
   box-shadow: 0 4px 15px rgba(15, 43, 92, 0.08);
   border: 1px solid rgba(30, 60, 114, 0.06);
+  background: #ffffff !important;
+  color: #333333 !important;
 }
 
 ion-button {
@@ -58,4 +49,3 @@ ion-item {
   padding: 4px 8px;
   border-radius: 12px;
 }
-
