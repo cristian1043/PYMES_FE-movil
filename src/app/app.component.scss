@@ -1,3 +1,11 @@
+ion-menu {
+  ion-content.menu-content {
+    --overflow: auto !important;
+    overflow-y: auto !important;
+    height: 100%;
+  }
+}
+
 .brand-title {
   display: flex;
   align-items: center;
@@ -79,5 +87,6 @@
 }
 
 .logout-section {
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
 }

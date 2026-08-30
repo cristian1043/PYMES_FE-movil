@@ -12,7 +12,7 @@
         </ion-toolbar>
       </ion-header>
 
-      <ion-content class="menu-content">
+      <ion-content class="menu-content" scroll-y="true">
         <!-- Perfil del Usuario Activo -->
         <div class="user-profile-card ion-padding" *ngIf="usuario">
           <div class="avatar-container">
@@ -42,7 +42,7 @@
         </ion-list>
 
         <!-- Botón de Cerrar Sesión -->
-        <div class="logout-section ion-padding-horizontal ion-margin-top" *ngIf="usuario">
+        <div class="logout-section ion-padding-horizontal ion-margin-top ion-margin-bottom" *ngIf="usuario">
           <ion-button expand="block" color="danger" fill="outline" (click)="logout()">
             <ion-icon name="log-out-outline" slot="start"></ion-icon>
             Cerrar Sesión
