@@ -17,9 +17,11 @@
             <ion-label position="floating">Usuario o Correo</ion-label>
             <ion-input
               type="text"
+              [value]="username"
+              (ionInput)="onUsernameInput($event)"
+              (ionChange)="onUsernameInput($event)"
               [(ngModel)]="username"
               name="username"
-              required
               placeholder="ej: admin">
             </ion-input>
             <ion-icon name="person-outline" slot="start"></ion-icon>
@@ -29,9 +31,11 @@
             <ion-label position="floating">Contraseña</ion-label>
             <ion-input
               type="password"
+              [value]="password"
+              (ionInput)="onPasswordInput($event)"
+              (ionChange)="onPasswordInput($event)"
               [(ngModel)]="password"
               name="password"
-              required
               placeholder="••••••••">
             </ion-input>
             <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
@@ -46,7 +50,7 @@
           <ion-button
             expand="block"
             type="submit"
-            [disabled]="loading || !username || !password"
+            [disabled]="loading"
             class="login-button ion-margin-top">
             <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
             <span *ngIf="!loading">Ingresar</span>

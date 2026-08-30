@@ -14,6 +14,11 @@ export class RoleGuard implements CanActivate {
   ) {}
 
   async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/login']);
+      return false;
+    }
+
     const allowedRoles = route.data['roles'] as Array<number>;
 
     if (!allowedRoles || allowedRoles.length === 0) {
@@ -32,7 +37,7 @@ export class RoleGuard implements CanActivate {
     });
     await toast.present();
 
-    this.router.navigate(['/productos']);
+    this.router.navigate(['/login']);
     return false;
   }
 }

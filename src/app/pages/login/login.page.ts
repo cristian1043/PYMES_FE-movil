@@ -21,29 +21,43 @@ export class LoginPage {
     private toastController: ToastController
   ) {}
 
+  onUsernameInput(ev: any): void {
+    this.username = ev?.detail?.value || ev?.target?.value || '';
+  }
+
+  onPasswordInput(ev: any): void {
+    this.password = ev?.detail?.value || ev?.target?.value || '';
+  }
+
   onLogin(): void {
-    if (!this.username || !this.password) return;
+    const userTrim = (this.username || '').trim();
+    const passTrim = (this.password || '').trim();
+
+    if (!userTrim || !passTrim) {
+      this.errorMessage = 'Por favor ingresa tu usuario y contraseña.';
+      return;
+    }
 
     this.loading = true;
     this.errorMessage = '';
 
     this.authService.login({
-      username: this.username,
-      password: this.password
+      username: userTrim,
+      password: passTrim
     }).subscribe({
       next: async (res) => {
         this.loading = false;
         if (res.exito) {
           const toast = await this.toastController.create({
-            message: `¡Bienvenido ${res.usuario?.username || ''}!`,
+            message: `¡Bienvenido ${res.usuario?.nombre || res.usuario?.username || 'al sistema'}!`,
             duration: 2000,
             color: 'success',
             position: 'top'
           });
           await toast.present();
-          this.router.navigate(['/productos']);
+          this.router.navigateByUrl('/productos');
         } else {
-          this.errorMessage = res.mensaje || 'Credenciales incorrectas';
+          this.errorMessage = res.mensaje || 'Credenciales incorrectas.';
         }
       },
       error: async (err) => {
