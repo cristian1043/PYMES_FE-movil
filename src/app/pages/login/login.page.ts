@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
@@ -9,7 +9,7 @@ import { AuthService } from '../../services/auth.service';
   styleUrls: ['./login.page.scss'],
   standalone: false
 })
-export class LoginPage {
+export class LoginPage implements OnInit {
   username = '';
   password = '';
   loading = false;
@@ -20,6 +20,20 @@ export class LoginPage {
     private router: Router,
     private toastController: ToastController
   ) {}
+
+  ngOnInit(): void {
+    this.checkSession();
+  }
+
+  ionViewWillEnter(): void {
+    this.checkSession();
+  }
+
+  private checkSession(): void {
+    if (this.authService.isLoggedIn()) {
+      this.router.navigateByUrl('/productos');
+    }
+  }
 
   onUsernameInput(ev: any): void {
     this.username = ev?.detail?.value || ev?.target?.value || '';
@@ -41,7 +55,6 @@ export class LoginPage {
     this.loading = true;
     this.errorMessage = '';
 
-    // Safety timeout to prevent infinite spinner
     const timer = setTimeout(() => {
       if (this.loading) {
         this.loading = false;
