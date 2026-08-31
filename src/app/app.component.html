@@ -1,6 +1,6 @@
 <ion-app>
-  <ion-split-pane contentId="main-content">
-    <ion-menu contentId="main-content" type="overlay" [disabled]="!usuario">
+  <ion-split-pane contentId="main-content" when="md">
+    <ion-menu contentId="main-content" menuId="main-menu" [disabled]="!usuario">
       <ion-header class="menu-header">
         <ion-toolbar color="secondary">
           <ion-title>
@@ -26,20 +26,22 @@
         </div>
 
         <!-- Categorías del Menú según Rol -->
-        <ion-list *ngFor="let cat of menuCategoriasPermitidas" class="menu-list">
-          <ion-list-header class="menu-category-header">{{ cat.titulo }}</ion-list-header>
+        <div class="menu-list-container">
+          <ion-list *ngFor="let cat of menuCategoriasPermitidas" class="menu-list">
+            <ion-list-header class="menu-category-header">{{ cat.titulo }}</ion-list-header>
 
-          <ion-item
-            *ngFor="let item of cat.items"
-            button
-            (click)="navegar(item.url)"
-            lines="none"
-            routerLinkActive="selected"
-            class="menu-item">
-            <ion-icon aria-hidden="true" slot="start" [name]="item.icon"></ion-icon>
-            <ion-label>{{ item.title }}</ion-label>
-          </ion-item>
-        </ion-list>
+            <ion-item
+              *ngFor="let item of cat.items"
+              button
+              (click)="navegar(item.url)"
+              lines="none"
+              routerLinkActive="selected"
+              class="menu-item">
+              <ion-icon aria-hidden="true" slot="start" [name]="item.icon"></ion-icon>
+              <ion-label>{{ item.title }}</ion-label>
+            </ion-item>
+          </ion-list>
+        </div>
 
         <!-- Botón de Cerrar Sesión -->
         <div class="logout-section ion-padding-horizontal ion-margin-top ion-margin-bottom" *ngIf="usuario">

@@ -1,9 +1,21 @@
 ion-menu {
-  ion-content.menu-content {
-    --overflow: auto !important;
-    overflow-y: auto !important;
-    height: 100%;
-  }
+  --width: 290px;
+  --max-width: 290px;
+}
+
+ion-menu::part(container) {
+  overflow-y: auto !important;
+  max-height: 100vh;
+}
+
+ion-content.menu-content {
+  --overflow: auto !important;
+  overflow-y: auto !important;
+  height: 100%;
+}
+
+.menu-list-container {
+  padding-bottom: 20px;
 }
 
 .brand-title {
@@ -87,6 +99,7 @@ ion-menu {
 }
 
 .logout-section {
-  margin-bottom: 32px;
-  padding-bottom: 20px;
+  margin-top: 16px;
+  margin-bottom: 40px;
+  padding-bottom: 30px;
 }
