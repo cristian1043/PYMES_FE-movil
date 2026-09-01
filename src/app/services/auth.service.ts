@@ -20,15 +20,21 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<any>(this.getUsuarioDesdeStorage());
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) {
+    // Limpiar residuos de localStorage persistente antiguo para forzar la validación de credenciales al iniciar
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('usuario');
+    }
+  }
 
   login(credentials: { email?: string; username?: string; password: string }): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
       tap(response => {
         if (response.exito && response.access_token) {
-          localStorage.setItem('access_token', response.access_token);
+          sessionStorage.setItem('access_token', response.access_token);
           if (response.usuario) {
-            localStorage.setItem('usuario', JSON.stringify(response.usuario));
+            sessionStorage.setItem('usuario', JSON.stringify(response.usuario));
             this.currentUserSubject.next(response.usuario);
           }
         }
@@ -41,13 +47,22 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('usuario');
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('access_token');
+      sessionStorage.removeItem('usuario');
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('usuario');
+    }
     this.currentUserSubject.next(null);
   }
 
   getToken(): string | null {
-    return localStorage.getItem('access_token');
+    if (typeof sessionStorage !== 'undefined') {
+      return sessionStorage.getItem('access_token');
+    }
+    return null;
   }
 
   isLoggedIn(): boolean {
@@ -77,7 +92,8 @@ export class AuthService {
   }
 
   private getUsuarioDesdeStorage(): any {
-    const userStr = localStorage.getItem('usuario');
+    if (typeof sessionStorage === 'undefined') return null;
+    const userStr = sessionStorage.getItem('usuario');
     if (!userStr) return null;
     try {
       return JSON.parse(userStr);

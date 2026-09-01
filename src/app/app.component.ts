@@ -64,6 +64,11 @@ export class AppComponent implements OnInit {
     });
   }
 
+  get isAuthPage(): boolean {
+    const url = this.router.url;
+    return !url || url.includes('/login') || url.includes('/register') || url === '/';
+  }
+
   actualizarMenu(): void {
     if (!this.usuario) {
       this.menuCategoriasPermitidas = [];

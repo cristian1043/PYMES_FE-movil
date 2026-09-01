@@ -22,17 +22,8 @@ export class LoginPage implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.checkSession();
-  }
-
-  ionViewWillEnter(): void {
-    this.checkSession();
-  }
-
-  private checkSession(): void {
-    if (this.authService.isLoggedIn()) {
-      this.router.navigateByUrl('/productos');
-    }
+    // Limpiar mensaje de error previo al cargar la página
+    this.errorMessage = '';
   }
 
   onUsernameInput(ev: any): void {
