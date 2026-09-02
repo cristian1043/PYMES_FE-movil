@@ -5,7 +5,7 @@ import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
 export interface UsuarioItem {
-  id: number;
+  id?: number;
   nombre: string;
   apellido?: string;
   username: string;
@@ -14,6 +14,7 @@ export interface UsuarioItem {
   rol_nombre?: string;
   estado?: string;
   telefono?: string;
+  password?: string;
 }
 
 @Injectable({
@@ -30,6 +31,11 @@ export class UsuariosService {
   getUsuarios(page: number = 1, perPage: number = 15): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
+  }
+
+  createUsuario(data: Partial<UsuarioItem>): Observable<UsuarioItem> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post<UsuarioItem>(`${this.apiUrl}/`, data, { headers });
   }
 
   deleteUsuario(id: number): Observable<any> {

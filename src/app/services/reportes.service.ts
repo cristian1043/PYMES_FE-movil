@@ -24,4 +24,9 @@ export class ReportesService {
     const headers = this.authService.getAuthHeaders();
     return this.http.get<any>(`${this.apiUrl}/ventas`, { headers });
   }
+
+  getDashboardMetrics(): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<any>(`${this.apiUrl}/dashboard`, { headers });
+  }
 }

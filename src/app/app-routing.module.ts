@@ -18,6 +18,11 @@ const routes: Routes = [
     loadChildren: () => import('./pages/register/register.module').then(m => m.RegisterPageModule)
   },
   {
+    path: 'inicio',
+    canActivate: [AuthGuard],
+    loadChildren: () => import('./pages/inicio/inicio.module').then(m => m.InicioPageModule)
+  },
+  {
     path: 'productos',
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [1, 2, 3] },

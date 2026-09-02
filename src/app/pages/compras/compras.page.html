@@ -4,42 +4,137 @@
       <ion-buttons slot="start">
         <ion-menu-button></ion-menu-button>
       </ion-buttons>
-      <ion-title>Gestión de Compras</ion-title>
+      <ion-title>Módulo de Gestión de Compras</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <ion-content class="ion-padding">
-    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
-      <ion-refresher-content></ion-refresher-content>
-    </ion-refresher>
-
-    <div *ngIf="loading" class="ion-text-center ion-padding">
-      <ion-spinner name="crescent" color="primary"></ion-spinner>
-      <p>Cargando órdenes de compra...</p>
+  <ion-content class="ion-padding module-background">
+    <!-- Barra Superior de Navegación del Módulo -->
+    <div class="module-action-bar ion-margin-bottom">
+      <ion-button
+        fill="outline"
+        color="secondary"
+        size="small"
+        (click)="cancelarOVolver()"
+        class="cancel-button">
+        <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
+        Cancelar / Volver
+      </ion-button>
     </div>
 
-    <div *ngIf="!loading && compras.length === 0" class="ion-text-center ion-padding empty-state">
-      <ion-icon name="cart-outline" class="empty-icon"></ion-icon>
-      <h3>Sin Compras</h3>
-      <p>No hay órdenes de compra registradas.</p>
-    </div>
-
-    <ion-list *ngIf="!loading && compras.length > 0">
-      <ion-item *ngFor="let c of compras" class="compra-item">
-        <ion-icon name="cart-outline" slot="start" color="tertiary" style="font-size: 28px;"></ion-icon>
-        <ion-label>
-          <h2>Compra {{ c.codigo_compra || '#' + c.id }}</h2>
-          <p>Proveedor: {{ c.proveedor_nombre || 'Proveedor Desconocido' }}</p>
-          <ion-note color="medium" *ngIf="c.fecha">{{ c.fecha }}</ion-note>
-        </ion-label>
-        <div slot="end" class="ion-text-right">
-          <ion-badge color="success">${{ c.total | number:'1.2-2' }}</ion-badge>
+    <!-- VISTA 1: HUB PRINCIPAL DEL MÓDULO -->
+    <div *ngIf="activeTab === 'hub'" class="hub-container">
+      <div class="hub-header ion-text-center ion-margin-bottom">
+        <div class="hub-icon-badge">
+          <ion-icon name="cart-outline"></ion-icon>
         </div>
-      </ion-item>
-    </ion-list>
+        <h2>Módulo de Gestión de Compras</h2>
+        <p>Selecciona la acción que deseas realizar en este módulo</p>
+      </div>
 
-    <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
-      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más compras..."></ion-infinite-scroll-content>
-    </ion-infinite-scroll>
+      <div class="hub-actions-grid">
+        <div class="action-card" (click)="seleccionarAccion('nueva')">
+          <div class="action-icon bg-warning">
+            <ion-icon name="add-circle-outline"></ion-icon>
+          </div>
+          <div class="action-info">
+            <h3>Registrar Nueva Compra</h3>
+            <p>Registra un pedido de compras o reabastecimiento a un proveedor</p>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
+        </div>
+
+        <div class="action-card" (click)="seleccionarAccion('listado')">
+          <div class="action-icon bg-primary">
+            <ion-icon name="receipt-outline"></ion-icon>
+          </div>
+          <div class="action-info">
+            <h3>Ver Historial de Compras</h3>
+            <p>Consulta las órdenes de compra registradas y montos invertidos</p>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISTA 2: FORMULARIO NUEVA COMPRA -->
+    <div *ngIf="activeTab === 'nueva'" class="form-container">
+      <ion-card class="form-card">
+        <ion-card-header>
+          <ion-card-title>🛒 Registrar Nueva Compra</ion-card-title>
+        </ion-card-header>
+
+        <ion-card-content>
+          <form (ngSubmit)="onRegistrarCompra()">
+            <div class="form-group">
+              <label class="form-label">Nombre del Proveedor *</label>
+              <input
+                type="text"
+                class="custom-input"
+                [(ngModel)]="proveedorNombre"
+                name="proveedorNombre"
+                placeholder="ej: Distribuidores del Caribe S.A.S."
+                required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Monto Total de la Compra ($) *</label>
+              <input
+                type="number"
+                class="custom-input"
+                [(ngModel)]="totalCompra"
+                name="totalCompra"
+                placeholder="ej: 4500000"
+                step="0.01"
+                min="0"
+                required />
+            </div>
+
+            <div class="form-actions ion-margin-top">
+              <ion-button
+                expand="block"
+                type="submit"
+                color="primary"
+                [disabled]="guardando || !proveedorNombre || !totalCompra || totalCompra <= 0">
+                <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
+                <span *ngIf="!guardando">Guardar Orden de Compra</span>
+              </ion-button>
+            </div>
+          </form>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- VISTA 3: HISTORIAL DE COMPRAS -->
+    <div *ngIf="activeTab === 'listado'" class="listado-container">
+      <div *ngIf="loading" class="ion-text-center ion-padding">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Cargando órdenes de compra...</p>
+      </div>
+
+      <div *ngIf="!loading && compras.length === 0" class="ion-text-center ion-padding empty-state">
+        <ion-icon name="cart-outline" class="empty-icon"></ion-icon>
+        <h3>Sin Compras</h3>
+        <p>No hay órdenes de compra registradas.</p>
+      </div>
+
+      <ion-list *ngIf="!loading && compras.length > 0">
+        <ion-item *ngFor="let c of compras" class="compra-item">
+          <ion-icon name="cart-outline" slot="start" color="tertiary" style="font-size: 28px;"></ion-icon>
+          <ion-label>
+            <h2>Compra {{ c.codigo_compra || '#' + c.id }}</h2>
+            <p>Proveedor: {{ c.proveedor_nombre || 'Proveedor General' }}</p>
+            <ion-note color="medium" *ngIf="c.fecha">{{ c.fecha }}</ion-note>
+          </ion-label>
+          <div slot="end" class="ion-text-right">
+            <ion-badge color="success">${{ c.total | number:'1.2-2' }}</ion-badge>
+          </div>
+        </ion-item>
+      </ion-list>
+
+      <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
+        <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más compras..."></ion-infinite-scroll-content>
+      </ion-infinite-scroll>
+    </div>
   </ion-content>
 </ion-page>

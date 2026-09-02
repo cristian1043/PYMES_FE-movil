@@ -35,4 +35,9 @@ export class ProductosService {
     const headers = this.authService.getAuthHeaders();
     return this.http.get<Producto>(`${this.apiUrl}/${id}`, { headers });
   }
+
+  createProducto(data: Producto): Observable<Producto> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post<Producto>(`${this.apiUrl}/`, data, { headers });
+  }
 }

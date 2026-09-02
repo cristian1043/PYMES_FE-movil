@@ -29,7 +29,7 @@ export class AppComponent implements OnInit {
     {
       titulo: 'Gestión Principal',
       items: [
-        { title: 'Inicio / Pantalla Principal', url: '/productos', icon: 'home-outline', roles: [1, 2, 3] },
+        { title: 'Inicio / Pantalla Principal', url: '/inicio', icon: 'home-outline', roles: [1, 2, 3] },
         { title: 'Productos e Inventario', url: '/productos', icon: 'cube-outline', roles: [1, 2, 3] },
         { title: 'Facturas y Ventas', url: '/facturas', icon: 'document-text-outline', roles: [1, 2] },
         { title: 'Gestión de Compras', url: '/compras', icon: 'cart-outline', roles: [1, 3] },

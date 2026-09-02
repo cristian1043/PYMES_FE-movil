@@ -4,7 +4,7 @@
       <ion-buttons slot="start">
         <ion-menu-button></ion-menu-button>
       </ion-buttons>
-      <ion-title>Catálogo de Productos</ion-title>
+      <ion-title>Módulo de Productos e Inventario</ion-title>
       <ion-buttons slot="end">
         <ion-button (click)="logout()">
           <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
@@ -13,51 +13,173 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-content [fullscreen]="true" class="ion-padding">
-    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
-      <ion-refresher-content></ion-refresher-content>
-    </ion-refresher>
-
-    <div class="user-greeting ion-margin-bottom" *ngIf="usuario">
-      <h2>Hola, {{ usuario.nombre || usuario.username || 'Usuario' }} 👋</h2>
-      <p>Consulta los productos de tu negocio registrados en PYMES Backend</p>
+  <ion-content [fullscreen]="true" class="ion-padding module-background">
+    <!-- Barra Superior de Navegación del Módulo -->
+    <div class="module-action-bar ion-margin-bottom">
+      <ion-button
+        fill="outline"
+        color="secondary"
+        size="small"
+        (click)="cancelarOVolver()"
+        class="cancel-button">
+        <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
+        Cancelar / Volver
+      </ion-button>
     </div>
 
-    <ion-searchbar
-      [(ngModel)]="searchTerm"
-      (ionInput)="filtrarProductos()"
-      placeholder="Buscar por nombre o código..."
-      class="ion-margin-bottom">
-    </ion-searchbar>
-
-    <div *ngIf="loading" class="spinner-container ion-text-center ion-padding">
-      <ion-spinner name="crescent" color="primary"></ion-spinner>
-      <p>Cargando productos...</p>
-    </div>
-
-    <ion-card *ngIf="!loading && productosFiltrados.length === 0" class="ion-text-center ion-padding">
-      <ion-icon name="cube-outline" style="font-size: 48px; color: #999;"></ion-icon>
-      <h3>No hay productos encontrados</h3>
-      <p>Intenta cambiar el término de búsqueda o añade más productos desde el backend.</p>
-    </ion-card>
-
-    <ion-list *ngIf="!loading && productosFiltrados.length > 0">
-      <ion-item *ngFor="let prod of productosFiltrados" class="product-item">
-        <ion-icon name="cube-outline" slot="start" color="secondary" style="font-size: 28px;"></ion-icon>
-        <ion-label>
-          <h2>{{ prod.nombre }}</h2>
-          <p>Código: {{ prod.codigo || 'N/A' }} | Cat: {{ prod.categoria_nombre || 'General' }}</p>
-          <ion-note color="medium" *ngIf="prod.descripcion">{{ prod.descripcion }}</ion-note>
-        </ion-label>
-        <div slot="end" class="ion-text-right">
-          <ion-badge color="success">${{ prod.precio | number:'1.2-2' }}</ion-badge>
-          <p style="font-size: 11px; margin: 4px 0 0; color: #666;">Stock: {{ prod.stock ?? 0 }}</p>
+    <!-- VISTA 1: HUB PRINCIPAL DEL MÓDULO -->
+    <div *ngIf="activeTab === 'hub'" class="hub-container">
+      <div class="hub-header ion-text-center ion-margin-bottom">
+        <div class="hub-icon-badge">
+          <ion-icon name="cube-outline"></ion-icon>
         </div>
-      </ion-item>
-    </ion-list>
+        <h2>Módulo de Productos e Inventario</h2>
+        <p>Selecciona la acción que deseas realizar en este módulo</p>
+      </div>
 
-    <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
-      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más productos..."></ion-infinite-scroll-content>
-    </ion-infinite-scroll>
+      <div class="hub-actions-grid">
+        <div class="action-card" (click)="seleccionarAccion('nuevo')">
+          <div class="action-icon bg-primary">
+            <ion-icon name="add-circle-outline"></ion-icon>
+          </div>
+          <div class="action-info">
+            <h3>Registrar Nuevo Producto</h3>
+            <p>Añade un nuevo ítem al catálogo de inventario con su precio y stock</p>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
+        </div>
+
+        <div class="action-card" (click)="seleccionarAccion('listado')">
+          <div class="action-icon bg-success">
+            <ion-icon name="list-outline"></ion-icon>
+          </div>
+          <div class="action-info">
+            <h3>Ver Listado de Productos</h3>
+            <p>Consulta el catálogo completo de productos registrados y busca por código o nombre</p>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISTA 2: FORMULARIO NUEVO PRODUCTO -->
+    <div *ngIf="activeTab === 'nuevo'" class="form-container">
+      <ion-card class="form-card">
+        <ion-card-header>
+          <ion-card-title>➕ Registrar Nuevo Producto</ion-card-title>
+        </ion-card-header>
+
+        <ion-card-content>
+          <form (ngSubmit)="onRegistrarProducto()">
+            <div class="form-group">
+              <label class="form-label">Nombre del Producto *</label>
+              <input
+                type="text"
+                class="custom-input"
+                [(ngModel)]="nuevoNombre"
+                name="nuevoNombre"
+                placeholder="ej: Laptop HP ProBook 450"
+                required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Código del Producto (Opcional)</label>
+              <input
+                type="text"
+                class="custom-input"
+                [(ngModel)]="nuevoCodigo"
+                name="nuevoCodigo"
+                placeholder="ej: PROD-001 (Generación automática)" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Precio ($) *</label>
+              <input
+                type="number"
+                class="custom-input"
+                [(ngModel)]="nuevoPrecio"
+                name="nuevoPrecio"
+                placeholder="ej: 3500000"
+                step="0.01"
+                min="0"
+                required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Cantidad Inicial en Stock</label>
+              <input
+                type="number"
+                class="custom-input"
+                [(ngModel)]="nuevoStock"
+                name="nuevoStock"
+                placeholder="ej: 100"
+                min="0" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Descripción Detallada</label>
+              <textarea
+                class="custom-textarea"
+                [(ngModel)]="nuevaDescripcion"
+                name="nuevaDescripcion"
+                placeholder="ej: Portátil de alta gama 16GB RAM, SSD 512GB..."
+                rows="3">
+              </textarea>
+            </div>
+
+            <div class="form-actions ion-margin-top">
+              <ion-button
+                expand="block"
+                type="submit"
+                color="primary"
+                [disabled]="guardando || !nuevoNombre || !nuevoPrecio || nuevoPrecio <= 0">
+                <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
+                <span *ngIf="!guardando">Guardar Producto</span>
+              </ion-button>
+            </div>
+          </form>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- VISTA 3: LISTADO DE PRODUCTOS -->
+    <div *ngIf="activeTab === 'listado'" class="listado-container">
+      <ion-searchbar
+        [(ngModel)]="searchTerm"
+        (ionInput)="filtrarProductos()"
+        placeholder="Buscar por nombre o código..."
+        class="ion-margin-bottom">
+      </ion-searchbar>
+
+      <div *ngIf="loading" class="spinner-container ion-text-center ion-padding">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Cargando productos...</p>
+      </div>
+
+      <ion-card *ngIf="!loading && productosFiltrados.length === 0" class="ion-text-center ion-padding">
+        <ion-icon name="cube-outline" style="font-size: 48px; color: #999;"></ion-icon>
+        <h3>No hay productos encontrados</h3>
+        <p>Intenta cambiar el término de búsqueda o registra un nuevo producto.</p>
+      </ion-card>
+
+      <ion-list *ngIf="!loading && productosFiltrados.length > 0">
+        <ion-item *ngFor="let prod of productosFiltrados" class="product-item">
+          <ion-icon name="cube-outline" slot="start" color="secondary" style="font-size: 28px;"></ion-icon>
+          <ion-label>
+            <h2>{{ prod.nombre }}</h2>
+            <p>Código: {{ prod.codigo || 'N/A' }} | Cat: {{ prod.categoria_nombre || 'General' }}</p>
+            <ion-note color="medium" *ngIf="prod.descripcion">{{ prod.descripcion }}</ion-note>
+          </ion-label>
+          <div slot="end" class="ion-text-right">
+            <ion-badge color="success">${{ prod.precio | number:'1.2-2' }}</ion-badge>
+            <p style="font-size: 11px; margin: 4px 0 0; color: #666;">Stock: {{ prod.stock ?? 0 }}</p>
+          </div>
+        </ion-item>
+      </ion-list>
+
+      <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
+        <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más productos..."></ion-infinite-scroll-content>
+      </ion-infinite-scroll>
+    </div>
   </ion-content>
 </ion-page>

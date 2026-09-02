@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
 import { ReportesService } from '../../services/reportes.service';
 
 @Component({
@@ -8,54 +10,56 @@ import { ReportesService } from '../../services/reportes.service';
   standalone: false
 })
 export class ReportesPage implements OnInit {
-  loading = true;
+  loading = false;
   totalVentas = 0;
   totalProductos = 0;
   stockBajoCount = 0;
+  usuario: any = null;
 
-  constructor(private reportesService: ReportesService) {}
+  constructor(
+    private authService: AuthService,
+    private reportesService: ReportesService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
-    this.cargarReportes();
+    this.usuario = this.authService.getUsuario();
+    this.cargarDashboard();
   }
 
   ionViewWillEnter(): void {
-    this.cargarReportes();
+    this.usuario = this.authService.getUsuario();
+    this.cargarDashboard();
   }
 
-  cargarReportes(event?: any): void {
-    this.loading = !event;
+  cancelarOVolver(): void {
+    this.router.navigateByUrl('/inicio');
+  }
 
-    this.reportesService.getReporteInventario().subscribe({
-      next: (res) => {
+  cargarDashboard(event?: any): void {
+    this.loading = true;
+    this.reportesService.getDashboardMetrics().subscribe({
+      next: (data: any) => {
         this.loading = false;
         if (event) event.target.complete();
-
-        if (res) {
-          this.totalProductos = res.total_productos ?? (Array.isArray(res.productos) ? res.productos.length : 0);
-          this.stockBajoCount = res.productos_bajo_stock ?? 0;
-        }
+        this.totalVentas = data?.total_ventas || 0;
+        this.totalProductos = data?.total_productos || 0;
+        this.stockBajoCount = data?.stock_bajo || 0;
       },
-      error: (err) => {
+      error: (err: any) => {
         this.loading = false;
         if (event) event.target.complete();
-        console.error('Error al cargar reporte de inventario:', err);
-      }
-    });
-
-    this.reportesService.getReporteVentas().subscribe({
-      next: (res) => {
-        if (res && res.total_ventas !== undefined) {
-          this.totalVentas = res.total_ventas;
-        }
-      },
-      error: (err) => {
-        console.error('Error al cargar reporte de ventas:', err);
+        console.error('Error al obtener métricas del dashboard:', err);
       }
     });
   }
 
   handleRefresh(event: any): void {
-    this.cargarReportes(event);
+    this.cargarDashboard(event);
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

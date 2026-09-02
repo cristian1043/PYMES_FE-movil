@@ -1,29 +1,51 @@
+.module-background {
+  --background: #f4f6f9;
+}
+
+.cancel-button {
+  --border-radius: 10px;
+  font-weight: 600;
+}
+
 .header-card {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  background: linear-gradient(135deg, #0f2b5c 0%, #1e3c72 100%);
   color: #ffffff;
-  border-radius: 14px;
+  border-radius: 16px;
+
   h2 {
     font-size: 20px;
     font-weight: 700;
     margin: 0 0 4px;
+    color: #ffffff;
   }
   p {
     font-size: 13px;
-    opacity: 0.9;
+    color: #e0e0e0;
     margin: 0;
   }
 }
 
 .kpi-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 12px;
 }
 
 .kpi-card {
+  border-radius: 16px;
   margin: 0;
-  border-radius: 14px;
   color: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+
+  &.bg-primary-gradient {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  }
+  &.bg-secondary-gradient {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  }
+  &.bg-warning-gradient {
+    background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
+  }
 
   ion-card-content {
     display: flex;
@@ -33,34 +55,27 @@
   }
 
   .kpi-icon {
-    font-size: 36px;
+    font-size: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .kpi-title {
+    font-size: 13px;
     opacity: 0.9;
+    margin: 0 0 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  .kpi-data {
-    .kpi-title {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin: 0 0 4px;
-      opacity: 0.85;
-    }
-    .kpi-value {
-      font-size: 22px;
-      font-weight: 700;
-      margin: 0;
-    }
+  .kpi-value {
+    font-size: 22px;
+    font-weight: 800;
+    margin: 0;
   }
-}
-
-.bg-primary-gradient {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-}
-
-.bg-secondary-gradient {
-  background: linear-gradient(135deg, #0f2b5c 0%, #1e3c72 100%);
-}
-
-.bg-warning-gradient {
-  background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
 }

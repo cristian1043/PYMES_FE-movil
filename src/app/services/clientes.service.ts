@@ -28,4 +28,9 @@ export class ClientesService {
     const headers = this.authService.getAuthHeaders();
     return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
   }
+
+  createCliente(data: Cliente): Observable<Cliente> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post<Cliente>(`${this.apiUrl}/`, data, { headers });
+  }
 }

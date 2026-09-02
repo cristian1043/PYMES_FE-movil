@@ -12,6 +12,7 @@ export interface Factura {
   total: number;
   fecha?: string;
   estado?: string;
+  metodo_pago?: string;
 }
 
 @Injectable({
@@ -28,5 +29,10 @@ export class FacturasService {
   getFacturas(page: number = 1, perPage: number = 15): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
+  }
+
+  createFactura(data: Factura): Observable<Factura> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post<Factura>(`${this.apiUrl}/`, data, { headers });
   }
 }

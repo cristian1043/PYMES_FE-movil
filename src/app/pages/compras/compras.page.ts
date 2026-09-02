@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { AlertController, ToastController } from '@ionic/angular/lazy';
+import { AuthService } from '../../services/auth.service';
 import { ComprasService, Compra } from '../../services/compras.service';
 
 @Component({
@@ -8,20 +11,49 @@ import { ComprasService, Compra } from '../../services/compras.service';
   standalone: false
 })
 export class ComprasPage implements OnInit {
+  activeTab: 'hub' | 'nueva' | 'listado' = 'hub';
+
   compras: Compra[] = [];
-  loading = true;
+  loading = false;
+  usuario: any = null;
   currentPage = 1;
   totalPages = 1;
   hasMorePages = true;
 
-  constructor(private comprasService: ComprasService) {}
+  // Formulario nueva compra
+  proveedorNombre = '';
+  totalCompra: number | null = null;
+  guardando = false;
+
+  constructor(
+    private authService: AuthService,
+    private comprasService: ComprasService,
+    private router: Router,
+    private alertController: AlertController,
+    private toastController: ToastController
+  ) {}
 
   ngOnInit(): void {
-    this.cargarCompras(1, true);
+    this.usuario = this.authService.getUsuario();
   }
 
   ionViewWillEnter(): void {
-    this.cargarCompras(1, true);
+    this.usuario = this.authService.getUsuario();
+  }
+
+  cancelarOVolver(): void {
+    if (this.activeTab === 'hub') {
+      this.router.navigateByUrl('/inicio');
+    } else {
+      this.activeTab = 'hub';
+    }
+  }
+
+  seleccionarAccion(accion: 'nueva' | 'listado'): void {
+    this.activeTab = accion;
+    if (accion === 'listado') {
+      this.cargarCompras(1, true);
+    }
   }
 
   cargarCompras(page: number = 1, isInitial: boolean = false, event?: any): void {
@@ -75,5 +107,74 @@ export class ComprasPage implements OnInit {
 
   handleRefresh(event: any): void {
     this.cargarCompras(1, true, event);
+  }
+
+  async onRegistrarCompra(): Promise<void> {
+    if (!this.proveedorNombre || !this.totalCompra || this.totalCompra <= 0) {
+      const toast = await this.toastController.create({
+        message: 'Por favor ingresa el nombre del proveedor y un monto total válido.',
+        duration: 2500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
+    this.guardando = true;
+
+    this.comprasService.createCompra({
+      proveedor_nombre: this.proveedorNombre.trim(),
+      total: Number(this.totalCompra),
+      estado: 'Completada'
+    }).subscribe({
+      next: async (res) => {
+        this.guardando = false;
+        this.limpiarFormulario();
+
+        const alert = await this.alertController.create({
+          header: '¡Compra Registrada!',
+          message: 'La orden de compra ha sido registrada con éxito. ¿Quieres ver el historial de compras?',
+          backdropDismiss: false,
+          buttons: [
+            {
+              text: 'No, crear otra',
+              role: 'cancel',
+              handler: () => {
+                this.activeTab = 'nueva';
+              }
+            },
+            {
+              text: 'Sí, ver historial',
+              handler: () => {
+                this.seleccionarAccion('listado');
+              }
+            }
+          ]
+        });
+        await alert.present();
+      },
+      error: async (err) => {
+        this.guardando = false;
+        console.error('Error al registrar compra:', err);
+        const toast = await this.toastController.create({
+          message: err?.error?.mensaje || 'No se pudo registrar la orden de compra.',
+          duration: 3000,
+          color: 'danger',
+          position: 'top'
+        });
+        await toast.present();
+      }
+    });
+  }
+
+  private limpiarFormulario(): void {
+    this.proveedorNombre = '';
+    this.totalCompra = null;
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

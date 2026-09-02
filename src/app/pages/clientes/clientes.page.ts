@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { AlertController, ToastController } from '@ionic/angular/lazy';
+import { AuthService } from '../../services/auth.service';
 import { ClientesService, Cliente } from '../../services/clientes.service';
 
 @Component({
@@ -8,20 +11,52 @@ import { ClientesService, Cliente } from '../../services/clientes.service';
   standalone: false
 })
 export class ClientesPage implements OnInit {
+  activeTab: 'hub' | 'nuevo' | 'listado' = 'hub';
+
   clientes: Cliente[] = [];
-  loading = true;
+  loading = false;
+  usuario: any = null;
   currentPage = 1;
   totalPages = 1;
   hasMorePages = true;
 
-  constructor(private clientesService: ClientesService) {}
+  // Formulario nuevo cliente
+  nombreCliente = '';
+  documentoCliente = '';
+  telefonoCliente = '';
+  emailCliente = '';
+  direccionCliente = '';
+  guardando = false;
+
+  constructor(
+    private authService: AuthService,
+    private clientesService: ClientesService,
+    private router: Router,
+    private alertController: AlertController,
+    private toastController: ToastController
+  ) {}
 
   ngOnInit(): void {
-    this.cargarClientes(1, true);
+    this.usuario = this.authService.getUsuario();
   }
 
   ionViewWillEnter(): void {
-    this.cargarClientes(1, true);
+    this.usuario = this.authService.getUsuario();
+  }
+
+  cancelarOVolver(): void {
+    if (this.activeTab === 'hub') {
+      this.router.navigateByUrl('/inicio');
+    } else {
+      this.activeTab = 'hub';
+    }
+  }
+
+  seleccionarAccion(accion: 'nuevo' | 'listado'): void {
+    this.activeTab = accion;
+    if (accion === 'listado') {
+      this.cargarClientes(1, true);
+    }
   }
 
   cargarClientes(page: number = 1, isInitial: boolean = false, event?: any): void {
@@ -75,5 +110,79 @@ export class ClientesPage implements OnInit {
 
   handleRefresh(event: any): void {
     this.cargarClientes(1, true, event);
+  }
+
+  async onRegistrarCliente(): Promise<void> {
+    if (!this.nombreCliente) {
+      const toast = await this.toastController.create({
+        message: 'Por favor ingresa el nombre del cliente.',
+        duration: 2500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
+    this.guardando = true;
+
+    this.clientesService.createCliente({
+      nombre: this.nombreCliente.trim(),
+      documento: (this.documentoCliente || '').trim(),
+      telefono: (this.telefonoCliente || '').trim(),
+      email: (this.emailCliente || '').trim(),
+      direccion: (this.direccionCliente || '').trim()
+    }).subscribe({
+      next: async (res) => {
+        this.guardando = false;
+        this.limpiarFormulario();
+
+        const alert = await this.alertController.create({
+          header: '¡Cliente Registrado!',
+          message: 'El cliente ha sido registrado con éxito. ¿Quieres ver el directorio de clientes?',
+          backdropDismiss: false,
+          buttons: [
+            {
+              text: 'No, crear otro',
+              role: 'cancel',
+              handler: () => {
+                this.activeTab = 'nuevo';
+              }
+            },
+            {
+              text: 'Sí, ver directorio',
+              handler: () => {
+                this.seleccionarAccion('listado');
+              }
+            }
+          ]
+        });
+        await alert.present();
+      },
+      error: async (err) => {
+        this.guardando = false;
+        console.error('Error al registrar cliente:', err);
+        const toast = await this.toastController.create({
+          message: err?.error?.mensaje || 'No se pudo registrar el cliente. Intenta nuevamente.',
+          duration: 3000,
+          color: 'danger',
+          position: 'top'
+        });
+        await toast.present();
+      }
+    });
+  }
+
+  private limpiarFormulario(): void {
+    this.nombreCliente = '';
+    this.documentoCliente = '';
+    this.telefonoCliente = '';
+    this.emailCliente = '';
+    this.direccionCliente = '';
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }

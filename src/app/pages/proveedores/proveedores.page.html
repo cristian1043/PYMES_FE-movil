@@ -4,47 +4,169 @@
       <ion-buttons slot="start">
         <ion-menu-button></ion-menu-button>
       </ion-buttons>
-      <ion-title>Directorio de Proveedores</ion-title>
+      <ion-title>Módulo de Proveedores</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <ion-content class="ion-padding">
-    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
-      <ion-refresher-content></ion-refresher-content>
-    </ion-refresher>
-
-    <div *ngIf="loading" class="ion-text-center ion-padding">
-      <ion-spinner name="crescent" color="primary"></ion-spinner>
-      <p>Cargando lista de proveedores...</p>
+  <ion-content class="ion-padding module-background">
+    <!-- Barra Superior de Navegación del Módulo -->
+    <div class="module-action-bar ion-margin-bottom">
+      <ion-button
+        fill="outline"
+        color="secondary"
+        size="small"
+        (click)="cancelarOVolver()"
+        class="cancel-button">
+        <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
+        Cancelar / Volver
+      </ion-button>
     </div>
 
-    <div *ngIf="!loading && proveedores.length === 0" class="ion-text-center ion-padding empty-state">
-      <ion-icon name="bus-outline" class="empty-icon"></ion-icon>
-      <h3>Sin Proveedores</h3>
-      <p>No hay proveedores registrados aún.</p>
-    </div>
-
-    <ion-list *ngIf="!loading && proveedores.length > 0">
-      <ion-item *ngFor="let prov of proveedores" class="proveedor-item">
-        <ion-icon name="business-outline" slot="start" color="tertiary" style="font-size: 28px;"></ion-icon>
-        <ion-label>
-          <h2>{{ prov.nombre }}</h2>
-          <p>NIT/Doc: {{ prov.nit_documento || 'N/A' }}</p>
-          <ion-note color="medium" *ngIf="prov.contacto">Contacto: {{ prov.contacto }}</ion-note>
-        </ion-label>
-        <div slot="end" class="action-buttons">
-          <ion-button *ngIf="prov.telefono" fill="clear" color="success" [href]="'tel:' + prov.telefono">
-            <ion-icon slot="icon-only" name="call-outline"></ion-icon>
-          </ion-button>
-          <ion-button *ngIf="prov.email" fill="clear" color="primary" [href]="'mailto:' + prov.email">
-            <ion-icon slot="icon-only" name="mail-outline"></ion-icon>
-          </ion-button>
+    <!-- VISTA 1: HUB PRINCIPAL DEL MÓDULO -->
+    <div *ngIf="activeTab === 'hub'" class="hub-container">
+      <div class="hub-header ion-text-center ion-margin-bottom">
+        <div class="hub-icon-badge">
+          <ion-icon name="bus-outline"></ion-icon>
         </div>
-      </ion-item>
-    </ion-list>
+        <h2>Módulo de Proveedores</h2>
+        <p>Selecciona la acción que deseas realizar en este módulo</p>
+      </div>
 
-    <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
-      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más proveedores..."></ion-infinite-scroll-content>
-    </ion-infinite-scroll>
+      <div class="hub-actions-grid">
+        <div class="action-card" (click)="seleccionarAccion('nuevo')">
+          <div class="action-icon bg-medium">
+            <ion-icon name="business-outline"></ion-icon>
+          </div>
+          <div class="action-info">
+            <h3>Registrar Nuevo Proveedor</h3>
+            <p>Registra un nuevo proveedor o alianza comercial en el sistema</p>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
+        </div>
+
+        <div class="action-card" (click)="seleccionarAccion('listado')">
+          <div class="action-icon bg-primary">
+            <ion-icon name="bus-outline"></ion-icon>
+          </div>
+          <div class="action-info">
+            <h3>Ver Directorio de Proveedores</h3>
+            <p>Consulta la lista de proveedores registrados y sus contactos</p>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISTA 2: FORMULARIO NUEVO PROVEEDOR -->
+    <div *ngIf="activeTab === 'nuevo'" class="form-container">
+      <ion-card class="form-card">
+        <ion-card-header>
+          <ion-card-title>🚛 Registrar Nuevo Proveedor</ion-card-title>
+        </ion-card-header>
+
+        <ion-card-content>
+          <form (ngSubmit)="onRegistrarProveedor()">
+            <div class="form-group">
+              <label class="form-label">Nombre o Razon Social *</label>
+              <input
+                type="text"
+                class="custom-input"
+                [(ngModel)]="nombreProveedor"
+                name="nombreProveedor"
+                placeholder="ej: Distribuidores del Caribe S.A.S."
+                required />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">NIT / Documento</label>
+              <input
+                type="text"
+                class="custom-input"
+                [(ngModel)]="nitProveedor"
+                name="nitProveedor"
+                placeholder="ej: 900.123.456-7" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Persona de Contacto</label>
+              <input
+                type="text"
+                class="custom-input"
+                [(ngModel)]="contactoProveedor"
+                name="contactoProveedor"
+                placeholder="ej: Juan Pérez (Asesor Comercial)" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Teléfono de Contacto</label>
+              <input
+                type="tel"
+                class="custom-input"
+                [(ngModel)]="telefonoProveedor"
+                name="telefonoProveedor"
+                placeholder="ej: +57 301 9876543" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Correo Electrónico</label>
+              <input
+                type="email"
+                class="custom-input"
+                [(ngModel)]="emailProveedor"
+                name="emailProveedor"
+                placeholder="ej: ventas@distribuidores.com" />
+            </div>
+
+            <div class="form-actions ion-margin-top">
+              <ion-button
+                expand="block"
+                type="submit"
+                color="primary"
+                [disabled]="guardando || !nombreProveedor">
+                <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
+                <span *ngIf="!guardando">Guardar Proveedor</span>
+              </ion-button>
+            </div>
+          </form>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- VISTA 3: DIRECTORIO DE PROVEEDORES -->
+    <div *ngIf="activeTab === 'listado'" class="listado-container">
+      <div *ngIf="loading" class="ion-text-center ion-padding">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Cargando lista de proveedores...</p>
+      </div>
+
+      <div *ngIf="!loading && proveedores.length === 0" class="ion-text-center ion-padding empty-state">
+        <ion-icon name="bus-outline" class="empty-icon"></ion-icon>
+        <h3>Sin Proveedores</h3>
+        <p>No hay proveedores registrados aún.</p>
+      </div>
+
+      <ion-list *ngIf="!loading && proveedores.length > 0">
+        <ion-item *ngFor="let prov of proveedores" class="proveedor-item">
+          <ion-icon name="business-outline" slot="start" color="tertiary" style="font-size: 28px;"></ion-icon>
+          <ion-label>
+            <h2>{{ prov.nombre }}</h2>
+            <p>NIT/Doc: {{ prov.nit_documento || 'N/A' }}</p>
+            <ion-note color="medium" *ngIf="prov.contacto">Contacto: {{ prov.contacto }}</ion-note>
+          </ion-label>
+          <div slot="end" class="action-buttons">
+            <ion-button *ngIf="prov.telefono" fill="clear" color="success" [href]="'tel:' + prov.telefono">
+              <ion-icon slot="icon-only" name="call-outline"></ion-icon>
+            </ion-button>
+            <ion-button *ngIf="prov.email" fill="clear" color="primary" [href]="'mailto:' + prov.email">
+              <ion-icon slot="icon-only" name="mail-outline"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-item>
+      </ion-list>
+
+      <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
+        <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más proveedores..."></ion-infinite-scroll-content>
+      </ion-infinite-scroll>
+    </div>
   </ion-content>
 </ion-page>

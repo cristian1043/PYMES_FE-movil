@@ -1,0 +1,51 @@
+<ion-page>
+  <ion-header class="ion-no-border">
+    <ion-toolbar color="primary">
+      <ion-buttons slot="start">
+        <ion-menu-button></ion-menu-button>
+      </ion-buttons>
+      <ion-title>Inicio / Pantalla Principal</ion-title>
+      <ion-buttons slot="end">
+        <ion-button (click)="logout()">
+          <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content class="ion-padding inicio-background">
+    <!-- Header de Bienvenida -->
+    <div class="welcome-banner ion-padding ion-margin-bottom" *ngIf="usuario">
+      <div class="welcome-text">
+        <h2>¡Bienvenido, {{ usuario.nombre || usuario.username }}! 👋</h2>
+        <p>Selecciona un módulo para gestionar las operaciones de tu negocio</p>
+      </div>
+      <ion-badge color="tertiary" class="role-badge">
+        {{ usuario.rol || 'Usuario Activo' }}
+      </ion-badge>
+    </div>
+
+    <!-- Grid de Módulos del Sistema -->
+    <div class="modules-section">
+      <h3 class="section-title">Módulos del Sistema</h3>
+
+      <div class="modules-grid">
+        <div
+          *ngFor="let mod of modulosPermitidos"
+          class="module-card"
+          (click)="irAModulo(mod.url)">
+          <div class="module-icon-container" [ngClass]="'color-' + mod.color">
+            <ion-icon [name]="mod.icon"></ion-icon>
+          </div>
+          <div class="module-info">
+            <h4 class="module-title">{{ mod.titulo }}</h4>
+            <p class="module-desc">{{ mod.descripcion }}</p>
+          </div>
+          <div class="module-arrow">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ion-content>
+</ion-page>

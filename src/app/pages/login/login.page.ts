@@ -22,7 +22,6 @@ export class LoginPage implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Limpiar mensaje de error previo al cargar la página
     this.errorMessage = '';
   }
 
@@ -68,7 +67,7 @@ export class LoginPage implements OnInit {
             position: 'top'
           });
           await toast.present();
-          this.router.navigateByUrl('/productos');
+          this.router.navigateByUrl('/inicio');
         } else {
           this.errorMessage = res.mensaje || 'Credenciales incorrectas.';
         }

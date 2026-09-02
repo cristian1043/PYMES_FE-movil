@@ -1,4 +1,7 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { AlertController, ToastController } from '@ionic/angular/lazy';
+import { AuthService } from '../../services/auth.service';
 import { UsuariosService, UsuarioItem } from '../../services/usuarios.service';
 
 @Component({
@@ -8,20 +11,53 @@ import { UsuariosService, UsuarioItem } from '../../services/usuarios.service';
   standalone: false
 })
 export class UsuariosPage implements OnInit {
+  activeTab: 'hub' | 'nuevo' | 'listado' = 'hub';
+
   usuarios: UsuarioItem[] = [];
-  loading = true;
+  loading = false;
+  usuario: any = null;
   currentPage = 1;
   totalPages = 1;
   hasMorePages = true;
 
-  constructor(private usuariosService: UsuariosService) {}
+  // Formulario nuevo usuario
+  nombreUser = '';
+  apellidoUser = '';
+  usernameUser = '';
+  emailUser = '';
+  passwordUser = '';
+  idRolUser = 2; // Default Vendedor
+  guardando = false;
+
+  constructor(
+    private authService: AuthService,
+    private usuariosService: UsuariosService,
+    private router: Router,
+    private alertController: AlertController,
+    private toastController: ToastController
+  ) {}
 
   ngOnInit(): void {
-    this.cargarUsuarios(1, true);
+    this.usuario = this.authService.getUsuario();
   }
 
   ionViewWillEnter(): void {
-    this.cargarUsuarios(1, true);
+    this.usuario = this.authService.getUsuario();
+  }
+
+  cancelarOVolver(): void {
+    if (this.activeTab === 'hub') {
+      this.router.navigateByUrl('/inicio');
+    } else {
+      this.activeTab = 'hub';
+    }
+  }
+
+  seleccionarAccion(accion: 'nuevo' | 'listado'): void {
+    this.activeTab = accion;
+    if (accion === 'listado') {
+      this.cargarUsuarios(1, true);
+    }
   }
 
   cargarUsuarios(page: number = 1, isInitial: boolean = false, event?: any): void {
@@ -37,13 +73,13 @@ export class UsuariosPage implements OnInit {
         if (event) event.target.complete();
 
         let newItems: UsuarioItem[] = [];
-        if (res && res.items && Array.isArray(res.items)) {
+        if (Array.isArray(res)) {
+          newItems = res;
+          this.hasMorePages = false;
+        } else if (res && res.items && Array.isArray(res.items)) {
           newItems = res.items;
           this.totalPages = res.total_pages || 1;
           this.hasMorePages = page < this.totalPages;
-        } else if (Array.isArray(res)) {
-          newItems = res;
-          this.hasMorePages = false;
         } else {
           newItems = [];
           this.hasMorePages = false;
@@ -73,13 +109,92 @@ export class UsuariosPage implements OnInit {
     this.cargarUsuarios(this.currentPage, false, event);
   }
 
-  getNombreRol(idRol: number): string {
-    if (idRol === 1) return 'Administrador';
-    if (idRol === 3) return 'Almacenista';
-    return 'Vendedor';
-  }
-
   handleRefresh(event: any): void {
     this.cargarUsuarios(1, true, event);
+  }
+
+  getNombreRol(idRol: number): string {
+    switch (idRol) {
+      case 1: return 'Administrador';
+      case 2: return 'Vendedor';
+      case 3: return 'Almacenista';
+      default: return 'Usuario';
+    }
+  }
+
+  async onRegistrarUsuario(): Promise<void> {
+    if (!this.nombreUser || !this.usernameUser || !this.emailUser || !this.passwordUser) {
+      const toast = await this.toastController.create({
+        message: 'Por favor completa los campos obligatorios del usuario.',
+        duration: 2500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
+    this.guardando = true;
+
+    this.usuariosService.createUsuario({
+      nombre: this.nombreUser.trim(),
+      apellido: (this.apellidoUser || '').trim(),
+      username: this.usernameUser.trim(),
+      email: this.emailUser.trim(),
+      password: this.passwordUser.trim(),
+      id_rol: Number(this.idRolUser)
+    }).subscribe({
+      next: async (res) => {
+        this.guardando = false;
+        this.limpiarFormulario();
+
+        const alert = await this.alertController.create({
+          header: '¡Usuario Registrado!',
+          message: 'El nuevo usuario del sistema ha sido creado con éxito. ¿Quieres ver la lista de usuarios?',
+          backdropDismiss: false,
+          buttons: [
+            {
+              text: 'No, crear otro',
+              role: 'cancel',
+              handler: () => {
+                this.activeTab = 'nuevo';
+              }
+            },
+            {
+              text: 'Sí, ver lista',
+              handler: () => {
+                this.seleccionarAccion('listado');
+              }
+            }
+          ]
+        });
+        await alert.present();
+      },
+      error: async (err) => {
+        this.guardando = false;
+        console.error('Error al registrar usuario:', err);
+        const toast = await this.toastController.create({
+          message: err?.error?.mensaje || 'No se pudo registrar el usuario. Intenta nuevamente.',
+          duration: 3000,
+          color: 'danger',
+          position: 'top'
+        });
+        await toast.present();
+      }
+    });
+  }
+
+  private limpiarFormulario(): void {
+    this.nombreUser = '';
+    this.apellidoUser = '';
+    this.usernameUser = '';
+    this.emailUser = '';
+    this.passwordUser = '';
+    this.idRolUser = 2;
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/login']);
   }
 }
