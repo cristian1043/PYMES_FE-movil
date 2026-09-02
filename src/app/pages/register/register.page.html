@@ -1,4 +1,4 @@
-<ion-content class="ion-padding register-background">
+<ion-content class="register-background">
   <div class="register-container">
     <div class="header-section ion-text-center">
       <ion-icon name="storefront-outline" class="app-logo"></ion-icon>
@@ -6,120 +6,127 @@
       <p class="subtitle">Registro de Nuevo Usuario</p>
     </div>
 
-    <ion-card class="register-card">
-      <ion-card-header>
-        <ion-card-title class="ion-text-center">Crear Cuenta</ion-card-title>
-      </ion-card-header>
+    <div class="register-card">
+      <h2 class="card-title ion-text-center">Crear Cuenta</h2>
 
-      <ion-card-content>
-        <form (ngSubmit)="onRegister()">
-          <!-- Nombre y Apellido -->
-          <ion-item fill="outline" class="ion-margin-bottom">
-            <ion-label position="floating">Nombre *</ion-label>
-            <ion-input
-              type="text"
-              [(ngModel)]="nombre"
-              name="nombre"
-              required
-              placeholder="ej: Carlos">
-            </ion-input>
-            <ion-icon name="person-outline" slot="start"></ion-icon>
-          </ion-item>
+      <form (ngSubmit)="onRegister()" class="register-form">
+        <!-- Nombre -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="person-outline"></ion-icon> Nombre *
+          </label>
+          <input
+            type="text"
+            class="custom-input"
+            [(ngModel)]="nombre"
+            name="nombre"
+            placeholder="ej: Carlos"
+            required />
+        </div>
 
-          <ion-item fill="outline" class="ion-margin-bottom">
-            <ion-label position="floating">Apellido *</ion-label>
-            <ion-input
-              type="text"
-              [(ngModel)]="apellido"
-              name="apellido"
-              required
-              placeholder="ej: Gómez">
-            </ion-input>
-            <ion-icon name="person-outline" slot="start"></ion-icon>
-          </ion-item>
+        <!-- Apellido -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="person-outline"></ion-icon> Apellido *
+          </label>
+          <input
+            type="text"
+            class="custom-input"
+            [(ngModel)]="apellido"
+            name="apellido"
+            placeholder="ej: Gómez"
+            required />
+        </div>
 
-          <!-- Tipo Doc. y Número de Documento -->
-          <ion-item fill="outline" class="ion-margin-bottom">
-            <ion-label position="floating">Tipo Documento *</ion-label>
-            <ion-select [(ngModel)]="tipoDocumento" name="tipoDocumento" required interface="popover">
-              <ion-select-option value="CC">Cédula de Ciudadanía (CC)</ion-select-option>
-              <ion-select-option value="NIT">NIT (Empresas)</ion-select-option>
-              <ion-select-option value="CE">Cédula Extranjería (CE)</ion-select-option>
-              <ion-select-option value="PAS">Pasaporte (PAS)</ion-select-option>
-            </ion-select>
-            <ion-icon name="card-outline" slot="start"></ion-icon>
-          </ion-item>
+        <!-- Tipo Documento -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="card-outline"></ion-icon> Tipo Documento *
+          </label>
+          <select
+            class="custom-select"
+            [(ngModel)]="tipoDocumento"
+            name="tipoDocumento"
+            required>
+            <option value="CC">Cédula de Ciudadanía (CC)</option>
+            <option value="NIT">NIT (Empresas)</option>
+            <option value="CE">Cédula Extranjería (CE)</option>
+            <option value="PAS">Pasaporte (PAS)</option>
+          </select>
+        </div>
 
-          <ion-item fill="outline" class="ion-margin-bottom">
-            <ion-label position="floating">N° Documento *</ion-label>
-            <ion-input
-              type="text"
-              [(ngModel)]="documento"
-              name="documento"
-              required
-              placeholder="ej: 1098765432">
-            </ion-input>
-            <ion-icon name="finger-print-outline" slot="start"></ion-icon>
-          </ion-item>
+        <!-- Número de Documento -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="finger-print-outline"></ion-icon> N° Documento *
+          </label>
+          <input
+            type="text"
+            class="custom-input"
+            [(ngModel)]="documento"
+            name="documento"
+            placeholder="ej: 1098765432"
+            required />
+        </div>
 
-          <!-- Teléfono y Correo -->
-          <ion-item fill="outline" class="ion-margin-bottom">
-            <ion-label position="floating">Teléfono *</ion-label>
-            <ion-input
-              type="tel"
-              [(ngModel)]="telefono"
-              name="telefono"
-              required
-              placeholder="ej: +57 300 1234567">
-            </ion-input>
-            <ion-icon name="call-outline" slot="start"></ion-icon>
-          </ion-item>
+        <!-- Teléfono -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="call-outline"></ion-icon> Teléfono *
+          </label>
+          <input
+            type="tel"
+            class="custom-input"
+            [(ngModel)]="telefono"
+            name="telefono"
+            placeholder="ej: +57 300 1234567"
+            required />
+        </div>
 
-          <ion-item fill="outline" class="ion-margin-bottom">
-            <ion-label position="floating">Correo Electrónico *</ion-label>
-            <ion-input
-              type="email"
-              [(ngModel)]="email"
-              name="email"
-              required
-              placeholder="ej: carlos@pyme.com">
-            </ion-input>
-            <ion-icon name="mail-outline" slot="start"></ion-icon>
-          </ion-item>
+        <!-- Correo Electrónico -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="mail-outline"></ion-icon> Correo Electrónico *
+          </label>
+          <input
+            type="email"
+            class="custom-input"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="ej: carlos@pyme.com"
+            required />
+        </div>
 
-          <!-- Contraseña -->
-          <ion-item fill="outline" class="ion-margin-bottom">
-            <ion-label position="floating">Contraseña *</ion-label>
-            <ion-input
-              type="password"
-              [(ngModel)]="password"
-              name="password"
-              required
-              placeholder="••••••••">
-            </ion-input>
-            <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
-          </ion-item>
+        <!-- Contraseña -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="lock-closed-outline"></ion-icon> Contraseña *
+          </label>
+          <input
+            type="password"
+            class="custom-input"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="••••••••"
+            required />
+        </div>
 
-          <div *ngIf="errorMessage" class="error-message ion-margin-bottom">
-            <ion-text color="danger">
-              <p><ion-icon name="alert-circle-outline"></ion-icon> {{ errorMessage }}</p>
-            </ion-text>
-          </div>
+        <div *ngIf="errorMessage" class="error-message">
+          <p><ion-icon name="alert-circle-outline"></ion-icon> {{ errorMessage }}</p>
+        </div>
 
-          <ion-button
-            expand="block"
-            type="submit"
-            [disabled]="loading || !nombre || !apellido || !tipoDocumento || !documento || !telefono || !email || !password"
-            class="register-button ion-margin-top">
-            <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
-            <span *ngIf="!loading">Crear Cuenta</span>
-          </ion-button>
+        <button
+          type="submit"
+          [disabled]="loading || !nombre || !apellido || !tipoDocumento || !documento || !telefono || !email || !password"
+          class="submit-button">
+          <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+          <span *ngIf="!loading">Crear Cuenta</span>
+        </button>
 
-          <div class="login-link ion-text-center ion-margin-top">
-            <p>¿Ya tienes una cuenta? <a routerLink="/login" class="login-text">Inicia Sesión aquí</a></p>
-          </div>
-        </form>
-      </ion-card-content>
-    </ion-card>
+        <div class="login-link ion-text-center">
+          <p>¿Ya tienes una cuenta? <a routerLink="/login" class="login-text">Inicia Sesión aquí</a></p>
+        </div>
+      </form>
+    </div>
   </div>
 </ion-content>

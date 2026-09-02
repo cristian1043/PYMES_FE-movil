@@ -1,48 +1,50 @@
-<ion-header class="ion-no-border">
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Directorio de Clientes</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-page>
+  <ion-header class="ion-no-border">
+    <ion-toolbar color="primary">
+      <ion-buttons slot="start">
+        <ion-menu-button></ion-menu-button>
+      </ion-buttons>
+      <ion-title>Directorio de Clientes</ion-title>
+    </ion-toolbar>
+  </ion-header>
 
-<ion-content class="ion-padding">
-  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
-    <ion-refresher-content></ion-refresher-content>
-  </ion-refresher>
+  <ion-content class="ion-padding">
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+      <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
 
-  <div *ngIf="loading" class="ion-text-center ion-padding">
-    <ion-spinner name="crescent" color="primary"></ion-spinner>
-    <p>Cargando lista de clientes...</p>
-  </div>
+    <div *ngIf="loading" class="ion-text-center ion-padding">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Cargando lista de clientes...</p>
+    </div>
 
-  <div *ngIf="!loading && clientes.length === 0" class="ion-text-center ion-padding empty-state">
-    <ion-icon name="people-outline" class="empty-icon"></ion-icon>
-    <h3>Sin Clientes</h3>
-    <p>No hay clientes registrados en el sistema.</p>
-  </div>
+    <div *ngIf="!loading && clientes.length === 0" class="ion-text-center ion-padding empty-state">
+      <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+      <h3>Sin Clientes</h3>
+      <p>No hay clientes registrados en el sistema.</p>
+    </div>
 
-  <ion-list *ngIf="!loading && clientes.length > 0">
-    <ion-item *ngFor="let cli of clientes" class="cliente-item">
-      <ion-icon name="person-outline" slot="start" color="secondary" style="font-size: 28px;"></ion-icon>
-      <ion-label>
-        <h2>{{ cli.nombre }}</h2>
-        <p>Doc: {{ cli.documento || 'N/A' }}</p>
-        <ion-note color="medium" *ngIf="cli.direccion">{{ cli.direccion }}</ion-note>
-      </ion-label>
-      <div slot="end" class="action-buttons">
-        <ion-button *ngIf="cli.telefono" fill="clear" color="success" [href]="'tel:' + cli.telefono">
-          <ion-icon slot="icon-only" name="call-outline"></ion-icon>
-        </ion-button>
-        <ion-button *ngIf="cli.email" fill="clear" color="primary" [href]="'mailto:' + cli.email">
-          <ion-icon slot="icon-only" name="mail-outline"></ion-icon>
-        </ion-button>
-      </div>
-    </ion-item>
-  </ion-list>
+    <ion-list *ngIf="!loading && clientes.length > 0">
+      <ion-item *ngFor="let cli of clientes" class="cliente-item">
+        <ion-icon name="person-outline" slot="start" color="secondary" style="font-size: 28px;"></ion-icon>
+        <ion-label>
+          <h2>{{ cli.nombre }}</h2>
+          <p>Doc: {{ cli.documento || 'N/A' }}</p>
+          <ion-note color="medium" *ngIf="cli.direccion">{{ cli.direccion }}</ion-note>
+        </ion-label>
+        <div slot="end" class="action-buttons">
+          <ion-button *ngIf="cli.telefono" fill="clear" color="success" [href]="'tel:' + cli.telefono">
+            <ion-icon slot="icon-only" name="call-outline"></ion-icon>
+          </ion-button>
+          <ion-button *ngIf="cli.email" fill="clear" color="primary" [href]="'mailto:' + cli.email">
+            <ion-icon slot="icon-only" name="mail-outline"></ion-icon>
+          </ion-button>
+        </div>
+      </ion-item>
+    </ion-list>
 
-  <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
-    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más clientes..."></ion-infinite-scroll-content>
-  </ion-infinite-scroll>
-</ion-content>
+    <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
+      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más clientes..."></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  </ion-content>
+</ion-page>

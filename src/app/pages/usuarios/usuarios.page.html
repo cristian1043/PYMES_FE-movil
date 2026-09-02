@@ -1,45 +1,47 @@
-<ion-header class="ion-no-border">
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Gestión de Usuarios (Admin)</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-page>
+  <ion-header class="ion-no-border">
+    <ion-toolbar color="primary">
+      <ion-buttons slot="start">
+        <ion-menu-button></ion-menu-button>
+      </ion-buttons>
+      <ion-title>Gestión de Usuarios (Admin)</ion-title>
+    </ion-toolbar>
+  </ion-header>
 
-<ion-content class="ion-padding">
-  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
-    <ion-refresher-content></ion-refresher-content>
-  </ion-refresher>
+  <ion-content class="ion-padding">
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+      <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
 
-  <div *ngIf="loading" class="ion-text-center ion-padding">
-    <ion-spinner name="crescent" color="primary"></ion-spinner>
-    <p>Cargando lista de usuarios del sistema...</p>
-  </div>
+    <div *ngIf="loading" class="ion-text-center ion-padding">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Cargando lista de usuarios del sistema...</p>
+    </div>
 
-  <div *ngIf="!loading && usuarios.length === 0" class="ion-text-center ion-padding empty-state">
-    <ion-icon name="people-outline" class="empty-icon"></ion-icon>
-    <h3>Sin Usuarios</h3>
-    <p>No hay usuarios registrados.</p>
-  </div>
+    <div *ngIf="!loading && usuarios.length === 0" class="ion-text-center ion-padding empty-state">
+      <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+      <h3>Sin Usuarios</h3>
+      <p>No hay usuarios registrados.</p>
+    </div>
 
-  <ion-list *ngIf="!loading && usuarios.length > 0">
-    <ion-item *ngFor="let u of usuarios" class="usuario-item">
-      <ion-icon name="shield-checkmark-outline" slot="start" color="primary" style="font-size: 28px;"></ion-icon>
-      <ion-label>
-        <h2>{{ u.nombre }} {{ u.apellido || '' }}</h2>
-        <p>Usuario: @{{ u.username }} | {{ u.email }}</p>
-        <ion-note color="medium">Rol: {{ getNombreRol(u.id_rol) }}</ion-note>
-      </ion-label>
-      <div slot="end" class="action-buttons">
-        <ion-badge [color]="u.id_rol === 1 ? 'primary' : (u.id_rol === 3 ? 'warning' : 'info')">
-          {{ getNombreRol(u.id_rol) }}
-        </ion-badge>
-      </div>
-    </ion-item>
-  </ion-list>
+    <ion-list *ngIf="!loading && usuarios.length > 0">
+      <ion-item *ngFor="let u of usuarios" class="usuario-item">
+        <ion-icon name="shield-checkmark-outline" slot="start" color="primary" style="font-size: 28px;"></ion-icon>
+        <ion-label>
+          <h2>{{ u.nombre }} {{ u.apellido || '' }}</h2>
+          <p>Usuario: @{{ u.username }} | {{ u.email }}</p>
+          <ion-note color="medium">Rol: {{ getNombreRol(u.id_rol) }}</ion-note>
+        </ion-label>
+        <div slot="end" class="action-buttons">
+          <ion-badge [color]="u.id_rol === 1 ? 'primary' : (u.id_rol === 3 ? 'warning' : 'info')">
+            {{ getNombreRol(u.id_rol) }}
+          </ion-badge>
+        </div>
+      </ion-item>
+    </ion-list>
 
-  <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
-    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más usuarios..."></ion-infinite-scroll-content>
-  </ion-infinite-scroll>
-</ion-content>
+    <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
+      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más usuarios..."></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  </ion-content>
+</ion-page>

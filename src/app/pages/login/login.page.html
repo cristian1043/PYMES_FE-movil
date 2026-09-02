@@ -1,4 +1,4 @@
-<ion-content class="ion-padding login-background">
+<ion-content class="login-background">
   <div class="login-container">
     <div class="header-section ion-text-center">
       <ion-icon name="storefront-outline" class="app-logo"></ion-icon>
@@ -6,55 +6,60 @@
       <p class="subtitle">Gestión Empresarial en tus Manos</p>
     </div>
 
-    <ion-card class="login-card ion-padding">
-      <ion-card-header>
-        <ion-card-title class="ion-text-center">Iniciar Sesión</ion-card-title>
-      </ion-card-header>
+    <div class="login-card">
+      <h2 class="card-title ion-text-center">Iniciar Sesión</h2>
 
-      <ion-card-content>
-        <form (ngSubmit)="onLogin()">
-          <ion-item fill="outline" class="ion-margin-bottom custom-input-item">
-            <ion-label position="floating">Usuario o Correo</ion-label>
-            <ion-input
+      <form (ngSubmit)="onLogin()" class="login-form">
+        <!-- Usuario o Correo -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="person-outline"></ion-icon> Usuario o Correo
+          </label>
+          <div class="input-wrapper">
+            <input
               type="text"
-              [(ngModel)]="username"
+              class="custom-input"
+              [value]="username"
+              (input)="onUsernameInput($event)"
               name="username"
-              placeholder="ej: admin">
-            </ion-input>
-            <ion-icon name="person-outline" slot="start"></ion-icon>
-          </ion-item>
+              placeholder="ej: admin"
+              required />
+          </div>
+        </div>
 
-          <ion-item fill="outline" class="ion-margin-bottom custom-input-item">
-            <ion-label position="floating">Contraseña</ion-label>
-            <ion-input
+        <!-- Contraseña -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="lock-closed-outline"></ion-icon> Contraseña
+          </label>
+          <div class="input-wrapper">
+            <input
               type="password"
-              [(ngModel)]="password"
+              class="custom-input"
+              [value]="password"
+              (input)="onPasswordInput($event)"
               name="password"
-              placeholder="••••••••">
-            </ion-input>
-            <ion-icon name="lock-closed-outline" slot="start"></ion-icon>
-          </ion-item>
-
-          <div *ngIf="errorMessage" class="error-message ion-margin-bottom">
-            <ion-text color="danger">
-              <p><ion-icon name="alert-circle-outline"></ion-icon> {{ errorMessage }}</p>
-            </ion-text>
+              placeholder="••••••••"
+              required />
           </div>
+        </div>
 
-          <ion-button
-            expand="block"
-            type="submit"
-            [disabled]="loading"
-            class="login-button ion-margin-top">
-            <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
-            <span *ngIf="!loading">Ingresar</span>
-          </ion-button>
+        <div *ngIf="errorMessage" class="error-message">
+          <p><ion-icon name="alert-circle-outline"></ion-icon> {{ errorMessage }}</p>
+        </div>
 
-          <div class="register-link ion-text-center ion-margin-top">
-            <p>¿No tienes una cuenta? <a routerLink="/register" class="register-text">Regístrate aquí</a></p>
-          </div>
-        </form>
-      </ion-card-content>
-    </ion-card>
+        <button
+          type="submit"
+          [disabled]="loading"
+          class="submit-button">
+          <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
+          <span *ngIf="!loading">Ingresar</span>
+        </button>
+
+        <div class="register-link ion-text-center">
+          <p>¿No tienes una cuenta? <a routerLink="/register" class="register-text">Regístrate aquí</a></p>
+        </div>
+      </form>
+    </div>
   </div>
 </ion-content>

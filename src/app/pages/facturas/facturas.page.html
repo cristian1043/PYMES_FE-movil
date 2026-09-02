@@ -1,44 +1,46 @@
-<ion-header class="ion-no-border">
-  <ion-toolbar color="primary">
-    <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
-    </ion-buttons>
-    <ion-title>Historial de Facturas</ion-title>
-  </ion-toolbar>
-</ion-header>
+<ion-page>
+  <ion-header class="ion-no-border">
+    <ion-toolbar color="primary">
+      <ion-buttons slot="start">
+        <ion-menu-button></ion-menu-button>
+      </ion-buttons>
+      <ion-title>Historial de Facturas</ion-title>
+    </ion-toolbar>
+  </ion-header>
 
-<ion-content class="ion-padding">
-  <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
-    <ion-refresher-content></ion-refresher-content>
-  </ion-refresher>
+  <ion-content class="ion-padding">
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+      <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
 
-  <div *ngIf="loading" class="ion-text-center ion-padding">
-    <ion-spinner name="crescent" color="primary"></ion-spinner>
-    <p>Cargando historial de facturas...</p>
-  </div>
+    <div *ngIf="loading" class="ion-text-center ion-padding">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Cargando historial de facturas...</p>
+    </div>
 
-  <div *ngIf="!loading && facturas.length === 0" class="ion-text-center ion-padding empty-state">
-    <ion-icon name="document-text-outline" class="empty-icon"></ion-icon>
-    <h3>Sin Facturas</h3>
-    <p>No hay facturas registradas en la base de datos.</p>
-  </div>
+    <div *ngIf="!loading && facturas.length === 0" class="ion-text-center ion-padding empty-state">
+      <ion-icon name="document-text-outline" class="empty-icon"></ion-icon>
+      <h3>Sin Facturas</h3>
+      <p>No hay facturas registradas en la base de datos.</p>
+    </div>
 
-  <ion-list *ngIf="!loading && facturas.length > 0">
-    <ion-item *ngFor="let fact of facturas" class="factura-item">
-      <ion-icon name="document-text-outline" slot="start" color="primary" style="font-size: 28px;"></ion-icon>
-      <ion-label>
-        <h2>Factura {{ fact.numero_factura || '#' + fact.id }}</h2>
-        <p>Cliente: {{ fact.cliente_nombre || 'Cliente General' }}</p>
-        <ion-note color="medium" *ngIf="fact.fecha">{{ fact.fecha }}</ion-note>
-      </ion-label>
-      <div slot="end" class="ion-text-right">
-        <ion-badge color="success">${{ fact.total | number:'1.2-2' }}</ion-badge>
-        <p style="font-size: 11px; margin: 4px 0 0; color: #3880ff;">{{ fact.estado || 'Emitida' }}</p>
-      </div>
-    </ion-item>
-  </ion-list>
+    <ion-list *ngIf="!loading && facturas.length > 0">
+      <ion-item *ngFor="let fact of facturas" class="factura-item">
+        <ion-icon name="document-text-outline" slot="start" color="primary" style="font-size: 28px;"></ion-icon>
+        <ion-label>
+          <h2>Factura {{ fact.numero_factura || '#' + fact.id }}</h2>
+          <p>Cliente: {{ fact.cliente_nombre || 'Cliente General' }}</p>
+          <ion-note color="medium" *ngIf="fact.fecha">{{ fact.fecha }}</ion-note>
+        </ion-label>
+        <div slot="end" class="ion-text-right">
+          <ion-badge color="success">${{ fact.total | number:'1.2-2' }}</ion-badge>
+          <p style="font-size: 11px; margin: 4px 0 0; color: #3880ff;">{{ fact.estado || 'Emitida' }}</p>
+        </div>
+      </ion-item>
+    </ion-list>
 
-  <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
-    <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más facturas..."></ion-infinite-scroll-content>
-  </ion-infinite-scroll>
-</ion-content>
+    <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
+      <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más facturas..."></ion-infinite-scroll-content>
+    </ion-infinite-scroll>
+  </ion-content>
+</ion-page>
