@@ -1,14 +1,24 @@
 <ion-page>
-  <ion-header [translucent]="true">
-    <ion-toolbar color="primary">
-      <ion-buttons slot="start">
-        <ion-menu-button></ion-menu-button>
-      </ion-buttons>
-      <ion-title>Módulo de Reportes y Métricas</ion-title>
-    </ion-toolbar>
+  <!-- Encabezado Corporativo Elegante -->
+  <ion-header class="custom-app-header">
+    <div class="header-content">
+      <button class="header-menu-btn" (click)="toggleMenu()" title="Abrir Menú">
+        <ion-icon name="menu-outline"></ion-icon>
+      </button>
+
+      <div class="header-title-container">
+        <ion-icon name="bar-chart-outline" class="header-logo-icon"></ion-icon>
+        <span class="header-title-text">Módulo de Reportes y Métricas</span>
+      </div>
+
+      <button class="header-logout-btn" (click)="logout()" title="Cerrar Sesión">
+        <ion-icon name="log-out-outline"></ion-icon>
+        <span class="logout-label">Salir</span>
+      </button>
+    </div>
   </ion-header>
 
-  <ion-content [fullscreen]="true" class="ion-padding module-background">
+  <ion-content [fullscreen]="true" class="module-background ion-padding">
     <!-- Barra Superior de Navegación del Módulo -->
     <div class="module-action-bar ion-margin-bottom">
       <ion-button

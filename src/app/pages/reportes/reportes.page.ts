@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { MenuController } from '@ionic/angular';
 import { AuthService } from '../../services/auth.service';
 import { ReportesService } from '../../services/reportes.service';
 
@@ -19,7 +20,8 @@ export class ReportesPage implements OnInit {
   constructor(
     private authService: AuthService,
     private reportesService: ReportesService,
-    private router: Router
+    private router: Router,
+    private menuCtrl: MenuController
   ) {}
 
   ngOnInit(): void {
@@ -30,6 +32,10 @@ export class ReportesPage implements OnInit {
   ionViewWillEnter(): void {
     this.usuario = this.authService.getUsuario();
     this.cargarDashboard();
+  }
+
+  toggleMenu(): void {
+    this.menuCtrl.toggle('main-menu');
   }
 
   cancelarOVolver(): void {

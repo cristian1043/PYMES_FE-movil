@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, ToastController } from '@ionic/angular/lazy';
+import { MenuController, AlertController, ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ProductosService, Producto } from '../../services/productos.service';
 
@@ -35,6 +35,7 @@ export class ProductosPage implements OnInit {
     private authService: AuthService,
     private productosService: ProductosService,
     private router: Router,
+    private menuCtrl: MenuController,
     private alertController: AlertController,
     private toastController: ToastController
   ) {}
@@ -45,6 +46,10 @@ export class ProductosPage implements OnInit {
 
   ionViewWillEnter(): void {
     this.usuario = this.authService.getUsuario();
+  }
+
+  toggleMenu(): void {
+    this.menuCtrl.toggle('main-menu');
   }
 
   cancelarOVolver(): void {

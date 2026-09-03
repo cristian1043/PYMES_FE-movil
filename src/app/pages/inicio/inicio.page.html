@@ -1,19 +1,28 @@
 <ion-page>
-  <ion-header class="ion-no-border">
-    <ion-toolbar color="primary">
-      <ion-buttons slot="start">
-        <ion-menu-button></ion-menu-button>
-      </ion-buttons>
-      <ion-title>Inicio / Pantalla Principal</ion-title>
-      <ion-buttons slot="end">
-        <ion-button (click)="logout()">
-          <ion-icon slot="icon-only" name="log-out-outline"></ion-icon>
-        </ion-button>
-      </ion-buttons>
-    </ion-toolbar>
+  <!-- Encabezado Corporativo Elegante -->
+  <ion-header class="custom-app-header">
+    <div class="header-content">
+      <!-- Botón Hamburguesa Grande para Abrir Menú -->
+      <button class="header-menu-btn" (click)="toggleMenu()" title="Abrir Menú">
+        <ion-icon name="menu-outline"></ion-icon>
+      </button>
+
+      <!-- Título de la Aplicación -->
+      <div class="header-title-container">
+        <ion-icon name="storefront-outline" class="header-logo-icon"></ion-icon>
+        <span class="header-title-text">PYMEsoft Móvil</span>
+      </div>
+
+      <!-- Botón Cerrar Sesión -->
+      <button class="header-logout-btn" (click)="logout()" title="Cerrar Sesión">
+        <ion-icon name="log-out-outline"></ion-icon>
+        <span class="logout-label">Salir</span>
+      </button>
+    </div>
   </ion-header>
 
-  <ion-content class="ion-padding inicio-background">
+  <!-- Contenido de la Pantalla Principal con Altura 100% -->
+  <ion-content class="inicio-background ion-padding">
     <!-- Header de Bienvenida -->
     <div class="welcome-banner ion-padding ion-margin-bottom" *ngIf="usuario">
       <div class="welcome-text">

@@ -1,5 +1,6 @@
 .inicio-background {
   --background: #f4f6f9;
+  height: 100%;
 }
 
 .welcome-banner {
@@ -18,13 +19,13 @@
       font-size: 22px;
       font-weight: 700;
       margin: 0 0 6px;
-      color: #ffffff;
+      color: #ffffff !important;
     }
     p {
       font-size: 14px;
       opacity: 0.9;
       margin: 0;
-      color: #e0e0e0;
+      color: #e0e0e0 !important;
     }
   }
 
@@ -36,10 +37,14 @@
   }
 }
 
+.modules-section {
+  padding-bottom: 24px;
+}
+
 .section-title {
   font-size: 16px;
   font-weight: 700;
-  color: #1e3c72;
+  color: #1e3c72 !important;
   margin: 16px 0 12px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -52,7 +57,7 @@
 }
 
 .module-card {
-  background: #ffffff;
+  background: #ffffff !important;
   border-radius: 16px;
   padding: 16px;
   display: flex;
@@ -74,6 +79,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 
     ion-icon {
       font-size: 26px;
@@ -115,13 +121,13 @@
     .module-title {
       font-size: 16px;
       font-weight: 700;
-      color: #1e293b;
+      color: #1e293b !important;
       margin: 0 0 4px;
     }
 
     .module-desc {
       font-size: 13px;
-      color: #64748b;
+      color: #64748b !important;
       margin: 0;
       line-height: 1.4;
     }
@@ -130,5 +136,6 @@
   .module-arrow {
     color: #94a3b8;
     font-size: 20px;
+    flex-shrink: 0;
   }
 }

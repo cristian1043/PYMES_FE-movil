@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { MenuController } from '@ionic/angular';
 import { AuthService } from '../../services/auth.service';
 
 interface ModuleCard {
@@ -82,7 +83,8 @@ export class InicioPage implements OnInit {
 
   constructor(
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private menuCtrl: MenuController
   ) {}
 
   ngOnInit(): void {
@@ -96,6 +98,10 @@ export class InicioPage implements OnInit {
   private cargarUsuarioYModulos(): void {
     this.usuario = this.authService.getUsuario();
     this.modulosPermitidos = this.todosModulos.filter(mod => this.authService.hasRole(mod.roles));
+  }
+
+  toggleMenu(): void {
+    this.menuCtrl.toggle('main-menu');
   }
 
   irAModulo(url: string): void {

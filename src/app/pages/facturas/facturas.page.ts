@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, ToastController } from '@ionic/angular/lazy';
+import { MenuController, AlertController, ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { FacturasService, Factura } from '../../services/facturas.service';
 
@@ -31,6 +31,7 @@ export class FacturasPage implements OnInit {
     private authService: AuthService,
     private facturasService: FacturasService,
     private router: Router,
+    private menuCtrl: MenuController,
     private alertController: AlertController,
     private toastController: ToastController
   ) {}
@@ -41,6 +42,10 @@ export class FacturasPage implements OnInit {
 
   ionViewWillEnter(): void {
     this.usuario = this.authService.getUsuario();
+  }
+
+  toggleMenu(): void {
+    this.menuCtrl.toggle('main-menu');
   }
 
   cancelarOVolver(): void {

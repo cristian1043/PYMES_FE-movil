@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, ToastController } from '@ionic/angular/lazy';
+import { MenuController, AlertController, ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ComprasService, Compra } from '../../services/compras.service';
 
@@ -29,6 +29,7 @@ export class ComprasPage implements OnInit {
     private authService: AuthService,
     private comprasService: ComprasService,
     private router: Router,
+    private menuCtrl: MenuController,
     private alertController: AlertController,
     private toastController: ToastController
   ) {}
@@ -39,6 +40,10 @@ export class ComprasPage implements OnInit {
 
   ionViewWillEnter(): void {
     this.usuario = this.authService.getUsuario();
+  }
+
+  toggleMenu(): void {
+    this.menuCtrl.toggle('main-menu');
   }
 
   cancelarOVolver(): void {

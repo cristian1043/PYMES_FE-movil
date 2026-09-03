@@ -22,6 +22,19 @@ export class LoginPage implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.resetState();
+  }
+
+  ionViewWillEnter(): void {
+    this.resetState();
+  }
+
+  ionViewDidEnter(): void {
+    this.loading = false;
+  }
+
+  private resetState(): void {
+    this.loading = false;
     this.errorMessage = '';
   }
 
