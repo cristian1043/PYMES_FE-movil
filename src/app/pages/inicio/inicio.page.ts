@@ -96,12 +96,17 @@ export class InicioPage implements OnInit {
   }
 
   private cargarUsuarioYModulos(): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/login'], { replaceUrl: true });
+      return;
+    }
     this.usuario = this.authService.getUsuario();
     this.modulosPermitidos = this.todosModulos.filter(mod => this.authService.hasRole(mod.roles));
   }
 
-  toggleMenu(): void {
-    this.menuCtrl.toggle('main-menu');
+  async toggleMenu(): Promise<void> {
+    await this.menuCtrl.enable(true, 'main-menu');
+    await this.menuCtrl.open('main-menu');
   }
 
   irAModulo(url: string): void {

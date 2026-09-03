@@ -59,7 +59,7 @@ export class AppComponent implements OnInit {
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe(user => {
-      this.usuario = user;
+      this.usuario = user || this.authService.getUsuario();
       this.actualizarMenu();
     });
   }
@@ -70,10 +70,12 @@ export class AppComponent implements OnInit {
   }
 
   actualizarMenu(): void {
-    if (!this.usuario) {
+    const activeUser = this.usuario || this.authService.getUsuario();
+    if (!activeUser && !this.authService.isLoggedIn()) {
       this.menuCategoriasPermitidas = [];
       return;
     }
+    this.usuario = activeUser;
     this.menuCategoriasPermitidas = this.menuCategoriasRaw
       .map(cat => ({
         titulo: cat.titulo,
@@ -83,13 +85,13 @@ export class AppComponent implements OnInit {
   }
 
   async navegar(url: string): Promise<void> {
-    await this.menuCtrl.close();
+    await this.menuCtrl.close('main-menu');
     this.router.navigateByUrl(url);
   }
 
-  logout(): void {
+  async logout(): Promise<void> {
+    await this.menuCtrl.close('main-menu');
     this.authService.logout();
-    this.menuCtrl.close();
     this.router.navigateByUrl('/login');
   }
 }

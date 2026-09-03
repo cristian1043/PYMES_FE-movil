@@ -57,8 +57,9 @@ export class ClientesPage implements OnInit {
     this.usuario = this.authService.getUsuario();
   }
 
-  toggleMenu(): void {
-    this.menuCtrl.toggle('main-menu');
+  async toggleMenu(): Promise<void> {
+    await this.menuCtrl.enable(true, 'main-menu');
+    await this.menuCtrl.open('main-menu');
   }
 
   irAIndex(): void {
