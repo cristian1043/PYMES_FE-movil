@@ -39,15 +39,27 @@ export class ComprasPage implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.usuario = this.authService.getUsuario();
+    this.verificarAutenticacion();
   }
 
   ionViewWillEnter(): void {
+    this.verificarAutenticacion();
+  }
+
+  private verificarAutenticacion(): void {
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/login'], { replaceUrl: true });
+      return;
+    }
     this.usuario = this.authService.getUsuario();
   }
 
   toggleMenu(): void {
     this.menuCtrl.toggle('main-menu');
+  }
+
+  irAIndex(): void {
+    this.router.navigateByUrl('/inicio');
   }
 
   cancelarOVolver(): void {
@@ -171,10 +183,5 @@ export class ComprasPage implements OnInit {
   private limpiarFormulario(): void {
     this.proveedorNombre = '';
     this.totalCompra = null;
-  }
-
-  logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/login']);
   }
 }

@@ -1,20 +1,24 @@
 <ion-page>
-  <!-- Encabezado Corporativo Elegante -->
-  <ion-header class="custom-app-header">
-    <div class="header-content">
-      <button class="header-menu-btn" (click)="toggleMenu()" title="Abrir Menú">
-        <ion-icon name="menu-outline"></ion-icon>
+  <!-- Encabezado Corporativo de Módulo con Logo Arriba (Click Redirige al Index) y Menú Lateral -->
+  <ion-header class="module-app-header">
+    <div class="header-top-brand" (click)="irAIndex()" title="Ir al Inicio (Index)">
+      <ion-icon name="storefront-outline" class="brand-icon"></ion-icon>
+      <span class="brand-name">PYMEsoft Móvil</span>
+      <span class="brand-home-badge">Inicio 🏠</span>
+    </div>
+
+    <div class="header-bottom-bar">
+      <button class="header-menu-btn" (click)="toggleMenu()" title="Abrir Menú de Opciones">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
       </button>
 
-      <div class="header-title-container">
-        <ion-icon name="bar-chart-outline" class="header-logo-icon"></ion-icon>
-        <span class="header-title-text">Módulo de Reportes y Métricas</span>
+      <div class="header-module-title">
+        Módulo de Reportes y Métricas
       </div>
-
-      <button class="header-logout-btn" (click)="logout()" title="Cerrar Sesión">
-        <ion-icon name="log-out-outline"></ion-icon>
-        <span class="logout-label">Salir</span>
-      </button>
     </div>
   </ion-header>
 

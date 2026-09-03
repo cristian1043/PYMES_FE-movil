@@ -15,7 +15,7 @@ export class RoleGuard implements CanActivate {
 
   async canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean> {
     if (!this.authService.isLoggedIn()) {
-      this.router.navigate(['/login']);
+      this.router.navigate(['/login'], { replaceUrl: true });
       return false;
     }
 
@@ -37,7 +37,7 @@ export class RoleGuard implements CanActivate {
     });
     await toast.present();
 
-    this.router.navigate(['/login']);
+    this.router.navigate(['/inicio'], { replaceUrl: true });
     return false;
   }
 }
