@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuController, AlertController, ToastController } from '@ionic/angular/lazy';
+import { MenuController, ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { FacturasService, Factura } from '../../services/facturas.service';
 
@@ -27,12 +27,16 @@ export class FacturasPage implements OnInit {
   metodoPago = 'Efectivo';
   guardando = false;
 
+  // Modal de confirmación personalizado
+  mostrarModalConfirmacion = false;
+  modalTitulo = '';
+  modalMensaje = '';
+
   constructor(
     private authService: AuthService,
     private facturasService: FacturasService,
     private router: Router,
     private menuCtrl: MenuController,
-    private alertController: AlertController,
     private toastController: ToastController
   ) {}
 
@@ -136,31 +140,12 @@ export class FacturasPage implements OnInit {
       metodo_pago: this.metodoPago,
       estado: 'Emitida'
     }).subscribe({
-      next: async (res) => {
+      next: (res) => {
         this.guardando = false;
         this.limpiarFormulario();
-
-        const alert = await this.alertController.create({
-          header: '¡Factura Registrada!',
-          message: 'La factura ha sido registrada con éxito. ¿Quieres ver el historial de facturas?',
-          backdropDismiss: false,
-          buttons: [
-            {
-              text: 'No, crear otra',
-              role: 'cancel',
-              handler: () => {
-                this.activeTab = 'nueva';
-              }
-            },
-            {
-              text: 'Sí, ver historial',
-              handler: () => {
-                this.seleccionarAccion('listado');
-              }
-            }
-          ]
-        });
-        await alert.present();
+        this.modalTitulo = '¡Factura Registrada!';
+        this.modalMensaje = 'La factura ha sido registrada con éxito. ¿Quieres ver el historial de facturas?';
+        this.mostrarModalConfirmacion = true;
       },
       error: async (err) => {
         this.guardando = false;
@@ -174,6 +159,16 @@ export class FacturasPage implements OnInit {
         await toast.present();
       }
     });
+  }
+
+  responderModal(verListado: boolean): void {
+    this.mostrarModalConfirmacion = false;
+    this.limpiarFormulario();
+    if (verListado) {
+      this.seleccionarAccion('listado');
+    } else {
+      this.activeTab = 'nueva';
+    }
   }
 
   private limpiarFormulario(): void {

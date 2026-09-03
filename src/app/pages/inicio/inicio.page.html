@@ -1,27 +1,32 @@
 <ion-page>
-  <!-- Encabezado Corporativo Elegante -->
+  <!-- Encabezado Corporativo Elegante con SVG Nativo -->
   <ion-header class="custom-app-header">
     <div class="header-content">
-      <!-- Botón Hamburguesa Grande para Abrir Menú -->
       <button class="header-menu-btn" (click)="toggleMenu()" title="Abrir Menú">
-        <ion-icon name="menu-outline"></ion-icon>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
       </button>
 
-      <!-- Título de la Aplicación -->
       <div class="header-title-container">
         <ion-icon name="storefront-outline" class="header-logo-icon"></ion-icon>
         <span class="header-title-text">PYMEsoft Móvil</span>
       </div>
 
-      <!-- Botón Cerrar Sesión -->
       <button class="header-logout-btn" (click)="logout()" title="Cerrar Sesión">
-        <ion-icon name="log-out-outline"></ion-icon>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
         <span class="logout-label">Salir</span>
       </button>
     </div>
   </ion-header>
 
-  <!-- Contenido de la Pantalla Principal con Altura 100% -->
+  <!-- Contenido de la Pantalla Principal -->
   <ion-content class="inicio-background ion-padding">
     <!-- Header de Bienvenida -->
     <div class="welcome-banner ion-padding ion-margin-bottom" *ngIf="usuario">

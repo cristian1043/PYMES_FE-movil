@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuController, AlertController, ToastController } from '@ionic/angular/lazy';
+import { MenuController, ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ProveedoresService, Proveedor } from '../../services/proveedores.service';
 
@@ -28,12 +28,16 @@ export class ProveedoresPage implements OnInit {
   emailProveedor = '';
   guardando = false;
 
+  // Modal de confirmación personalizado
+  mostrarModalConfirmacion = false;
+  modalTitulo = '';
+  modalMensaje = '';
+
   constructor(
     private authService: AuthService,
     private proveedoresService: ProveedoresService,
     private router: Router,
     private menuCtrl: MenuController,
-    private alertController: AlertController,
     private toastController: ToastController
   ) {}
 
@@ -138,31 +142,12 @@ export class ProveedoresPage implements OnInit {
       telefono: (this.telefonoProveedor || '').trim(),
       email: (this.emailProveedor || '').trim()
     }).subscribe({
-      next: async (res) => {
+      next: (res) => {
         this.guardando = false;
         this.limpiarFormulario();
-
-        const alert = await this.alertController.create({
-          header: '¡Proveedor Registrado!',
-          message: 'El proveedor ha sido registrado con éxito. ¿Quieres ver el directorio de proveedores?',
-          backdropDismiss: false,
-          buttons: [
-            {
-              text: 'No, crear otro',
-              role: 'cancel',
-              handler: () => {
-                this.activeTab = 'nuevo';
-              }
-            },
-            {
-              text: 'Sí, ver directorio',
-              handler: () => {
-                this.seleccionarAccion('listado');
-              }
-            }
-          ]
-        });
-        await alert.present();
+        this.modalTitulo = '¡Proveedor Registrado!';
+        this.modalMensaje = 'El proveedor ha sido registrado con éxito. ¿Quieres ver el directorio de proveedores?';
+        this.mostrarModalConfirmacion = true;
       },
       error: async (err) => {
         this.guardando = false;
@@ -176,6 +161,16 @@ export class ProveedoresPage implements OnInit {
         await toast.present();
       }
     });
+  }
+
+  responderModal(verListado: boolean): void {
+    this.mostrarModalConfirmacion = false;
+    this.limpiarFormulario();
+    if (verListado) {
+      this.seleccionarAccion('listado');
+    } else {
+      this.activeTab = 'nuevo';
+    }
   }
 
   private limpiarFormulario(): void {

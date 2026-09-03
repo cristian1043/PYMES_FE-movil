@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuController, AlertController, ToastController } from '@ionic/angular/lazy';
+import { MenuController, ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ProductosService, Producto } from '../../services/productos.service';
 
@@ -31,12 +31,16 @@ export class ProductosPage implements OnInit {
   nuevaDescripcion = '';
   guardando = false;
 
+  // Modal de confirmación personalizado
+  mostrarModalConfirmacion = false;
+  modalTitulo = '';
+  modalMensaje = '';
+
   constructor(
     private authService: AuthService,
     private productosService: ProductosService,
     private router: Router,
     private menuCtrl: MenuController,
-    private alertController: AlertController,
     private toastController: ToastController
   ) {}
 
@@ -155,31 +159,12 @@ export class ProductosPage implements OnInit {
       stock: Number(this.nuevoStock || 0),
       descripcion: (this.nuevaDescripcion || '').trim()
     }).subscribe({
-      next: async (res) => {
+      next: (res) => {
         this.guardando = false;
         this.limpiarFormulario();
-
-        const alert = await this.alertController.create({
-          header: '¡Producto Registrado!',
-          message: 'El producto ha sido registrado con éxito. ¿Quieres ver el listado de productos?',
-          backdropDismiss: false,
-          buttons: [
-            {
-              text: 'No, crear otro',
-              role: 'cancel',
-              handler: () => {
-                this.activeTab = 'nuevo';
-              }
-            },
-            {
-              text: 'Sí, ver listado',
-              handler: () => {
-                this.seleccionarAccion('listado');
-              }
-            }
-          ]
-        });
-        await alert.present();
+        this.modalTitulo = '¡Producto Registrado!';
+        this.modalMensaje = 'El producto ha sido registrado con éxito. ¿Quieres ver el listado de productos?';
+        this.mostrarModalConfirmacion = true;
       },
       error: async (err) => {
         this.guardando = false;
@@ -193,6 +178,16 @@ export class ProductosPage implements OnInit {
         await toast.present();
       }
     });
+  }
+
+  responderModal(verListado: boolean): void {
+    this.mostrarModalConfirmacion = false;
+    this.limpiarFormulario();
+    if (verListado) {
+      this.seleccionarAccion('listado');
+    } else {
+      this.activeTab = 'nuevo';
+    }
   }
 
   private limpiarFormulario(): void {

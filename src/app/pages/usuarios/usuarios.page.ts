@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuController, AlertController, ToastController } from '@ionic/angular/lazy';
+import { MenuController, ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { UsuariosService, UsuarioItem } from '../../services/usuarios.service';
 
@@ -29,12 +29,16 @@ export class UsuariosPage implements OnInit {
   idRolUser = 2; // Default Vendedor
   guardando = false;
 
+  // Modal de confirmación personalizado
+  mostrarModalConfirmacion = false;
+  modalTitulo = '';
+  modalMensaje = '';
+
   constructor(
     private authService: AuthService,
     private usuariosService: UsuariosService,
     private router: Router,
     private menuCtrl: MenuController,
-    private alertController: AlertController,
     private toastController: ToastController
   ) {}
 
@@ -149,31 +153,12 @@ export class UsuariosPage implements OnInit {
       password: this.passwordUser.trim(),
       id_rol: Number(this.idRolUser)
     }).subscribe({
-      next: async (res) => {
+      next: (res) => {
         this.guardando = false;
         this.limpiarFormulario();
-
-        const alert = await this.alertController.create({
-          header: '¡Usuario Registrado!',
-          message: 'El nuevo usuario del sistema ha sido creado con éxito. ¿Quieres ver la lista de usuarios?',
-          backdropDismiss: false,
-          buttons: [
-            {
-              text: 'No, crear otro',
-              role: 'cancel',
-              handler: () => {
-                this.activeTab = 'nuevo';
-              }
-            },
-            {
-              text: 'Sí, ver lista',
-              handler: () => {
-                this.seleccionarAccion('listado');
-              }
-            }
-          ]
-        });
-        await alert.present();
+        this.modalTitulo = '¡Usuario Registrado!';
+        this.modalMensaje = 'El nuevo usuario del sistema ha sido creado con éxito. ¿Quieres ver la lista de usuarios?';
+        this.mostrarModalConfirmacion = true;
       },
       error: async (err) => {
         this.guardando = false;
@@ -187,6 +172,16 @@ export class UsuariosPage implements OnInit {
         await toast.present();
       }
     });
+  }
+
+  responderModal(verListado: boolean): void {
+    this.mostrarModalConfirmacion = false;
+    this.limpiarFormulario();
+    if (verListado) {
+      this.seleccionarAccion('listado');
+    } else {
+      this.activeTab = 'nuevo';
+    }
   }
 
   private limpiarFormulario(): void {

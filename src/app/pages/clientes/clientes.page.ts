@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuController, AlertController, ToastController } from '@ionic/angular/lazy';
+import { MenuController, ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ClientesService, Cliente } from '../../services/clientes.service';
 
@@ -28,12 +28,16 @@ export class ClientesPage implements OnInit {
   direccionCliente = '';
   guardando = false;
 
+  // Modal de confirmación personalizado
+  mostrarModalConfirmacion = false;
+  modalTitulo = '';
+  modalMensaje = '';
+
   constructor(
     private authService: AuthService,
     private clientesService: ClientesService,
     private router: Router,
     private menuCtrl: MenuController,
-    private alertController: AlertController,
     private toastController: ToastController
   ) {}
 
@@ -138,31 +142,12 @@ export class ClientesPage implements OnInit {
       email: (this.emailCliente || '').trim(),
       direccion: (this.direccionCliente || '').trim()
     }).subscribe({
-      next: async (res) => {
+      next: (res) => {
         this.guardando = false;
         this.limpiarFormulario();
-
-        const alert = await this.alertController.create({
-          header: '¡Cliente Registrado!',
-          message: 'El cliente ha sido registrado con éxito. ¿Quieres ver el directorio de clientes?',
-          backdropDismiss: false,
-          buttons: [
-            {
-              text: 'No, crear otro',
-              role: 'cancel',
-              handler: () => {
-                this.activeTab = 'nuevo';
-              }
-            },
-            {
-              text: 'Sí, ver directorio',
-              handler: () => {
-                this.seleccionarAccion('listado');
-              }
-            }
-          ]
-        });
-        await alert.present();
+        this.modalTitulo = '¡Cliente Registrado!';
+        this.modalMensaje = 'El cliente ha sido registrado con éxito. ¿Quieres ver el directorio de clientes?';
+        this.mostrarModalConfirmacion = true;
       },
       error: async (err) => {
         this.guardando = false;
@@ -176,6 +161,16 @@ export class ClientesPage implements OnInit {
         await toast.present();
       }
     });
+  }
+
+  responderModal(verListado: boolean): void {
+    this.mostrarModalConfirmacion = false;
+    this.limpiarFormulario();
+    if (verListado) {
+      this.seleccionarAccion('listado');
+    } else {
+      this.activeTab = 'nuevo';
+    }
   }
 
   private limpiarFormulario(): void {
