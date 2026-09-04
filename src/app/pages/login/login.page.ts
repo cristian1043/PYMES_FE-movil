@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-login',
@@ -29,24 +30,14 @@ export class LoginPage implements OnInit {
     this.resetState();
   }
 
-  ionViewDidEnter(): void {
-    this.loading = false;
-  }
-
   private resetState(): void {
     this.loading = false;
     this.errorMessage = '';
   }
 
-  onUsernameInput(ev: any): void {
-    this.username = ev?.detail?.value || ev?.target?.value || '';
-  }
-
-  onPasswordInput(ev: any): void {
-    this.password = ev?.detail?.value || ev?.target?.value || '';
-  }
-
   onLogin(): void {
+    if (this.loading) return;
+
     const userTrim = (this.username || '').trim();
     const passTrim = (this.password || '').trim();
 
@@ -58,21 +49,18 @@ export class LoginPage implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    const timer = setTimeout(() => {
-      if (this.loading) {
-        this.loading = false;
-        this.errorMessage = 'El servidor tardó demasiado en responder. Verifica que Flask esté encendido.';
-      }
-    }, 6000);
-
     this.authService.login({
       username: userTrim,
       password: passTrim
-    }).subscribe({
-      next: async (res) => {
-        clearTimeout(timer);
+    })
+    .pipe(
+      finalize(() => {
         this.loading = false;
-        if (res.exito) {
+      })
+    )
+    .subscribe({
+      next: async (res) => {
+        if (res && res.exito) {
           const toast = await this.toastController.create({
             message: `¡Bienvenido ${res.usuario?.nombre || res.usuario?.username || 'al sistema'}!`,
             duration: 2000,
@@ -82,14 +70,20 @@ export class LoginPage implements OnInit {
           await toast.present();
           this.router.navigateByUrl('/inicio');
         } else {
-          this.errorMessage = res.mensaje || 'Credenciales incorrectas.';
+          this.errorMessage = res?.mensaje || 'Credenciales incorrectas.';
         }
       },
-      error: async (err) => {
-        clearTimeout(timer);
-        this.loading = false;
-        console.error('Error al conectar con la API:', err);
-        this.errorMessage = err?.error?.mensaje || 'No se pudo conectar con el servidor. Verifica tu conexión.';
+      error: (err) => {
+        console.error('Error en inicio de sesión:', err);
+        if (err.status === 401) {
+          this.errorMessage = err?.error?.mensaje || 'Usuario o contraseña incorrectos.';
+        } else if (err.status === 429) {
+          this.errorMessage = err?.error?.mensaje || '⚠️ Demasiados intentos fallidos. Bloqueo de seguridad activado. Espera 1 minuto.';
+        } else if (err.status === 0) {
+          this.errorMessage = 'No se pudo conectar con el servidor. Verifica que Flask esté encendido.';
+        } else {
+          this.errorMessage = err?.error?.mensaje || 'Error al iniciar sesión. Intenta nuevamente.';
+        }
       }
     });
   }

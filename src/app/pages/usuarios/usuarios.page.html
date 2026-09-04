@@ -8,7 +8,7 @@
     </div>
 
     <div class="header-bottom-bar">
-      <button class="header-menu-btn" (click)="toggleMenu()" title="Abrir Menú de Opciones">
+      <button type="button" class="header-menu-btn" (click)="toggleMenu()" title="Abrir Menú de Opciones">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="3" y1="6" x2="21" y2="6"></line>
           <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -40,31 +40,47 @@
     <div *ngIf="activeTab === 'hub'" class="hub-container">
       <div class="hub-header ion-text-center ion-margin-bottom">
         <div class="hub-icon-badge">
-          <ion-icon name="shield-checkmark-outline"></ion-icon>
+          <!-- Icono SVG de alta compatibilidad -->
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="m9 12 2 2 4-4"></path>
+          </svg>
         </div>
         <h2>Módulo de Gestión de Usuarios</h2>
-        <p>Administra los accesos y roles del equipo de tu PYME</p>
+        <p>Administra los accesos, credenciales y roles del equipo de tu empresa</p>
       </div>
 
       <div class="hub-actions-grid">
         <div class="action-card" (click)="seleccionarAccion('nuevo')">
           <div class="action-icon bg-dark">
-            <ion-icon name="person-add-outline"></ion-icon>
+            <!-- Icono SVG de Registrar Usuario -->
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0f2b5c" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="8.5" cy="7" r="4"></circle>
+              <line x1="20" y1="8" x2="20" y2="14"></line>
+              <line x1="23" y1="11" x2="17" y2="11"></line>
+            </svg>
           </div>
           <div class="action-info">
             <h3>Registrar Nuevo Usuario</h3>
-            <p>Crea una nueva cuenta con rol Administrador, Vendedor o Almacenista</p>
+            <p>Crea una nueva cuenta de acceso con rol y credenciales enviadas a su correo</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
         </div>
 
         <div class="action-card" (click)="seleccionarAccion('listado')">
           <div class="action-icon bg-primary">
-            <ion-icon name="people-outline"></ion-icon>
+            <!-- Icono SVG de Ver Lista de Usuarios -->
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1e3c72" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+            </svg>
           </div>
           <div class="action-info">
             <h3>Ver Lista de Usuarios</h3>
-            <p>Consulta los usuarios registrados, sus roles y permisos</p>
+            <p>Consulta los usuarios registrados, sus roles y estados de cuenta</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
         </div>
@@ -80,6 +96,7 @@
 
         <ion-card-content>
           <form (ngSubmit)="onRegistrarUsuario()">
+            <!-- Nombre -->
             <div class="form-group">
               <label class="form-label">Nombre *</label>
               <input
@@ -91,6 +108,7 @@
                 required />
             </div>
 
+            <!-- Apellido -->
             <div class="form-group">
               <label class="form-label">Apellido</label>
               <input
@@ -101,19 +119,63 @@
                 placeholder="ej: Gómez" />
             </div>
 
+            <!-- Tipo de Documento -->
             <div class="form-group">
-              <label class="form-label">Nombre de Usuario (@username) *</label>
+              <label class="form-label">Tipo de Documento</label>
+              <select
+                class="custom-select"
+                [(ngModel)]="tipoDocumentoUser"
+                name="tipoDocumentoUser">
+                <option value="CC">Cédula de Ciudadanía (CC)</option>
+                <option value="NIT">NIT (Empresas)</option>
+                <option value="CE">Cédula Extranjería (CE)</option>
+                <option value="PAS">Pasaporte (PAS)</option>
+              </select>
+            </div>
+
+            <!-- N° Documento -->
+            <div class="form-group">
+              <label class="form-label">N° Documento</label>
               <input
                 type="text"
                 class="custom-input"
+                [(ngModel)]="documentoUser"
+                name="documentoUser"
+                placeholder="ej: 1098765432" />
+            </div>
+
+            <!-- Teléfono -->
+            <div class="form-group">
+              <label class="form-label">Teléfono de Contacto</label>
+              <input
+                type="tel"
+                class="custom-input"
+                [(ngModel)]="telefonoUser"
+                name="telefonoUser"
+                placeholder="ej: +57 300 1234567" />
+            </div>
+
+            <!-- Nombre de Usuario @username (Único) -->
+            <div class="form-group">
+              <label class="form-label">Nombre de Usuario (@username) * (Único)</label>
+              <input
+                type="text"
+                class="custom-input"
+                [class.input-error]="usernameError"
                 [(ngModel)]="usernameUser"
+                (blur)="onUsernameChange()"
+                (input)="usernameError = ''; usernameSuccess = ''"
                 name="usernameUser"
                 placeholder="ej: cgomez"
                 required />
+              <span *ngIf="usernameChecking" class="field-hint">Verificando disponibilidad de @{{ usernameUser }}...</span>
+              <span *ngIf="usernameSuccess" class="field-hint success">{{ usernameSuccess }}</span>
+              <span *ngIf="usernameError" class="field-hint error">{{ usernameError }}</span>
             </div>
 
+            <!-- Correo Electrónico (Para envío de credenciales) -->
             <div class="form-group">
-              <label class="form-label">Correo Electrónico *</label>
+              <label class="form-label">Correo Electrónico * (Para envío de credenciales)</label>
               <input
                 type="email"
                 class="custom-input"
@@ -123,8 +185,17 @@
                 required />
             </div>
 
+            <!-- Banner Informativo de Envío de Correo -->
+            <div class="email-notification-banner">
+              <ion-icon name="mail-unread-outline"></ion-icon>
+              <p>
+                <strong>Notificación Automática:</strong> Al guardar, el sistema enviará la confirmación de registro y las credenciales al correo del usuario para validar su cuenta.
+              </p>
+            </div>
+
+            <!-- Contraseña de Acceso -->
             <div class="form-group">
-              <label class="form-label">Contraseña de Acceso *</label>
+              <label class="form-label">Contraseña de Acceso Temporal *</label>
               <input
                 type="password"
                 class="custom-input"
@@ -134,6 +205,7 @@
                 required />
             </div>
 
+            <!-- Rol del Usuario -->
             <div class="form-group">
               <label class="form-label">Rol del Usuario *</label>
               <select
@@ -146,14 +218,15 @@
               </select>
             </div>
 
+            <!-- Botón de Envío con Espaciado Adecuado -->
             <div class="form-actions ion-margin-top">
               <ion-button
                 expand="block"
                 type="submit"
                 color="primary"
-                [disabled]="guardando || !nombreUser || !usernameUser || !emailUser || !passwordUser">
+                [disabled]="guardando || !nombreUser || !usernameUser || !emailUser || !passwordUser || usernameError">
                 <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
-                <span *ngIf="!guardando">Crear Usuario</span>
+                <span *ngIf="!guardando">Crear Usuario y Enviar Credenciales</span>
               </ion-button>
             </div>
           </form>
@@ -169,7 +242,10 @@
       </div>
 
       <div *ngIf="!loading && usuarios.length === 0" class="ion-text-center ion-padding empty-state">
-        <ion-icon name="people-outline" class="empty-icon"></ion-icon>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 12px; display: block;">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+        </svg>
         <h3>Sin Usuarios</h3>
         <p>No hay usuarios registrados.</p>
       </div>

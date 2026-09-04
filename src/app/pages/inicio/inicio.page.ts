@@ -69,7 +69,7 @@ export class InicioPage implements OnInit {
       url: '/reportes',
       icon: 'bar-chart-outline',
       color: 'danger',
-      roles: [1, 3]
+      roles: [1, 2, 3]
     },
     {
       titulo: 'Gestión de Usuarios',

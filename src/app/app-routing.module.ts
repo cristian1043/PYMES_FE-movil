@@ -55,7 +55,7 @@ const routes: Routes = [
   {
     path: 'reportes',
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: [1, 3] },
+    data: { roles: [1, 2, 3] },
     loadChildren: () => import('./pages/reportes/reportes.module').then(m => m.ReportesPageModule)
   },
   {

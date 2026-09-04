@@ -32,7 +32,7 @@
         (click)="cancelarOVolver()"
         class="cancel-button">
         <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
-        Cancelar / Volver
+        Volver al Inicio
       </ion-button>
     </div>
 
@@ -40,65 +40,276 @@
       <ion-refresher-content></ion-refresher-content>
     </ion-refresher>
 
-    <div class="header-card ion-padding ion-margin-bottom">
-      <h2>Dashboard Ejecutivo 📊</h2>
-      <p>Resumen táctil del estado de tu negocio en tiempo real</p>
+    <!-- BARRA DE PESTAÑAS DE REPORTES -->
+    <div class="reportes-tabs-bar ion-margin-bottom">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'dashboard'"
+        (click)="cambiarTab('dashboard')">
+        📊 Dashboard
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'ventas'"
+        (click)="cambiarTab('ventas')">
+        💰 Ventas
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'inventario'"
+        (click)="cambiarTab('inventario')">
+        📦 Stock
+      </button>
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'clientes'"
+        (click)="cambiarTab('clientes')">
+        👥 Clientes
+      </button>
     </div>
 
+    <!-- SPINNER DE CARGA RÁPIDA -->
     <div *ngIf="loading" class="ion-text-center ion-padding">
       <ion-spinner name="crescent" color="primary"></ion-spinner>
-      <p>Cargando métricas del sistema...</p>
+      <p class="loading-label">Cargando datos del reporte...</p>
     </div>
 
-    <div *ngIf="!loading">
-      <!-- Grid de KPIs Executive Cards -->
-      <div class="kpi-grid">
-        <ion-card class="kpi-card bg-primary-gradient">
-          <ion-card-content>
-            <div class="kpi-icon">
-              <ion-icon name="cash-outline"></ion-icon>
-            </div>
-            <div class="kpi-data">
-              <p class="kpi-title">Ventas Totales</p>
-              <h3 class="kpi-value">${{ totalVentas | number:'1.2-2' }}</h3>
-            </div>
-          </ion-card-content>
-        </ion-card>
-
-        <ion-card class="kpi-card bg-secondary-gradient">
-          <ion-card-content>
-            <div class="kpi-icon">
-              <ion-icon name="cube-outline"></ion-icon>
-            </div>
-            <div class="kpi-data">
-              <p class="kpi-title">Productos en Stock</p>
-              <h3 class="kpi-value">{{ totalProductos }}</h3>
-            </div>
-          </ion-card-content>
-        </ion-card>
-
-        <ion-card class="kpi-card bg-warning-gradient">
-          <ion-card-content>
-            <div class="kpi-icon">
-              <ion-icon name="alert-circle-outline"></ion-icon>
-            </div>
-            <div class="kpi-data">
-              <p class="kpi-title">Stock Bajo (<5)</p>
-              <h3 class="kpi-value">{{ stockBajoCount }}</h3>
-            </div>
-          </ion-card-content>
-        </ion-card>
+    <!-- PESTAÑA 1: DASHBOARD EJECUTIVO -->
+    <div *ngIf="!loading && activeTab === 'dashboard'" class="tab-content">
+      <div class="header-card ion-padding ion-margin-bottom">
+        <h2>Dashboard Ejecutivo 📊</h2>
+        <p>Resumen táctil del estado de tu negocio en tiempo real</p>
       </div>
 
-      <!-- Sección de Detalle / Inventario -->
-      <ion-card class="ion-margin-top">
-        <ion-card-header>
-          <ion-card-title style="font-size: 16px;">Sincronización en Tiempo Real</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-          <p>Los datos están sincronizados directamente con la base de datos de <strong>PYMES_BE</strong>.</p>
-        </ion-card-content>
-      </ion-card>
+      <!-- Grid de KPIs -->
+      <div class="kpi-grid">
+        <div class="kpi-card bg-primary-gradient" (click)="cambiarTab('ventas')">
+          <div class="kpi-icon">
+            <ion-icon name="cash-outline"></ion-icon>
+          </div>
+          <div class="kpi-data">
+            <p class="kpi-title">Ventas Totales</p>
+            <h3 class="kpi-value">${{ totalVentas | number:'1.2-2' }}</h3>
+            <span class="kpi-sub">Facturas: {{ cantidadFacturas }}</span>
+          </div>
+        </div>
+
+        <div class="kpi-card bg-secondary-gradient" (click)="cambiarTab('inventario')">
+          <div class="kpi-icon">
+            <ion-icon name="cube-outline"></ion-icon>
+          </div>
+          <div class="kpi-data">
+            <p class="kpi-title">Productos en Stock</p>
+            <h3 class="kpi-value">{{ totalProductos }} ítems</h3>
+            <span class="kpi-sub">Valor: ${{ valorInventario | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div class="kpi-card bg-warning-gradient" (click)="cambiarTab('inventario')">
+          <div class="kpi-icon">
+            <ion-icon name="alert-circle-outline"></ion-icon>
+          </div>
+          <div class="kpi-data">
+            <p class="kpi-title">Stock Bajo (≤ 10)</p>
+            <h3 class="kpi-value">{{ stockBajoCount }} ítems</h3>
+            <span class="kpi-sub">Requiere compra</span>
+          </div>
+        </div>
+
+        <div class="kpi-card bg-info-gradient">
+          <div class="kpi-icon">
+            <ion-icon name="receipt-outline"></ion-icon>
+          </div>
+          <div class="kpi-data">
+            <p class="kpi-title">IVA Recaudado (19%)</p>
+            <h3 class="kpi-value">${{ ivaTotal | number:'1.2-2' }}</h3>
+            <span class="kpi-sub">Prom/Venta: ${{ promedioVenta | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accesos Rápidos a Reportes -->
+      <div class="shortcuts-section ion-margin-top">
+        <h4 class="section-title">Explorar Reportes Detallados</h4>
+        <div class="shortcut-cards">
+          <div class="shortcut-card" (click)="cambiarTab('ventas')">
+            <div class="shortcut-icon bg-blue">💰</div>
+            <div class="shortcut-info">
+              <strong>Reporte Financiero de Ventas</strong>
+              <p>Facturas emitidas, subtotales, IVA y estados</p>
+            </div>
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+
+          <div class="shortcut-card" (click)="cambiarTab('inventario')">
+            <div class="shortcut-icon bg-green">📦</div>
+            <div class="shortcut-info">
+              <strong>Reporte Operativo de Inventario</strong>
+              <p>Catálogo de stock, existencias críticas y valoración</p>
+            </div>
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+
+          <div class="shortcut-card" (click)="cambiarTab('clientes')">
+            <div class="shortcut-icon bg-purple">👥</div>
+            <div class="shortcut-info">
+              <strong>Reporte Comercial de Clientes</strong>
+              <p>Ranking de compradores, volumen de compras y contactos</p>
+            </div>
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 2: REPORTE FINANCIERO DE VENTAS -->
+    <div *ngIf="!loading && activeTab === 'ventas'" class="tab-content">
+      <div class="report-header-card">
+        <h3>💰 Reporte Financiero de Ventas</h3>
+        <p>Historial consolidado de ventas y facturación</p>
+        <div class="report-kpi-strip">
+          <div class="strip-item">
+            <span>Total Ventas:</span>
+            <strong>${{ (ventasResumen?.total_ventas || totalVentas) | number:'1.2-2' }}</strong>
+          </div>
+          <div class="strip-item">
+            <span>Total Facturas:</span>
+            <strong>{{ ventasResumen?.cantidad_facturas || cantidadFacturas }}</strong>
+          </div>
+          <div class="strip-item">
+            <span>IVA (19%):</span>
+            <strong>${{ (ventasResumen?.iva || ivaTotal) | number:'1.2-2' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-box ion-margin-top ion-margin-bottom">
+        <input
+          type="text"
+          class="custom-search-input"
+          [(ngModel)]="searchFacturas"
+          (input)="filtrarFacturas()"
+          placeholder="Buscar factura por número, fecha o estado..." />
+      </div>
+
+      <div *ngIf="facturasFiltradas.length === 0" class="empty-box">
+        <p>No se encontraron facturas registradas.</p>
+      </div>
+
+      <div class="report-cards-list" *ngIf="facturasFiltradas.length > 0">
+        <div class="report-item-card" *ngFor="let f of facturasFiltradas">
+          <div class="item-card-header">
+            <span class="badge-code">{{ f.numero || ('FAC-' + f.id) }}</span>
+            <span class="badge-status" [ngClass]="f.estado === 'Cancelada' ? 'status-danger' : 'status-success'">
+              {{ f.estado || 'Emitida' }}
+            </span>
+          </div>
+          <div class="item-card-body">
+            <p class="date-txt">📅 {{ f.fecha }}</p>
+            <div class="details-row">
+              <span>Subtotal: ${{ f.subtotal | number:'1.2-2' }}</span>
+              <span>IVA: ${{ f.iva | number:'1.2-2' }}</span>
+              <span class="highlight-total">Total: ${{ f.total | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 3: REPORTE OPERATIVO DE INVENTARIO -->
+    <div *ngIf="!loading && activeTab === 'inventario'" class="tab-content">
+      <div class="report-header-card">
+        <h3>📦 Reporte Operativo de Inventario</h3>
+        <p>Valoración de existencias y control de stock crítico</p>
+        <div class="report-kpi-strip">
+          <div class="strip-item">
+            <span>Valor Total:</span>
+            <strong>${{ (inventarioResumen?.valor_total_inventario || valorInventario) | number:'1.2-2' }}</strong>
+          </div>
+          <div class="strip-item">
+            <span>Total Ítems:</span>
+            <strong>{{ inventarioResumen?.total_productos || totalProductos }}</strong>
+          </div>
+          <div class="strip-item">
+            <span>Stock Bajo (≤10):</span>
+            <strong class="text-danger">{{ inventarioResumen?.productos_bajo_stock || stockBajoCount }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-box ion-margin-top ion-margin-bottom">
+        <input
+          type="text"
+          class="custom-search-input"
+          [(ngModel)]="searchProductos"
+          (input)="filtrarProductos()"
+          placeholder="Buscar producto por código o nombre..." />
+      </div>
+
+      <div *ngIf="productosFiltrados.length === 0" class="empty-box">
+        <p>No se encontraron productos en inventario.</p>
+      </div>
+
+      <div class="report-cards-list" *ngIf="productosFiltrados.length > 0">
+        <div class="report-item-card" *ngFor="let p of productosFiltrados">
+          <div class="item-card-header">
+            <span class="badge-code">{{ p.codigo || ('PROD-' + p.id) }}</span>
+            <span class="badge-stock" [class.stock-critical]="p.stock <= 10">
+              Stock: {{ p.stock }} {{ p.unidad_medida || 'UND' }}
+            </span>
+          </div>
+          <div class="item-card-body">
+            <strong class="item-name">{{ p.nombre }}</strong>
+            <div class="details-row">
+              <span>Precio Unit: ${{ p.precio | number:'1.2-2' }}</span>
+              <span class="highlight-total">Valor: ${{ (p.precio * p.stock) | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 4: REPORTE COMERCIAL DE CLIENTES -->
+    <div *ngIf="!loading && activeTab === 'clientes'" class="tab-content">
+      <div class="report-header-card">
+        <h3>👥 Reporte Comercial de Clientes</h3>
+        <p>Ranking de compradores y volumen comercial acumulado</p>
+      </div>
+
+      <div class="search-box ion-margin-top ion-margin-bottom">
+        <input
+          type="text"
+          class="custom-search-input"
+          [(ngModel)]="searchClientes"
+          (input)="filtrarClientes()"
+          placeholder="Buscar cliente por nombre, email o teléfono..." />
+      </div>
+
+      <div *ngIf="clientesFiltrados.length === 0" class="empty-box">
+        <p>No hay clientes registrados en el ranking.</p>
+      </div>
+
+      <div class="report-cards-list" *ngIf="clientesFiltrados.length > 0">
+        <div class="report-item-card" *ngFor="let c of clientesFiltrados; let idx = index">
+          <div class="item-card-header">
+            <span class="badge-rank">#{{ idx + 1 }}</span>
+            <strong class="item-name">{{ c.nombre }}</strong>
+            <span class="badge-invoices">{{ c.num_facturas }} Facturas</span>
+          </div>
+          <div class="item-card-body">
+            <p class="contact-txt">📧 {{ c.email }} | 📞 {{ c.telefono }}</p>
+            <div class="details-row">
+              <span>Total Comprado:</span>
+              <strong class="highlight-total">${{ c.total_comprado | number:'1.2-2' }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </ion-content>
 </ion-page>
+

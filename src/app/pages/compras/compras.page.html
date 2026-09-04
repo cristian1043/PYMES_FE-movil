@@ -40,81 +40,219 @@
     <div *ngIf="activeTab === 'hub'" class="hub-container">
       <div class="hub-header ion-text-center ion-margin-bottom">
         <div class="hub-icon-badge">
-          <ion-icon name="cart-outline"></ion-icon>
+          <!-- Icono SVG de alta fidelidad -->
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#ed6c02" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="8" cy="21" r="1"></circle>
+            <circle cx="19" cy="21" r="1"></circle>
+            <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+          </svg>
         </div>
         <h2>Módulo de Gestión de Compras</h2>
-        <p>Selecciona la acción que deseas realizar en este módulo</p>
+        <p>Registra órdenes de compra, incrementa el stock de tus productos y consulta tu historial</p>
       </div>
 
       <div class="hub-actions-grid">
         <div class="action-card" (click)="seleccionarAccion('nueva')">
           <div class="action-icon bg-warning">
-            <ion-icon name="add-circle-outline"></ion-icon>
+            <!-- Icono SVG Registrar Compra -->
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ed6c02" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="21" r="1"></circle>
+              <circle cx="19" cy="21" r="1"></circle>
+              <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"></path>
+              <line x1="12" y1="5" x2="12" y2="11"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+            </svg>
           </div>
           <div class="action-info">
             <h3>Registrar Nueva Compra</h3>
-            <p>Registra un pedido de compras o reabastecimiento a un proveedor</p>
+            <p>Genera una orden de compra, selecciona ítems y abastece el inventario de la empresa</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
         </div>
 
         <div class="action-card" (click)="seleccionarAccion('listado')">
           <div class="action-icon bg-primary">
-            <ion-icon name="receipt-outline"></ion-icon>
+            <!-- Icono SVG Ver Historial -->
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1e3c72" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
           </div>
           <div class="action-info">
             <h3>Ver Historial de Compras</h3>
-            <p>Consulta las órdenes de compra registradas y montos invertidos</p>
+            <p>Consulta las órdenes de compra registradas, proveedores y montos invertidos</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
         </div>
       </div>
     </div>
 
-    <!-- VISTA 2: FORMULARIO NUEVA COMPRA -->
+    <!-- VISTA 2: FORMULARIO NUEVA COMPRA (ESPEJO FRONT WEB) -->
     <div *ngIf="activeTab === 'nueva'" class="form-container">
-      <ion-card class="form-card">
+      <div *ngIf="cargandoCatalogos" class="ion-text-center ion-padding">
+        <ion-spinner name="crescent" color="primary"></ion-spinner>
+        <p>Cargando catálogo de proveedores y productos...</p>
+      </div>
+
+      <ion-card *ngIf="!cargandoCatalogos" class="form-card">
         <ion-card-header>
-          <ion-card-title>🛒 Registrar Nueva Compra</ion-card-title>
+          <ion-card-title>📦 Orden de Compra de Inventario</ion-card-title>
         </ion-card-header>
 
         <ion-card-content>
-          <form (ngSubmit)="onRegistrarCompra()">
-            <div class="form-group">
-              <label class="form-label">Nombre del Proveedor *</label>
-              <input
-                type="text"
-                class="custom-input"
-                [(ngModel)]="proveedorNombre"
-                name="proveedorNombre"
-                placeholder="ej: Distribuidores del Caribe S.A.S."
-                required />
-            </div>
+          <!-- 1. ENCABEZADO DE LA ORDEN -->
+          <div class="form-group">
+            <label class="form-label">N° Orden de Compra *</label>
+            <input
+              type="text"
+              class="custom-input readonly-input"
+              [value]="siguienteNumero"
+              readonly />
+            <small class="field-hint">Consecutivo asignado automáticamente por el sistema.</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Proveedor / Distribuidor *</label>
+            <select
+              class="custom-input select-input"
+              [(ngModel)]="idProveedor"
+              name="idProveedor">
+              <option [ngValue]="null">-- Seleccionar Proveedor del Catálogo --</option>
+              <option *ngFor="let prov of proveedores" [ngValue]="prov.id">
+                🏢 {{ prov.nombre }} (NIT: {{ prov.nit || prov.nit_documento }})
+              </option>
+            </select>
+          </div>
+
+          <hr class="section-divider">
+
+          <!-- 2. AGREGAR PRODUCTOS AL BORRADOR DE LA ORDEN -->
+          <div class="product-picker-card">
+            <h4 class="picker-title">🛒 Agregar Productos a la Compra</h4>
+            <p class="picker-subtitle">Al procesar esta orden, el stock de los productos aumentará de inmediato.</p>
 
             <div class="form-group">
-              <label class="form-label">Monto Total de la Compra ($) *</label>
+              <label class="form-label">Seleccionar Producto del Inventario *</label>
+              <select
+                class="custom-input select-input"
+                [(ngModel)]="idProductoSeleccionado"
+                (change)="onProductoSeleccionadoChange()"
+                name="idProductoSeleccionado">
+                <option [ngValue]="null">-- Seleccionar Producto del Inventario --</option>
+                <option *ngFor="let p of productos" [ngValue]="p.id">
+                  [{{ p.codigo || ('PROD-' + p.id) }}] {{ p.nombre }} - Costo: ${{ (p.costo || p.precio * 0.70) | number:'1.2-2' }} (Stock: {{ p.stock }})
+                </option>
+              </select>
+            </div>
+
+            <div class="row-two-col">
+              <div class="form-group">
+                <label class="form-label">Costo Mayor Unit. ($) *</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  class="custom-input"
+                  [(ngModel)]="costoUnitario"
+                  name="costoUnitario"
+                  placeholder="0.00" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Cantidad *</label>
+                <input
+                  type="number"
+                  min="1"
+                  class="custom-input"
+                  [(ngModel)]="cantidad"
+                  name="cantidad" />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn-add-item"
+              (click)="agregarItem()">
+              ➕ Agregar a la Orden
+            </button>
+          </div>
+
+          <hr class="section-divider">
+
+          <!-- 3. DETALLE DE PRODUCTOS A RECIBIR (BORRADOR) -->
+          <div class="items-draft-container">
+            <h4 class="draft-title">🛍️ Detalle de Productos a Recibir ({{ itemsCompra.length }})</h4>
+
+            <div *ngIf="itemsCompra.length === 0" class="empty-items-box">
+              <p>No has agregado productos a esta orden de compra. Usa el selector de arriba.</p>
+            </div>
+
+            <div *ngIf="itemsCompra.length > 0" class="items-cards-list">
+              <div class="item-compra-row" *ngFor="let item of itemsCompra; let i = index">
+                <div class="item-row-top">
+                  <span class="badge-code">{{ item.codigo }}</span>
+                  <strong class="item-name">{{ item.nombre_producto }}</strong>
+                  <button type="button" class="btn-delete" (click)="eliminarItem(i)" title="Quitar ítem">
+                    🗑️
+                  </button>
+                </div>
+                <div class="item-row-details">
+                  <span>Costo: <strong>${{ item.costo_unitario | number:'1.2-2' }}</strong></span>
+                  <span>Cant: <strong>x{{ item.cantidad }}</strong></span>
+                  <span class="item-subtotal-val">Subtotal: <strong>${{ item.subtotal | number:'1.2-2' }}</strong></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. RESUMEN DE TOTALES Y VALORES -->
+          <div class="totals-summary-card ion-margin-top">
+            <div class="summary-line">
+              <span>Subtotal Neto:</span>
+              <strong>${{ subtotalNeto | number:'1.2-2' }}</strong>
+            </div>
+
+            <div class="summary-line">
+              <span>IVA (19%):</span>
+              <span class="text-iva">+${{ iva | number:'1.2-2' }}</span>
+            </div>
+
+            <div class="summary-line align-items-center">
+              <span>Descuento ($):</span>
               <input
                 type="number"
-                class="custom-input"
-                [(ngModel)]="totalCompra"
-                name="totalCompra"
-                placeholder="ej: 4500000"
                 step="0.01"
                 min="0"
-                required />
+                class="custom-input input-desc-sm"
+                [(ngModel)]="descuento"
+                (input)="calcularTotales()"
+                placeholder="0.00" />
             </div>
 
-            <div class="form-actions ion-margin-top">
-              <ion-button
-                expand="block"
-                type="submit"
-                color="primary"
-                [disabled]="guardando || !proveedorNombre || !totalCompra || totalCompra <= 0">
-                <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
-                <span *ngIf="!guardando">Guardar Orden de Compra</span>
-              </ion-button>
+            <div class="totals-divider"></div>
+
+            <div class="total-final-box">
+              <span class="total-label">TOTAL COMPRA:</span>
+              <h3 class="total-val">${{ totalCompra | number:'1.2-2' }}</h3>
             </div>
-          </form>
+          </div>
+
+          <!-- 5. BOTÓN DE PROCESAR -->
+          <div class="form-actions ion-margin-top">
+            <ion-button
+              expand="block"
+              type="button"
+              color="success"
+              class="btn-submit-order"
+              (click)="onRegistrarCompra()"
+              [disabled]="guardando || !idProveedor || itemsCompra.length === 0 || totalCompra <= 0">
+              <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
+              <span *ngIf="!guardando">✅ Procesar e Incrementar Inventario</span>
+            </ion-button>
+          </div>
         </ion-card-content>
       </ion-card>
     </div>
@@ -134,14 +272,23 @@
 
       <ion-list *ngIf="!loading && compras.length > 0">
         <ion-item *ngFor="let c of compras" class="compra-item">
-          <ion-icon name="cart-outline" slot="start" color="tertiary" style="font-size: 28px;"></ion-icon>
+          <div slot="start" class="compra-icon-badge">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1e3c72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+          </div>
           <ion-label>
-            <h2>Compra {{ c.codigo_compra || '#' + c.id }}</h2>
-            <p>Proveedor: {{ c.proveedor_nombre || 'Proveedor General' }}</p>
+            <h2>Orden {{ c.numero || ('COMP-' + c.id) }}</h2>
+            <p class="prov-label">{{ c.proveedor_nombre || ('Proveedor #' + c.id_proveedor) }}</p>
             <ion-note color="medium" *ngIf="c.fecha">{{ c.fecha }}</ion-note>
           </ion-label>
           <div slot="end" class="ion-text-right">
-            <ion-badge color="success">${{ c.total | number:'1.2-2' }}</ion-badge>
+            <ion-badge [color]="c.estado === 'Cancelada' ? 'danger' : 'success'" class="status-badge">
+              {{ c.estado || 'Completada' }}
+            </ion-badge>
+            <div class="compra-total-tag">${{ c.total | number:'1.2-2' }}</div>
           </div>
         </ion-item>
       </ion-list>

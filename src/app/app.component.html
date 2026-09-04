@@ -1,57 +1,61 @@
 <ion-app>
-  <!-- Menú lateral deslizable desde la izquierda (Side Drawer Overlay) -->
-  <ion-menu contentId="main-content" menuId="main-menu" side="start" type="overlay" [disabled]="isAuthPage">
-    <ion-header class="menu-header">
-      <ion-toolbar color="secondary">
-        <ion-title>
-          <div class="brand-title">
-            <ion-icon name="storefront-outline" class="brand-icon"></ion-icon>
-            <span>PYMEsoft Móvil</span>
-          </div>
-        </ion-title>
-      </ion-toolbar>
-    </ion-header>
+  <!-- Fondo Traslúcido de Oscurecimiento (Backdrop Nativo Angular) -->
+  <div
+    class="custom-side-drawer-backdrop"
+    [class.active]="isMenuOpen && !isAuthPage"
+    (click)="closeMenu()">
+  </div>
 
-    <ion-content class="menu-content" scroll-y="true">
-      <!-- Perfil del Usuario Activo -->
-      <div class="user-profile-card ion-padding" *ngIf="usuario">
-        <div class="avatar-container">
-          <ion-icon name="person-circle-outline" class="user-avatar"></ion-icon>
-        </div>
-        <div class="user-info">
-          <h3 class="user-name">{{ usuario.nombre || usuario.username }}</h3>
-          <p class="user-email">{{ usuario.email || 'Sesión Activa' }}</p>
+  <!-- Panel Deslizable Lateral desde la Izquierda (Side Drawer Overlay Nativo) -->
+  <aside
+    class="custom-side-drawer-panel"
+    [class.open]="isMenuOpen && !isAuthPage">
+    <!-- Encabezado del Panel -->
+    <div class="drawer-header">
+      <div class="drawer-brand">
+        <ion-icon name="storefront-outline"></ion-icon>
+        <span>PYMEsoft Móvil</span>
+      </div>
+      <button type="button" class="drawer-close-btn" (click)="closeMenu()" title="Cerrar Menú">
+        ✕
+      </button>
+    </div>
+
+    <!-- Cuerpo del Panel / Lista de Módulos -->
+    <div class="drawer-body">
+      <!-- Perfil del Usuario -->
+      <div class="drawer-profile" *ngIf="usuario">
+        <ion-icon name="person-circle-outline" class="profile-avatar"></ion-icon>
+        <div class="profile-info">
+          <h4>{{ usuario.nombre || usuario.username }}</h4>
+          <p>{{ usuario.email || 'Sesión Activa' }}</p>
           <ion-badge color="tertiary" class="badge-role">{{ usuario.rol || 'Usuario' }}</ion-badge>
         </div>
       </div>
 
-      <!-- Categorías del Menú según Rol -->
-      <div class="menu-list-container">
-        <ion-list *ngFor="let cat of menuCategoriasPermitidas" class="menu-list">
-          <ion-list-header class="menu-category-header">{{ cat.titulo }}</ion-list-header>
+      <!-- Menú por Categorías -->
+      <div *ngFor="let cat of menuCategoriasPermitidas" class="drawer-menu-category">
+        <div class="category-title">{{ cat.titulo }}</div>
 
-          <ion-item
-            *ngFor="let item of cat.items"
-            button
-            (click)="navegar(item.url)"
-            lines="none"
-            routerLinkActive="selected"
-            class="menu-item">
-            <ion-icon aria-hidden="true" slot="start" [name]="item.icon"></ion-icon>
-            <ion-label>{{ item.title }}</ion-label>
-          </ion-item>
-        </ion-list>
+        <div
+          *ngFor="let item of cat.items"
+          class="drawer-menu-item"
+          (click)="navegar(item.url)">
+          <ion-icon [name]="item.icon"></ion-icon>
+          <span>{{ item.title }}</span>
+        </div>
       </div>
+    </div>
 
-      <!-- Botón de Cerrar Sesión -->
-      <div class="logout-section ion-padding-horizontal ion-margin-top ion-margin-bottom" *ngIf="usuario">
-        <ion-button expand="block" color="danger" fill="outline" (click)="logout()">
-          <ion-icon name="log-out-outline" slot="start"></ion-icon>
-          Cerrar Sesión
-        </ion-button>
-      </div>
-    </ion-content>
-  </ion-menu>
+    <!-- Pie del Panel / Cerrar Sesión -->
+    <div class="drawer-footer" *ngIf="usuario">
+      <button type="button" class="btn-logout" (click)="logout()">
+        <ion-icon name="log-out-outline"></ion-icon>
+        <span>Cerrar Sesión</span>
+      </button>
+    </div>
+  </aside>
 
+  <!-- Outlet Principal de la Aplicación -->
   <ion-router-outlet id="main-content"></ion-router-outlet>
 </ion-app>

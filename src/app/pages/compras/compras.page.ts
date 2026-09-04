@@ -1,8 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuController, ToastController } from '@ionic/angular/lazy';
+import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
-import { ComprasService, Compra } from '../../services/compras.service';
+import { ComprasService, Compra, ItemCompra } from '../../services/compras.service';
+import { ProveedoresService, Proveedor } from '../../services/proveedores.service';
+import { ProductosService, Producto } from '../../services/productos.service';
+import { MenuStateService } from '../../services/menu-state.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-compras',
@@ -13,6 +17,12 @@ import { ComprasService, Compra } from '../../services/compras.service';
 export class ComprasPage implements OnInit {
   activeTab: 'hub' | 'nueva' | 'listado' = 'hub';
 
+  // Catálogos
+  proveedores: any[] = [];
+  productos: any[] = [];
+  cargandoCatalogos = false;
+
+  // Listado de compras
   compras: Compra[] = [];
   loading = false;
   usuario: any = null;
@@ -20,9 +30,24 @@ export class ComprasPage implements OnInit {
   totalPages = 1;
   hasMorePages = true;
 
-  // Formulario nueva compra
-  proveedorNombre = '';
-  totalCompra: number | null = null;
+  // Formulario nueva orden de compra
+  siguienteNumero = 'COMP-001';
+  idProveedor: number | null = null;
+
+  // Selección de producto para borrador
+  idProductoSeleccionado: number | null = null;
+  costoUnitario: number | null = null;
+  cantidad: number = 1;
+
+  // Ítems de la orden
+  itemsCompra: ItemCompra[] = [];
+
+  // Totales
+  subtotalNeto: number = 0;
+  iva: number = 0;
+  descuento: number = 0;
+  totalCompra: number = 0;
+
   guardando = false;
 
   // Modal de confirmación personalizado
@@ -33,8 +58,10 @@ export class ComprasPage implements OnInit {
   constructor(
     private authService: AuthService,
     private comprasService: ComprasService,
+    private proveedoresService: ProveedoresService,
+    private productosService: ProductosService,
     private router: Router,
-    private menuCtrl: MenuController,
+    private menuStateService: MenuStateService,
     private toastController: ToastController
   ) {}
 
@@ -44,6 +71,11 @@ export class ComprasPage implements OnInit {
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
+    if (this.activeTab === 'nueva') {
+      this.cargarCatalogos();
+    } else if (this.activeTab === 'listado') {
+      this.cargarCompras(1, true);
+    }
   }
 
   private verificarAutenticacion(): void {
@@ -54,9 +86,8 @@ export class ComprasPage implements OnInit {
     this.usuario = this.authService.getUsuario();
   }
 
-  async toggleMenu(): Promise<void> {
-    await this.menuCtrl.enable(true, 'main-menu');
-    await this.menuCtrl.open('main-menu');
+  toggleMenu(): void {
+    this.menuStateService.toggle();
   }
 
   irAIndex(): void {
@@ -73,9 +104,139 @@ export class ComprasPage implements OnInit {
 
   seleccionarAccion(accion: 'nueva' | 'listado'): void {
     this.activeTab = accion;
-    if (accion === 'listado') {
+    if (accion === 'nueva') {
+      this.cargarCatalogos();
+    } else if (accion === 'listado') {
       this.cargarCompras(1, true);
     }
+  }
+
+  cargarCatalogos(): void {
+    this.cargandoCatalogos = true;
+
+    // Obtener siguiente consecutivo
+    this.comprasService.getSiguienteNumero().subscribe({
+      next: (res) => {
+        if (res && res.siguiente_numero) {
+          this.siguienteNumero = res.siguiente_numero;
+        }
+      },
+      error: () => {}
+    });
+
+    // Cargar proveedores
+    this.proveedoresService.getProveedores(1, 100).subscribe({
+      next: (res) => {
+        if (Array.isArray(res)) {
+          this.proveedores = res;
+        } else if (res && Array.isArray(res.items)) {
+          this.proveedores = res.items;
+        }
+      },
+      error: (err) => console.error('Error cargando proveedores:', err)
+    });
+
+    // Cargar productos
+    this.productosService.getProductos(1, 100).pipe(
+      finalize(() => this.cargandoCatalogos = false)
+    ).subscribe({
+      next: (res) => {
+        if (Array.isArray(res)) {
+          this.productos = res;
+        } else if (res && Array.isArray(res.items)) {
+          this.productos = res.items;
+        }
+      },
+      error: (err) => console.error('Error cargando productos:', err)
+    });
+  }
+
+  onProductoSeleccionadoChange(): void {
+    if (!this.idProductoSeleccionado) {
+      this.costoUnitario = null;
+      return;
+    }
+    const prod = this.productos.find(p => p.id == this.idProductoSeleccionado);
+    if (prod) {
+      const costoVal = prod.costo ? Number(prod.costo) : (Number(prod.precio || 0) * 0.70);
+      this.costoUnitario = Math.round(costoVal * 100) / 100;
+    }
+  }
+
+  async agregarItem(): Promise<void> {
+    if (!this.idProductoSeleccionado) {
+      const toast = await this.toastController.create({
+        message: 'Por favor selecciona un producto del inventario.',
+        duration: 2500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
+    const prod = this.productos.find(p => p.id == this.idProductoSeleccionado);
+    if (!prod) return;
+
+    const costo = Number(this.costoUnitario) || 0;
+    const cant = Number(this.cantidad) || 1;
+
+    if (costo <= 0) {
+      const toast = await this.toastController.create({
+        message: 'Por favor ingresa un costo unitario válido.',
+        duration: 2500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
+    if (cant <= 0) {
+      const toast = await this.toastController.create({
+        message: 'La cantidad debe ser al menos 1.',
+        duration: 2500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
+    const existeIdx = this.itemsCompra.findIndex(i => i.id_producto == prod.id);
+    if (existeIdx >= 0) {
+      this.itemsCompra[existeIdx].cantidad += cant;
+      this.itemsCompra[existeIdx].costo_unitario = costo;
+      this.itemsCompra[existeIdx].subtotal = +(this.itemsCompra[existeIdx].cantidad * costo).toFixed(2);
+    } else {
+      this.itemsCompra.push({
+        id_producto: prod.id,
+        codigo: prod.codigo || ('PROD-' + prod.id),
+        nombre_producto: prod.nombre,
+        costo_unitario: costo,
+        cantidad: cant,
+        subtotal: +(cant * costo).toFixed(2)
+      });
+    }
+
+    this.idProductoSeleccionado = null;
+    this.costoUnitario = null;
+    this.cantidad = 1;
+
+    this.calcularTotales();
+  }
+
+  eliminarItem(index: number): void {
+    this.itemsCompra.splice(index, 1);
+    this.calcularTotales();
+  }
+
+  calcularTotales(): void {
+    this.subtotalNeto = this.itemsCompra.reduce((sum, item) => sum + item.subtotal, 0);
+    this.subtotalNeto = +(this.subtotalNeto).toFixed(2);
+    this.iva = +(this.subtotalNeto * 0.19).toFixed(2);
+    const desc = Number(this.descuento) || 0;
+    this.totalCompra = Math.max(0, +(this.subtotalNeto + this.iva - desc).toFixed(2));
   }
 
   cargarCompras(page: number = 1, isInitial: boolean = false, event?: any): void {
@@ -85,11 +246,13 @@ export class ComprasPage implements OnInit {
       this.compras = [];
     }
 
-    this.comprasService.getCompras(page, 15).subscribe({
-      next: (res) => {
+    this.comprasService.getCompras(page, 15).pipe(
+      finalize(() => {
         this.loading = false;
         if (event) event.target.complete();
-
+      })
+    ).subscribe({
+      next: (res) => {
         let newItems: Compra[] = [];
         if (Array.isArray(res)) {
           newItems = res;
@@ -110,8 +273,6 @@ export class ComprasPage implements OnInit {
         }
       },
       error: (err) => {
-        this.loading = false;
-        if (event) event.target.complete();
         console.error('Error al cargar compras:', err);
       }
     });
@@ -132,9 +293,31 @@ export class ComprasPage implements OnInit {
   }
 
   async onRegistrarCompra(): Promise<void> {
-    if (!this.proveedorNombre || !this.totalCompra || this.totalCompra <= 0) {
+    if (!this.idProveedor) {
       const toast = await this.toastController.create({
-        message: 'Por favor ingresa el nombre del proveedor y un monto total válido.',
+        message: 'Debes seleccionar un proveedor del catálogo.',
+        duration: 2500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
+    if (this.itemsCompra.length === 0) {
+      const toast = await this.toastController.create({
+        message: 'Debes agregar al menos un producto a la orden de compra.',
+        duration: 2500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
+    if (this.totalCompra <= 0) {
+      const toast = await this.toastController.create({
+        message: 'El monto total de la compra debe ser mayor a 0.',
         duration: 2500,
         color: 'warning',
         position: 'top'
@@ -145,24 +328,31 @@ export class ComprasPage implements OnInit {
 
     this.guardando = true;
 
-    this.comprasService.createCompra({
-      proveedor_nombre: this.proveedorNombre.trim(),
-      total: Number(this.totalCompra),
-      estado: 'Completada'
-    }).subscribe({
+    const payload: Partial<Compra> = {
+      numero: this.siguienteNumero,
+      id_proveedor: Number(this.idProveedor),
+      id_usuario: this.usuario?.id || 1,
+      subtotal: this.subtotalNeto,
+      iva: this.iva,
+      descuento: Number(this.descuento) || 0,
+      total: this.totalCompra,
+      estado: 'Completada',
+      detalles: this.itemsCompra
+    };
+
+    this.comprasService.createCompra(payload).pipe(
+      finalize(() => this.guardando = false)
+    ).subscribe({
       next: (res) => {
-        this.guardando = false;
-        this.limpiarFormulario();
-        this.modalTitulo = '¡Compra Registrada!';
-        this.modalMensaje = 'La orden de compra ha sido registrada con éxito. ¿Quieres ver el historial de compras?';
+        this.modalTitulo = '✅ ¡Orden de Compra Procesada!';
+        this.modalMensaje = `La orden ${res.numero || this.siguienteNumero} fue registrada exitosamente y el inventario de los productos comprados ha sido incrementado.`;
         this.mostrarModalConfirmacion = true;
       },
       error: async (err) => {
-        this.guardando = false;
         console.error('Error al registrar compra:', err);
         const toast = await this.toastController.create({
-          message: err?.error?.mensaje || 'No se pudo registrar la orden de compra.',
-          duration: 3000,
+          message: err?.error?.mensaje || 'No se pudo procesar la orden de compra.',
+          duration: 3500,
           color: 'danger',
           position: 'top'
         });
@@ -178,11 +368,19 @@ export class ComprasPage implements OnInit {
       this.seleccionarAccion('listado');
     } else {
       this.activeTab = 'nueva';
+      this.cargarCatalogos();
     }
   }
 
   private limpiarFormulario(): void {
-    this.proveedorNombre = '';
-    this.totalCompra = null;
+    this.idProveedor = null;
+    this.idProductoSeleccionado = null;
+    this.costoUnitario = null;
+    this.cantidad = 1;
+    this.itemsCompra = [];
+    this.descuento = 0;
+    this.subtotalNeto = 0;
+    this.iva = 0;
+    this.totalCompra = 0;
   }
 }

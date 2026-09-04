@@ -38,10 +38,6 @@ ion-app {
   max-height: 100vh;
 }
 
-ion-split-pane {
-  height: 100%;
-}
-
 ion-page, .ion-page {
   display: flex !important;
   flex-direction: column !important;
@@ -81,32 +77,6 @@ ion-content {
     padding: 10px 16px;
     min-height: 60px;
     gap: 12px;
-  }
-
-  .header-menu-btn {
-    background: rgba(255, 255, 255, 0.18);
-    border: 1.5px solid rgba(255, 255, 255, 0.35);
-    border-radius: 12px;
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ffffff;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    flex-shrink: 0;
-
-    svg {
-      width: 24px;
-      height: 24px;
-      stroke: #ffffff;
-    }
-
-    &:hover, &:active {
-      background: rgba(255, 255, 255, 0.32);
-      transform: scale(1.04);
-    }
   }
 
   .header-title-container {
@@ -255,7 +225,185 @@ ion-content {
 }
 
 /* ----------------------------------------------------------------------------
- * 4. CUSTOM MODAL DIALOG OVERLAY (PURE ANGULAR HTML/CSS)
+ * 4. PURE ANGULAR SIDE DRAWER OVERLAY (IMMUNE TO STENCIL BACKDROP DEADLOCKS)
+ * ---------------------------------------------------------------------------- */
+.custom-side-drawer-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(3px);
+  z-index: 99990;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+
+  &.active {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.custom-side-drawer-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 300px;
+  max-width: 85vw;
+  background: #ffffff;
+  z-index: 99999;
+  box-shadow: 4px 0 25px rgba(15, 43, 92, 0.25);
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  &.open {
+    transform: translateX(0);
+  }
+
+  .drawer-header {
+    background: linear-gradient(135deg, #0f2b5c 0%, #1e3c72 100%);
+    color: #ffffff;
+    padding: 20px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .drawer-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #ffffff;
+
+      ion-icon {
+        font-size: 24px;
+        color: #4facfe;
+      }
+    }
+
+    .drawer-close-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      cursor: pointer;
+      font-size: 18px;
+    }
+  }
+
+  .drawer-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .drawer-profile {
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    border: 1px solid #e2e8f0;
+
+    .profile-avatar {
+      font-size: 40px;
+      color: #1e3c72;
+    }
+
+    .profile-info {
+      h4 {
+        font-size: 15px;
+        font-weight: 700;
+        margin: 0 0 2px;
+        color: #0f172a;
+      }
+      p {
+        font-size: 12px;
+        margin: 0 0 4px;
+        color: #64748b;
+      }
+    }
+  }
+
+  .drawer-menu-category {
+    margin-bottom: 16px;
+
+    .category-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #94a3b8;
+      margin: 0 0 8px 8px;
+    }
+
+    .drawer-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      color: #334155;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s ease;
+
+      ion-icon {
+        font-size: 20px;
+        color: #1e3c72;
+      }
+
+      &:hover, &:active {
+        background: #f1f5f9;
+        color: #1e3c72;
+      }
+    }
+  }
+
+  .drawer-footer {
+    padding: 16px;
+    border-top: 1px solid #e2e8f0;
+
+    .btn-logout {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1.5px solid #ef4444;
+      background: rgba(239, 68, 68, 0.08);
+      color: #dc2626;
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+
+      &:hover, &:active {
+        background: rgba(239, 68, 68, 0.18);
+      }
+    }
+  }
+}
+
+/* ----------------------------------------------------------------------------
+ * 5. CUSTOM MODAL DIALOG OVERLAY (PURE ANGULAR HTML/CSS)
  * ---------------------------------------------------------------------------- */
 .custom-modal-backdrop {
   position: fixed;
@@ -373,7 +521,7 @@ ion-content {
 }
 
 /* ----------------------------------------------------------------------------
- * 5. GLOBAL CARDS & BUTTONS ERGONOMICS
+ * 6. GLOBAL CARDS & BUTTONS ERGONOMICS
  * ---------------------------------------------------------------------------- */
 ion-card {
   border-radius: 16px;

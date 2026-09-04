@@ -19,8 +19,7 @@
             <input
               type="text"
               class="custom-input"
-              [value]="username"
-              (input)="onUsernameInput($event)"
+              [(ngModel)]="username"
               name="username"
               placeholder="ej: admin"
               required />
@@ -36,8 +35,7 @@
             <input
               type="password"
               class="custom-input"
-              [value]="password"
-              (input)="onPasswordInput($event)"
+              [(ngModel)]="password"
               name="password"
               placeholder="••••••••"
               required />

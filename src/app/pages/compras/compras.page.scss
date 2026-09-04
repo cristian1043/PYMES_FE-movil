@@ -163,4 +163,255 @@
   --border-radius: 12px;
   margin-bottom: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  .prov-label {
+    font-size: 13px;
+    color: #475569;
+  }
 }
+
+.readonly-input {
+  background-color: #f1f5f9 !important;
+  font-weight: 700;
+  color: #0f172a !important;
+}
+
+.field-hint {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.section-divider {
+  border: 0;
+  height: 1px;
+  background: #e2e8f0;
+  margin: 20px 0;
+}
+
+.product-picker-card {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+
+  .picker-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e3c72;
+    margin: 0 0 4px;
+  }
+
+  .picker-subtitle {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0 0 14px;
+  }
+}
+
+.row-two-col {
+  display: flex;
+  gap: 12px;
+
+  .form-group {
+    flex: 1;
+    margin-bottom: 12px;
+  }
+}
+
+.btn-add-item {
+  width: 100%;
+  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+
+  &:active {
+    opacity: 0.85;
+  }
+}
+
+.items-draft-container {
+  .draft-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 10px;
+  }
+}
+
+.empty-items-box {
+  background: #f8fafc;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 18px;
+  text-align: center;
+
+  p {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+  }
+}
+
+.items-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item-compra-row {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #1e3c72;
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+
+  .item-row-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .badge-code {
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 700;
+      background: #eff6ff;
+      color: #1e3c72;
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid #bfdbfe;
+    }
+
+    .item-name {
+      flex: 1;
+      font-size: 14px;
+      color: #1e293b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-delete {
+      background: transparent;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+    }
+  }
+
+  .item-row-details {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #64748b;
+
+    .item-subtotal-val {
+      color: #1e3c72;
+      font-weight: 700;
+      font-size: 13px;
+    }
+  }
+}
+
+.totals-summary-card {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 14px;
+  padding: 14px 16px;
+
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    color: #334155;
+    margin-bottom: 8px;
+
+    .text-iva {
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .input-desc-sm {
+      width: 100px;
+      padding: 6px 10px;
+      font-size: 13px;
+      text-align: right;
+    }
+  }
+
+  .totals-divider {
+    height: 1px;
+    background: #cbd5e1;
+    margin: 10px 0;
+  }
+
+  .total-final-box {
+    background: #1e3c72;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .total-label {
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    .total-val {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0;
+    }
+  }
+}
+
+.form-actions {
+  margin-bottom: 24px;
+  padding-bottom: 8px;
+
+  .btn-submit-order {
+    --border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    height: 48px;
+  }
+}
+
+.compra-icon-badge {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(30, 60, 114, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.compra-total-tag {
+  font-size: 15px;
+  font-weight: 800;
+  color: #10b981;
+  margin-top: 4px;
+}
+

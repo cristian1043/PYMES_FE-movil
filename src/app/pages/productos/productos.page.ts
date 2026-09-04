@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuController, ToastController } from '@ionic/angular/lazy';
+import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ProductosService, Producto } from '../../services/productos.service';
+import { MenuStateService } from '../../services/menu-state.service';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-productos',
@@ -40,7 +42,7 @@ export class ProductosPage implements OnInit {
     private authService: AuthService,
     private productosService: ProductosService,
     private router: Router,
-    private menuCtrl: MenuController,
+    private menuStateService: MenuStateService,
     private toastController: ToastController
   ) {}
 
@@ -50,6 +52,9 @@ export class ProductosPage implements OnInit {
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
+    if (this.activeTab === 'listado') {
+      this.cargarProductos(1, true);
+    }
   }
 
   private verificarAutenticacion(): void {
@@ -60,9 +65,8 @@ export class ProductosPage implements OnInit {
     this.usuario = this.authService.getUsuario();
   }
 
-  async toggleMenu(): Promise<void> {
-    await this.menuCtrl.enable(true, 'main-menu');
-    await this.menuCtrl.open('main-menu');
+  toggleMenu(): void {
+    this.menuStateService.toggle();
   }
 
   irAIndex(): void {
@@ -91,11 +95,13 @@ export class ProductosPage implements OnInit {
       this.productos = [];
     }
 
-    this.productosService.getProductos(page, 15).subscribe({
-      next: (res) => {
+    this.productosService.getProductos(page, 15).pipe(
+      finalize(() => {
         this.loading = false;
         if (event) event.target.complete();
-
+      })
+    ).subscribe({
+      next: (res) => {
         let newItems: Producto[] = [];
         if (Array.isArray(res)) {
           newItems = res;
@@ -117,8 +123,6 @@ export class ProductosPage implements OnInit {
         this.filtrarProductos();
       },
       error: (err) => {
-        this.loading = false;
-        if (event) event.target.complete();
         console.error('Error al cargar productos:', err);
       }
     });

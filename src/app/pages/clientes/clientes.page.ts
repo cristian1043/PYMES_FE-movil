@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuController, ToastController } from '@ionic/angular/lazy';
+import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ClientesService, Cliente } from '../../services/clientes.service';
+import { MenuStateService } from '../../services/menu-state.service';
 
 @Component({
   selector: 'app-clientes',
@@ -37,7 +38,7 @@ export class ClientesPage implements OnInit {
     private authService: AuthService,
     private clientesService: ClientesService,
     private router: Router,
-    private menuCtrl: MenuController,
+    private menuStateService: MenuStateService,
     private toastController: ToastController
   ) {}
 
@@ -57,9 +58,8 @@ export class ClientesPage implements OnInit {
     this.usuario = this.authService.getUsuario();
   }
 
-  async toggleMenu(): Promise<void> {
-    await this.menuCtrl.enable(true, 'main-menu');
-    await this.menuCtrl.open('main-menu');
+  toggleMenu(): void {
+    this.menuStateService.toggle();
   }
 
   irAIndex(): void {

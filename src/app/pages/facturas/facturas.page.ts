@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuController, ToastController } from '@ionic/angular/lazy';
+import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { FacturasService, Factura } from '../../services/facturas.service';
+import { MenuStateService } from '../../services/menu-state.service';
 
 @Component({
   selector: 'app-facturas',
@@ -36,7 +37,7 @@ export class FacturasPage implements OnInit {
     private authService: AuthService,
     private facturasService: FacturasService,
     private router: Router,
-    private menuCtrl: MenuController,
+    private menuStateService: MenuStateService,
     private toastController: ToastController
   ) {}
 
@@ -56,9 +57,8 @@ export class FacturasPage implements OnInit {
     this.usuario = this.authService.getUsuario();
   }
 
-  async toggleMenu(): Promise<void> {
-    await this.menuCtrl.enable(true, 'main-menu');
-    await this.menuCtrl.open('main-menu');
+  toggleMenu(): void {
+    this.menuStateService.toggle();
   }
 
   irAIndex(): void {

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { MenuController } from '@ionic/angular';
 import { AuthService } from './services/auth.service';
+import { MenuStateService } from './services/menu-state.service';
 
 interface MenuItem {
   title: string;
@@ -24,6 +24,7 @@ interface MenuCategory {
 export class AppComponent implements OnInit {
   usuario: any = null;
   menuCategoriasPermitidas: MenuCategory[] = [];
+  isMenuOpen = false;
 
   private readonly menuCategoriasRaw: MenuCategory[] = [
     {
@@ -45,7 +46,7 @@ export class AppComponent implements OnInit {
     {
       titulo: 'Analítica y Administración',
       items: [
-        { title: 'Reportes y Métricas', url: '/reportes', icon: 'bar-chart-outline', roles: [1, 3] },
+        { title: 'Reportes y Métricas', url: '/reportes', icon: 'bar-chart-outline', roles: [1, 2, 3] },
         { title: 'Gestión de Usuarios', url: '/usuarios', icon: 'shield-checkmark-outline', roles: [1] },
       ]
     }
@@ -54,13 +55,17 @@ export class AppComponent implements OnInit {
   constructor(
     public authService: AuthService,
     private router: Router,
-    private menuCtrl: MenuController
+    private menuStateService: MenuStateService
   ) {}
 
   ngOnInit(): void {
     this.authService.currentUser$.subscribe(user => {
       this.usuario = user || this.authService.getUsuario();
       this.actualizarMenu();
+    });
+
+    this.menuStateService.isOpen$.subscribe(isOpen => {
+      this.isMenuOpen = isOpen;
     });
   }
 
@@ -84,13 +89,17 @@ export class AppComponent implements OnInit {
       .filter(cat => cat.items.length > 0);
   }
 
-  async navegar(url: string): Promise<void> {
-    await this.menuCtrl.close('main-menu');
+  closeMenu(): void {
+    this.menuStateService.close();
+  }
+
+  navegar(url: string): void {
+    this.closeMenu();
     this.router.navigateByUrl(url);
   }
 
-  async logout(): Promise<void> {
-    await this.menuCtrl.close('main-menu');
+  logout(): void {
+    this.closeMenu();
     this.authService.logout();
     this.router.navigateByUrl('/login');
   }

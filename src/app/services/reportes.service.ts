@@ -29,4 +29,14 @@ export class ReportesService {
     const headers = this.authService.getAuthHeaders();
     return this.http.get<any>(`${this.apiUrl}/dashboard`, { headers });
   }
+
+  getReporteClientes(): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<any>(`${this.apiUrl}/clientes`, { headers });
+  }
+
+  getReporteTopProductos(): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<any>(`${this.apiUrl}/top-productos`, { headers });
+  }
 }

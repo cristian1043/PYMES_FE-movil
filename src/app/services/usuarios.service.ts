@@ -6,14 +6,16 @@ import { AuthService } from './auth.service';
 
 export interface UsuarioItem {
   id?: number;
+  tipo_documento?: string;
+  documento?: string;
   nombre: string;
   apellido?: string;
+  telefono?: string;
   username: string;
   email: string;
   id_rol: number;
   rol_nombre?: string;
   estado?: string;
-  telefono?: string;
   password?: string;
 }
 
@@ -31,6 +33,11 @@ export class UsuariosService {
   getUsuarios(page: number = 1, perPage: number = 15): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
+  }
+
+  checkUsernameDisponible(username: string): Observable<{ disponible: boolean }> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<{ disponible: boolean }>(`${this.apiUrl}/check-username/${encodeURIComponent(username.trim())}`, { headers });
   }
 
   createUsuario(data: Partial<UsuarioItem>): Observable<UsuarioItem> {
