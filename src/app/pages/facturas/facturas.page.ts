@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { FacturasService, Factura } from '../../services/facturas.service';
@@ -37,6 +37,7 @@ export class FacturasPage implements OnInit {
     private authService: AuthService,
     private facturasService: FacturasService,
     private router: Router,
+    private route: ActivatedRoute,
     private menuStateService: MenuStateService,
     private toastController: ToastController,
     private cdr: ChangeDetectorRef
@@ -44,10 +45,26 @@ export class FacturasPage implements OnInit {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
   }
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
+  }
+
+  private sincronizarTabDesdeUrl(): void {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam === 'listado' || tabParam === 'nueva') {
+      this.activeTab = tabParam;
+    } else {
+      this.activeTab = 'hub';
+    }
+
+    if (this.activeTab === 'listado') {
+      this.cargarFacturas(this.currentPage || 1, true);
+    }
+    this.cdr.detectChanges();
   }
 
   private verificarAutenticacion(): void {
@@ -71,14 +88,18 @@ export class FacturasPage implements OnInit {
       this.router.navigateByUrl('/inicio');
     } else {
       this.activeTab = 'hub';
+      this.router.navigate([], { relativeTo: this.route, queryParams: {} });
+      this.cdr.detectChanges();
     }
   }
 
   seleccionarAccion(accion: 'nueva' | 'listado'): void {
     this.activeTab = accion;
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: accion } });
     if (accion === 'listado') {
       this.cargarFacturas(1, true);
     }
+    this.cdr.detectChanges();
   }
 
   cargarFacturas(page: number = 1, isInitial: boolean = false, event?: any): void {
@@ -162,6 +183,7 @@ export class FacturasPage implements OnInit {
         this.modalTitulo = '¡Factura Registrada!';
         this.modalMensaje = 'La factura ha sido registrada con éxito. ¿Quieres ver el historial de facturas?';
         this.mostrarModalConfirmacion = true;
+        this.cdr.detectChanges();
       },
       error: async (err) => {
         this.guardando = false;
@@ -173,6 +195,7 @@ export class FacturasPage implements OnInit {
           position: 'top'
         });
         await toast.present();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -185,6 +208,7 @@ export class FacturasPage implements OnInit {
     } else {
       this.activeTab = 'nueva';
     }
+    this.cdr.detectChanges();
   }
 
   private limpiarFormulario(): void {

@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ProductosService, Producto } from '../../services/productos.service';
@@ -42,6 +42,7 @@ export class ProductosPage implements OnInit {
     private authService: AuthService,
     private productosService: ProductosService,
     private router: Router,
+    private route: ActivatedRoute,
     private menuStateService: MenuStateService,
     private toastController: ToastController,
     private cdr: ChangeDetectorRef
@@ -49,15 +50,28 @@ export class ProductosPage implements OnInit {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
   }
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
+  }
+
+  private sincronizarTabDesdeUrl(): void {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam === 'listado' || tabParam === 'nuevo') {
+      this.activeTab = tabParam;
+    } else {
+      this.activeTab = 'hub';
+    }
+
     if (this.activeTab === 'listado') {
-      this.cargarProductos(1, true);
+      this.cargarProductos(this.currentPage || 1, true);
     } else if (this.activeTab === 'nuevo') {
       this.cargarSiguienteCodigo();
     }
+    this.cdr.detectChanges();
   }
 
   private verificarAutenticacion(): void {
@@ -81,16 +95,20 @@ export class ProductosPage implements OnInit {
       this.router.navigateByUrl('/inicio');
     } else {
       this.activeTab = 'hub';
+      this.router.navigate([], { relativeTo: this.route, queryParams: {} });
+      this.cdr.detectChanges();
     }
   }
 
   seleccionarAccion(accion: 'nuevo' | 'listado'): void {
     this.activeTab = accion;
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: accion } });
     if (accion === 'listado') {
       this.cargarProductos(1, true);
     } else if (accion === 'nuevo') {
       this.cargarSiguienteCodigo();
     }
+    this.cdr.detectChanges();
   }
 
   cargarSiguienteCodigo(): void {
@@ -200,6 +218,7 @@ export class ProductosPage implements OnInit {
     }).pipe(
       finalize(() => {
         this.guardando = false;
+        this.cdr.detectChanges();
       })
     ).subscribe({
       next: (res) => {
@@ -207,6 +226,7 @@ export class ProductosPage implements OnInit {
         this.modalTitulo = '¡Producto Registrado!';
         this.modalMensaje = 'El producto ha sido registrado con éxito. ¿Quieres ver el listado de productos?';
         this.mostrarModalConfirmacion = true;
+        this.cdr.detectChanges();
       },
       error: async (err) => {
         console.error('Error al registrar producto:', err);
@@ -217,6 +237,7 @@ export class ProductosPage implements OnInit {
           position: 'top'
         });
         await toast.present();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -230,6 +251,7 @@ export class ProductosPage implements OnInit {
       this.activeTab = 'nuevo';
       this.cargarSiguienteCodigo();
     }
+    this.cdr.detectChanges();
   }
 
   private limpiarFormulario(): void {

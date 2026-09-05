@@ -160,6 +160,7 @@ export class EmpresaPage implements OnInit {
             position: 'top'
           });
           await toast.present();
+          this.cdr.detectChanges();
         }
       });
   }
@@ -212,6 +213,7 @@ export class EmpresaPage implements OnInit {
             position: 'top'
           });
           await toast.present();
+          this.cdr.detectChanges();
         }
       });
   }

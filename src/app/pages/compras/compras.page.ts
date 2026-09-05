@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ComprasService, Compra, ItemCompra } from '../../services/compras.service';
@@ -61,6 +61,7 @@ export class ComprasPage implements OnInit {
     private proveedoresService: ProveedoresService,
     private productosService: ProductosService,
     private router: Router,
+    private route: ActivatedRoute,
     private menuStateService: MenuStateService,
     private toastController: ToastController,
     private cdr: ChangeDetectorRef
@@ -68,15 +69,28 @@ export class ComprasPage implements OnInit {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
   }
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
+  }
+
+  private sincronizarTabDesdeUrl(): void {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam === 'listado' || tabParam === 'nueva') {
+      this.activeTab = tabParam;
+    } else {
+      this.activeTab = 'hub';
+    }
+
     if (this.activeTab === 'nueva') {
       this.cargarCatalogos();
     } else if (this.activeTab === 'listado') {
-      this.cargarCompras(1, true);
+      this.cargarCompras(this.currentPage || 1, true);
     }
+    this.cdr.detectChanges();
   }
 
   private verificarAutenticacion(): void {
@@ -100,16 +114,20 @@ export class ComprasPage implements OnInit {
       this.router.navigateByUrl('/inicio');
     } else {
       this.activeTab = 'hub';
+      this.router.navigate([], { relativeTo: this.route, queryParams: {} });
+      this.cdr.detectChanges();
     }
   }
 
   seleccionarAccion(accion: 'nueva' | 'listado'): void {
     this.activeTab = accion;
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: accion } });
     if (accion === 'nueva') {
       this.cargarCatalogos();
     } else if (accion === 'listado') {
       this.cargarCompras(1, true);
     }
+    this.cdr.detectChanges();
   }
 
   cargarCatalogos(): void {
@@ -352,12 +370,16 @@ export class ComprasPage implements OnInit {
     };
 
     this.comprasService.createCompra(payload).pipe(
-      finalize(() => this.guardando = false)
+      finalize(() => {
+        this.guardando = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
       next: (res) => {
         this.modalTitulo = '✅ ¡Orden de Compra Procesada!';
         this.modalMensaje = `La orden ${res.numero || this.siguienteNumero} fue registrada exitosamente y el inventario de los productos comprados ha sido incrementado.`;
         this.mostrarModalConfirmacion = true;
+        this.cdr.detectChanges();
       },
       error: async (err) => {
         console.error('Error al registrar compra:', err);
@@ -368,6 +390,7 @@ export class ComprasPage implements OnInit {
           position: 'top'
         });
         await toast.present();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -381,6 +404,7 @@ export class ComprasPage implements OnInit {
       this.activeTab = 'nueva';
       this.cargarCatalogos();
     }
+    this.cdr.detectChanges();
   }
 
   private limpiarFormulario(): void {

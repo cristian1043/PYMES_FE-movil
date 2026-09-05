@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ProveedoresService, Proveedor } from '../../services/proveedores.service';
@@ -38,6 +38,7 @@ export class ProveedoresPage implements OnInit {
     private authService: AuthService,
     private proveedoresService: ProveedoresService,
     private router: Router,
+    private route: ActivatedRoute,
     private menuStateService: MenuStateService,
     private toastController: ToastController,
     private cdr: ChangeDetectorRef
@@ -45,10 +46,26 @@ export class ProveedoresPage implements OnInit {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
   }
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
+  }
+
+  private sincronizarTabDesdeUrl(): void {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam === 'listado' || tabParam === 'nuevo') {
+      this.activeTab = tabParam;
+    } else {
+      this.activeTab = 'hub';
+    }
+
+    if (this.activeTab === 'listado') {
+      this.cargarProveedores(this.currentPage || 1, true);
+    }
+    this.cdr.detectChanges();
   }
 
   private verificarAutenticacion(): void {
@@ -73,14 +90,18 @@ export class ProveedoresPage implements OnInit {
       this.router.navigateByUrl('/inicio');
     } else {
       this.activeTab = 'hub';
+      this.router.navigate([], { relativeTo: this.route, queryParams: {} });
+      this.cdr.detectChanges();
     }
   }
 
   seleccionarAccion(accion: 'nuevo' | 'listado'): void {
     this.activeTab = accion;
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: accion } });
     if (accion === 'listado') {
       this.cargarProveedores(1, true);
     }
+    this.cdr.detectChanges();
   }
 
   cargarProveedores(page: number = 1, isInitial: boolean = false, event?: any): void {
@@ -166,6 +187,7 @@ export class ProveedoresPage implements OnInit {
         this.modalTitulo = '¡Proveedor Registrado!';
         this.modalMensaje = 'El proveedor ha sido registrado con éxito. ¿Quieres ver el directorio de proveedores?';
         this.mostrarModalConfirmacion = true;
+        this.cdr.detectChanges();
       },
       error: async (err) => {
         this.guardando = false;
@@ -177,6 +199,7 @@ export class ProveedoresPage implements OnInit {
           position: 'top'
         });
         await toast.present();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -189,6 +212,7 @@ export class ProveedoresPage implements OnInit {
     } else {
       this.activeTab = 'nuevo';
     }
+    this.cdr.detectChanges();
   }
 
   private limpiarFormulario(): void {

@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ClientesService, Cliente } from '../../services/clientes.service';
@@ -40,6 +40,7 @@ export class ClientesPage implements OnInit {
     private authService: AuthService,
     private clientesService: ClientesService,
     private router: Router,
+    private route: ActivatedRoute,
     private menuStateService: MenuStateService,
     private toastController: ToastController,
     private cdr: ChangeDetectorRef
@@ -47,10 +48,26 @@ export class ClientesPage implements OnInit {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
   }
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
+  }
+
+  private sincronizarTabDesdeUrl(): void {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam === 'listado' || tabParam === 'nuevo') {
+      this.activeTab = tabParam;
+    } else {
+      this.activeTab = 'hub';
+    }
+
+    if (this.activeTab === 'listado') {
+      this.cargarClientes(this.currentPage || 1, true);
+    }
+    this.cdr.detectChanges();
   }
 
   private verificarAutenticacion(): void {
@@ -75,14 +92,18 @@ export class ClientesPage implements OnInit {
       this.router.navigateByUrl('/inicio');
     } else {
       this.activeTab = 'hub';
+      this.router.navigate([], { relativeTo: this.route, queryParams: {} });
+      this.cdr.detectChanges();
     }
   }
 
   seleccionarAccion(accion: 'nuevo' | 'listado'): void {
     this.activeTab = accion;
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: accion } });
     if (accion === 'listado') {
       this.cargarClientes(1, true);
     }
+    this.cdr.detectChanges();
   }
 
   cargarClientes(page: number = 1, isInitial: boolean = false, event?: any): void {
@@ -168,6 +189,7 @@ export class ClientesPage implements OnInit {
         this.modalTitulo = '¡Cliente Registrado!';
         this.modalMensaje = 'El cliente ha sido registrado con éxito. ¿Quieres ver el directorio de clientes?';
         this.mostrarModalConfirmacion = true;
+        this.cdr.detectChanges();
       },
       error: async (err) => {
         this.guardando = false;
@@ -179,6 +201,7 @@ export class ClientesPage implements OnInit {
           position: 'top'
         });
         await toast.present();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -191,6 +214,7 @@ export class ClientesPage implements OnInit {
     } else {
       this.activeTab = 'nuevo';
     }
+    this.cdr.detectChanges();
   }
 
   private limpiarFormulario(): void {

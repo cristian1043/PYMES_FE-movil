@@ -23,6 +23,10 @@
   </ion-header>
 
   <ion-content class="module-background ion-padding">
+    <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+      <ion-refresher-content pullingText="Desliza para actualizar..." refreshingSpinner="crescent"></ion-refresher-content>
+    </ion-refresher>
+
     <!-- Barra Superior de Navegación del Módulo -->
     <div class="module-action-bar ion-margin-bottom">
       <ion-button

@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { UsuariosService, UsuarioItem } from '../../services/usuarios.service';
@@ -69,6 +69,7 @@ export class UsuariosPage implements OnInit {
     private authService: AuthService,
     private usuariosService: UsuariosService,
     private router: Router,
+    private route: ActivatedRoute,
     private menuStateService: MenuStateService,
     private toastController: ToastController,
     private cdr: ChangeDetectorRef
@@ -76,13 +77,26 @@ export class UsuariosPage implements OnInit {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
   }
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
-    if (this.activeTab === 'listado') {
-      this.cargarUsuarios(1, true);
+    this.sincronizarTabDesdeUrl();
+  }
+
+  private sincronizarTabDesdeUrl(): void {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam === 'listado' || tabParam === 'nuevo') {
+      this.activeTab = tabParam;
+    } else {
+      this.activeTab = 'hub';
     }
+
+    if (this.activeTab === 'listado') {
+      this.cargarUsuarios(this.currentPage || 1, true);
+    }
+    this.cdr.detectChanges();
   }
 
   private verificarAutenticacion(): void {
@@ -106,14 +120,18 @@ export class UsuariosPage implements OnInit {
       this.router.navigateByUrl('/inicio');
     } else {
       this.activeTab = 'hub';
+      this.router.navigate([], { relativeTo: this.route, queryParams: {} });
+      this.cdr.detectChanges();
     }
   }
 
   seleccionarAccion(accion: 'nuevo' | 'listado'): void {
     this.activeTab = accion;
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab: accion } });
     if (accion === 'listado') {
       this.cargarUsuarios(1, true);
     }
+    this.cdr.detectChanges();
   }
 
   onUsernameChange(): void {
@@ -487,6 +505,7 @@ export class UsuariosPage implements OnInit {
     .pipe(
       finalize(() => {
         this.guardando = false;
+        this.cdr.detectChanges();
       })
     )
     .subscribe({
@@ -495,6 +514,7 @@ export class UsuariosPage implements OnInit {
         this.modalTitulo = '¡Usuario Registrado Exitosamente!';
         this.modalMensaje = `El usuario @${res.username} ha sido registrado y se le ha notificado a su correo ${res.email} con sus credenciales de acceso. ¿Deseas ver la lista de usuarios?`;
         this.mostrarModalConfirmacion = true;
+        this.cdr.detectChanges();
       },
       error: async (err) => {
         console.error('Error al registrar usuario:', err);
@@ -505,6 +525,7 @@ export class UsuariosPage implements OnInit {
           position: 'top'
         });
         await toast.present();
+        this.cdr.detectChanges();
       }
     });
   }
@@ -517,6 +538,7 @@ export class UsuariosPage implements OnInit {
     } else {
       this.activeTab = 'nuevo';
     }
+    this.cdr.detectChanges();
   }
 
   private limpiarFormulario(): void {

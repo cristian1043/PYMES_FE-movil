@@ -1,5 +1,5 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ReportesService } from '../../services/reportes.service';
 import { MenuStateService } from '../../services/menu-state.service';
@@ -46,17 +46,30 @@ export class ReportesPage implements OnInit {
     private authService: AuthService,
     private reportesService: ReportesService,
     private router: Router,
+    private route: ActivatedRoute,
     private menuStateService: MenuStateService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
   }
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
+    this.sincronizarTabDesdeUrl();
+  }
+
+  private sincronizarTabDesdeUrl(): void {
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    if (tabParam && ['dashboard', 'ventas', 'inventario', 'clientes'].includes(tabParam)) {
+      this.activeTab = tabParam as any;
+    } else {
+      this.activeTab = 'dashboard';
+    }
     this.cargarDatosActuales();
+    this.cdr.detectChanges();
   }
 
   private verificarAutenticacion(): void {
@@ -77,11 +90,16 @@ export class ReportesPage implements OnInit {
   }
 
   cancelarOVolver(): void {
-    this.router.navigateByUrl('/inicio');
+    if (this.activeTab === 'dashboard') {
+      this.router.navigateByUrl('/inicio');
+    } else {
+      this.cambiarTab('dashboard');
+    }
   }
 
   cambiarTab(tab: 'dashboard' | 'ventas' | 'inventario' | 'clientes'): void {
     this.activeTab = tab;
+    this.router.navigate([], { relativeTo: this.route, queryParams: { tab } });
     this.cargarDatosActuales();
   }
 
