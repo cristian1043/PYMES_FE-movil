@@ -236,39 +236,164 @@
 
     <!-- VISTA 3: LISTA DE USUARIOS -->
     <div *ngIf="activeTab === 'listado'" class="listado-container">
+
+      <!-- Barra de Búsqueda y Filtro de Rol -->
+      <div class="filter-header-card">
+        <ion-searchbar
+          [(ngModel)]="searchTerm"
+          (ionInput)="filtrarUsuarios()"
+          placeholder="Buscar por nombre, @username o correo..."
+          class="custom-searchbar">
+        </ion-searchbar>
+
+        <div class="role-filter-chips">
+          <button
+            type="button"
+            class="chip-filter"
+            [class.active]="filtroRol === 'todos'"
+            (click)="filtroRol = 'todos'; filtrarUsuarios()">
+            Todos ({{ totalUsuarios }})
+          </button>
+          <button
+            type="button"
+            class="chip-filter chip-admin"
+            [class.active]="filtroRol === 1"
+            (click)="filtroRol = 1; filtrarUsuarios()">
+            🛡️ Admin
+          </button>
+          <button
+            type="button"
+            class="chip-filter chip-vendedor"
+            [class.active]="filtroRol === 2"
+            (click)="filtroRol = 2; filtrarUsuarios()">
+            💼 Vendedor
+          </button>
+          <button
+            type="button"
+            class="chip-filter chip-almacen"
+            [class.active]="filtroRol === 3"
+            (click)="filtroRol = 3; filtrarUsuarios()">
+            📦 Almacén
+          </button>
+        </div>
+      </div>
+
+      <!-- Spinner de Carga -->
       <div *ngIf="loading" class="ion-text-center ion-padding">
         <ion-spinner name="crescent" color="primary"></ion-spinner>
         <p>Cargando lista de usuarios del sistema...</p>
       </div>
 
-      <div *ngIf="!loading && usuarios.length === 0" class="ion-text-center ion-padding empty-state">
+      <!-- Estado Vacío -->
+      <div *ngIf="!loading && usuariosFiltrados.length === 0" class="ion-text-center ion-padding empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin: 0 auto 12px; display: block;">
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
           <circle cx="9" cy="7" r="4"></circle>
         </svg>
-        <h3>Sin Usuarios</h3>
-        <p>No hay usuarios registrados.</p>
+        <h3>Sin Usuarios Encontrados</h3>
+        <p>No se encontraron usuarios con el filtro o término de búsqueda ingresado.</p>
       </div>
 
-      <ion-list *ngIf="!loading && usuarios.length > 0">
-        <ion-item *ngFor="let u of usuarios" class="usuario-item">
-          <ion-icon name="shield-checkmark-outline" slot="start" color="primary" style="font-size: 28px;"></ion-icon>
+      <!-- Lista Interactiva de Usuarios (Click abre detalle) -->
+      <ion-list *ngIf="!loading && usuariosFiltrados.length > 0">
+        <ion-item
+          *ngFor="let u of usuariosFiltrados"
+          class="usuario-item clickable-card"
+          button
+          (click)="verDetalleUsuario(u)">
+          <div slot="start" class="user-avatar-badge" [ngClass]="'role-' + u.id_rol">
+            {{ (u.nombre || 'U').charAt(0).toUpperCase() }}
+          </div>
           <ion-label>
             <h2>{{ u.nombre }} {{ u.apellido || '' }}</h2>
-            <p>Usuario: @{{ u.username }} | {{ u.email }}</p>
-            <ion-note color="medium">Rol: {{ getNombreRol(u.id_rol) }}</ion-note>
+            <p class="user-handle">@{{ u.username }} • <span class="user-email-text">{{ u.email }}</span></p>
+            <div class="user-meta-line">
+              <span class="user-doc">📄 {{ u.tipo_documento || 'CC' }}: {{ u.documento || 'N/A' }}</span>
+              <span class="user-status-dot" [class.activo]="u.estado === 'Activo'"></span>
+              <span class="user-status-text">{{ u.estado || 'Activo' }}</span>
+            </div>
           </ion-label>
           <div slot="end" class="action-buttons">
-            <ion-badge [color]="u.id_rol === 1 ? 'primary' : (u.id_rol === 3 ? 'warning' : 'info')">
+            <ion-badge [color]="getColorRol(u.id_rol)">
               {{ getNombreRol(u.id_rol) }}
             </ion-badge>
+            <ion-icon name="chevron-forward-outline" color="medium" style="font-size: 18px; margin-left: 6px;"></ion-icon>
           </div>
         </ion-item>
       </ion-list>
 
+      <!-- Barra de Paginación Visible -->
+      <div *ngIf="!loading && totalPages > 1" class="pagination-bar">
+        <ion-button
+          size="small"
+          fill="outline"
+          [disabled]="currentPage === 1"
+          (click)="cambiarPagina(-1)">
+          ‹ Anterior
+        </ion-button>
+        <span class="page-indicator">Página {{ currentPage }} de {{ totalPages }}</span>
+        <ion-button
+          size="small"
+          fill="outline"
+          [disabled]="currentPage >= totalPages"
+          (click)="cambiarPagina(1)">
+          Siguiente ›
+        </ion-button>
+      </div>
+
+      <!-- Pull-to-refresh para actualizar lista sin reiniciar al hub -->
       <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
         <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más usuarios..."></ion-infinite-scroll-content>
       </ion-infinite-scroll>
+    </div>
+
+    <!-- MODAL DE DETALLE COMPLETO DE USUARIO -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalDetalle && usuarioSeleccionado">
+      <div class="custom-modal-card user-detail-card">
+        <div class="modal-header-icon" [ngClass]="'role-' + usuarioSeleccionado.id_rol">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+
+        <h3 class="detail-title">{{ usuarioSeleccionado.nombre }} {{ usuarioSeleccionado.apellido || '' }}</h3>
+        <p class="detail-username">@{{ usuarioSeleccionado.username }}</p>
+
+        <div class="detail-badge-container">
+          <ion-badge [color]="getColorRol(usuarioSeleccionado.id_rol)" class="detail-badge">
+            {{ getNombreRol(usuarioSeleccionado.id_rol) }}
+          </ion-badge>
+          <span class="status-pill" [class.activo]="usuarioSeleccionado.estado === 'Activo'">
+            {{ usuarioSeleccionado.estado || 'Activo' }}
+          </span>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-row">
+            <span class="detail-label">Correo Electrónico:</span>
+            <span class="detail-value">{{ usuarioSeleccionado.email }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Documento:</span>
+            <span class="detail-value">{{ usuarioSeleccionado.tipo_documento || 'CC' }} {{ usuarioSeleccionado.documento || 'No registrado' }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Teléfono:</span>
+            <span class="detail-value">{{ usuarioSeleccionado.telefono || 'No registrado' }}</span>
+          </div>
+          <div class="detail-row" *ngIf="usuarioSeleccionado.banco">
+            <span class="detail-label">Banco / Cuenta:</span>
+            <span class="detail-value">{{ usuarioSeleccionado.banco }} ({{ usuarioSeleccionado.tipo_cuenta || 'Ahorros' }})</span>
+          </div>
+        </div>
+
+        <div class="modal-buttons" style="margin-top: 20px;">
+          <button type="button" class="btn-modal btn-primary" (click)="cerrarModalDetalle()">
+            Cerrar Detalle
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO -->

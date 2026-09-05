@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ReportesService } from '../../services/reportes.service';
@@ -46,7 +46,8 @@ export class ReportesPage implements OnInit {
     private authService: AuthService,
     private reportesService: ReportesService,
     private router: Router,
-    private menuStateService: MenuStateService
+    private menuStateService: MenuStateService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -55,6 +56,7 @@ export class ReportesPage implements OnInit {
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
+    this.cargarDatosActuales();
   }
 
   private verificarAutenticacion(): void {
@@ -63,7 +65,7 @@ export class ReportesPage implements OnInit {
       return;
     }
     this.usuario = this.authService.getUsuario();
-    this.cargarDatosActuales();
+    this.cdr.detectChanges();
   }
 
   toggleMenu(): void {
@@ -85,12 +87,14 @@ export class ReportesPage implements OnInit {
 
   cargarDatosActuales(event?: any): void {
     this.loading = true;
+    this.cdr.detectChanges();
 
     if (this.activeTab === 'dashboard') {
       this.reportesService.getDashboardMetrics().pipe(
         finalize(() => {
           this.loading = false;
           if (event) event.target.complete();
+          this.cdr.detectChanges();
         })
       ).subscribe({
         next: (data: any) => {
@@ -101,9 +105,11 @@ export class ReportesPage implements OnInit {
           this.valorInventario = data?.valor_inventario || 0;
           this.promedioVenta = data?.promedio_venta || 0;
           this.ivaTotal = data?.iva_total || 0;
+          this.cdr.detectChanges();
         },
         error: (err: any) => {
           console.error('Error al cargar dashboard:', err);
+          this.cdr.detectChanges();
         }
       });
     } else if (this.activeTab === 'ventas') {
@@ -111,41 +117,56 @@ export class ReportesPage implements OnInit {
         finalize(() => {
           this.loading = false;
           if (event) event.target.complete();
+          this.cdr.detectChanges();
         })
       ).subscribe({
         next: (res: any) => {
           this.ventasResumen = res;
           this.facturas = res?.facturas || [];
           this.filtrarFacturas();
+          this.cdr.detectChanges();
         },
-        error: (err: any) => console.error('Error reporte ventas:', err)
+        error: (err: any) => {
+          console.error('Error reporte ventas:', err);
+          this.cdr.detectChanges();
+        }
       });
     } else if (this.activeTab === 'inventario') {
       this.reportesService.getReporteInventario().pipe(
         finalize(() => {
           this.loading = false;
           if (event) event.target.complete();
+          this.cdr.detectChanges();
         })
       ).subscribe({
         next: (res: any) => {
           this.inventarioResumen = res;
           this.productos = res?.productos || [];
           this.filtrarProductos();
+          this.cdr.detectChanges();
         },
-        error: (err: any) => console.error('Error reporte inventario:', err)
+        error: (err: any) => {
+          console.error('Error reporte inventario:', err);
+          this.cdr.detectChanges();
+        }
       });
     } else if (this.activeTab === 'clientes') {
       this.reportesService.getReporteClientes().pipe(
         finalize(() => {
           this.loading = false;
           if (event) event.target.complete();
+          this.cdr.detectChanges();
         })
       ).subscribe({
         next: (res: any) => {
           this.clientesRanking = Array.isArray(res) ? res : [];
           this.filtrarClientes();
+          this.cdr.detectChanges();
         },
-        error: (err: any) => console.error('Error reporte clientes:', err)
+        error: (err: any) => {
+          console.error('Error reporte clientes:', err);
+          this.cdr.detectChanges();
+        }
       });
     }
   }

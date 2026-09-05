@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
@@ -16,11 +16,21 @@ export class UsuariosPage implements OnInit {
   activeTab: 'hub' | 'nuevo' | 'listado' = 'hub';
 
   usuarios: UsuarioItem[] = [];
+  usuariosFiltrados: UsuarioItem[] = [];
   loading = false;
   usuario: any = null;
   currentPage = 1;
   totalPages = 1;
-  hasMorePages = true;
+  totalUsuarios = 0;
+  hasMorePages = false;
+
+  // Filtros de búsqueda
+  searchTerm = '';
+  filtroRol: number | 'todos' = 'todos';
+
+  // Modal de detalle de usuario
+  usuarioSeleccionado: UsuarioItem | null = null;
+  mostrarModalDetalle = false;
 
   // Formulario nuevo usuario
   nombreUser = '';
@@ -49,7 +59,8 @@ export class UsuariosPage implements OnInit {
     private usuariosService: UsuariosService,
     private router: Router,
     private menuStateService: MenuStateService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -119,9 +130,11 @@ export class UsuariosPage implements OnInit {
           this.usernameError = '✕ Este nombre de usuario ya está en uso. Elige otro.';
           this.usernameSuccess = '';
         }
+        this.cdr.detectChanges();
       },
       error: () => {
         this.usernameChecking = false;
+        this.cdr.detectChanges();
       }
     });
   }
@@ -131,13 +144,16 @@ export class UsuariosPage implements OnInit {
       this.loading = true;
       this.currentPage = 1;
       this.usuarios = [];
+      this.usuariosFiltrados = [];
+      this.cdr.detectChanges();
     }
 
-    this.usuariosService.getUsuarios(page, 15)
+    this.usuariosService.getUsuarios(page, 20)
       .pipe(
         finalize(() => {
           this.loading = false;
           if (event) event.target.complete();
+          this.cdr.detectChanges();
         })
       )
       .subscribe({
@@ -145,13 +161,16 @@ export class UsuariosPage implements OnInit {
           let newItems: UsuarioItem[] = [];
           if (Array.isArray(res)) {
             newItems = res;
+            this.totalUsuarios = res.length;
             this.hasMorePages = false;
           } else if (res && res.items && Array.isArray(res.items)) {
             newItems = res.items;
+            this.totalUsuarios = res.total || newItems.length;
             this.totalPages = res.total_pages || 1;
             this.hasMorePages = page < this.totalPages;
           } else {
             newItems = [];
+            this.totalUsuarios = 0;
             this.hasMorePages = false;
           }
 
@@ -160,11 +179,58 @@ export class UsuariosPage implements OnInit {
           } else {
             this.usuarios = [...this.usuarios, ...newItems];
           }
+          this.filtrarUsuarios();
+          this.cdr.detectChanges();
         },
         error: (err) => {
           console.error('Error al cargar usuarios:', err);
+          this.cdr.detectChanges();
         }
       });
+  }
+
+  filtrarUsuarios(): void {
+    let filtrados = [...this.usuarios];
+
+    // Filtro por rol
+    if (this.filtroRol !== 'todos') {
+      filtrados = filtrados.filter(u => Number(u.id_rol) === Number(this.filtroRol));
+    }
+
+    // Filtro por texto de búsqueda
+    if (this.searchTerm && this.searchTerm.trim() !== '') {
+      const term = this.searchTerm.toLowerCase().trim();
+      filtrados = filtrados.filter(u =>
+        (u.nombre && u.nombre.toLowerCase().includes(term)) ||
+        (u.apellido && u.apellido.toLowerCase().includes(term)) ||
+        (u.username && u.username.toLowerCase().includes(term)) ||
+        (u.email && u.email.toLowerCase().includes(term)) ||
+        (u.documento && u.documento.toLowerCase().includes(term))
+      );
+    }
+
+    this.usuariosFiltrados = filtrados;
+    this.cdr.detectChanges();
+  }
+
+  verDetalleUsuario(u: UsuarioItem): void {
+    this.usuarioSeleccionado = u;
+    this.mostrarModalDetalle = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarModalDetalle(): void {
+    this.mostrarModalDetalle = false;
+    this.usuarioSeleccionado = null;
+    this.cdr.detectChanges();
+  }
+
+  cambiarPagina(delta: number): void {
+    const nuevaPagina = this.currentPage + delta;
+    if (nuevaPagina >= 1 && nuevaPagina <= this.totalPages) {
+      this.currentPage = nuevaPagina;
+      this.cargarUsuarios(this.currentPage, true);
+    }
   }
 
   loadMoreData(event: any): void {
@@ -178,15 +244,24 @@ export class UsuariosPage implements OnInit {
   }
 
   handleRefresh(event: any): void {
-    this.cargarUsuarios(1, true, event);
+    this.cargarUsuarios(this.currentPage, true, event);
   }
 
   getNombreRol(idRol: number): string {
-    switch (idRol) {
+    switch (Number(idRol)) {
       case 1: return 'Administrador';
       case 2: return 'Vendedor';
       case 3: return 'Almacenista';
       default: return 'Usuario';
+    }
+  }
+
+  getColorRol(idRol: number): string {
+    switch (Number(idRol)) {
+      case 1: return 'primary';  // Azul Corporativo
+      case 2: return 'success';  // Verde Exitoso
+      case 3: return 'warning';  // Amarillo Almacén
+      default: return 'medium';
     }
   }
 

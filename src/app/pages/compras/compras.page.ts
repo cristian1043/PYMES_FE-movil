@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
@@ -62,7 +62,8 @@ export class ComprasPage implements OnInit {
     private productosService: ProductosService,
     private router: Router,
     private menuStateService: MenuStateService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -138,7 +139,10 @@ export class ComprasPage implements OnInit {
 
     // Cargar productos
     this.productosService.getProductos(1, 100).pipe(
-      finalize(() => this.cargandoCatalogos = false)
+      finalize(() => {
+        this.cargandoCatalogos = false;
+        this.cdr.detectChanges();
+      })
     ).subscribe({
       next: (res) => {
         if (Array.isArray(res)) {
@@ -146,8 +150,12 @@ export class ComprasPage implements OnInit {
         } else if (res && Array.isArray(res.items)) {
           this.productos = res.items;
         }
+        this.cdr.detectChanges();
       },
-      error: (err) => console.error('Error cargando productos:', err)
+      error: (err) => {
+        console.error('Error cargando productos:', err);
+        this.cdr.detectChanges();
+      }
     });
   }
 
@@ -250,6 +258,7 @@ export class ComprasPage implements OnInit {
       finalize(() => {
         this.loading = false;
         if (event) event.target.complete();
+        this.cdr.detectChanges();
       })
     ).subscribe({
       next: (res) => {
@@ -271,9 +280,11 @@ export class ComprasPage implements OnInit {
         } else {
           this.compras = [...this.compras, ...newItems];
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error al cargar compras:', err);
+        this.cdr.detectChanges();
       }
     });
   }

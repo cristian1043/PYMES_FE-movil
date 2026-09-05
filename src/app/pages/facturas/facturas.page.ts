@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
@@ -38,7 +38,8 @@ export class FacturasPage implements OnInit {
     private facturasService: FacturasService,
     private router: Router,
     private menuStateService: MenuStateService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -110,11 +111,13 @@ export class FacturasPage implements OnInit {
         } else {
           this.facturas = [...this.facturas, ...newItems];
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
         if (event) event.target.complete();
         console.error('Error al cargar facturas:', err);
+        this.cdr.detectChanges();
       }
     });
   }

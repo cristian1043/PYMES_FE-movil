@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
@@ -39,7 +39,8 @@ export class ProveedoresPage implements OnInit {
     private proveedoresService: ProveedoresService,
     private router: Router,
     private menuStateService: MenuStateService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -56,6 +57,7 @@ export class ProveedoresPage implements OnInit {
       return;
     }
     this.usuario = this.authService.getUsuario();
+    this.cdr.detectChanges();
   }
 
   toggleMenu(): void {
@@ -86,6 +88,7 @@ export class ProveedoresPage implements OnInit {
       this.loading = true;
       this.currentPage = 1;
       this.proveedores = [];
+      this.cdr.detectChanges();
     }
 
     this.proveedoresService.getProveedores(page, 15).subscribe({
@@ -111,11 +114,13 @@ export class ProveedoresPage implements OnInit {
         } else {
           this.proveedores = [...this.proveedores, ...newItems];
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
         if (event) event.target.complete();
         console.error('Error al cargar proveedores:', err);
+        this.cdr.detectChanges();
       }
     });
   }

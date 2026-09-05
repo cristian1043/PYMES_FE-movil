@@ -227,7 +227,229 @@
 
 .usuario-item {
   --padding-start: 16px;
-  --border-radius: 12px;
-  margin-bottom: 8px;
+  --border-radius: 14px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.15s ease;
+
+  &.clickable-card:active {
+    transform: scale(0.99);
+  }
+
+  h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 3px;
+  }
+
+  .user-handle {
+    font-size: 13px;
+    color: #1e3c72;
+    font-weight: 600;
+    margin: 2px 0;
+
+    .user-email-text {
+      color: #64748b;
+      font-weight: 400;
+    }
+  }
+
+  .user-meta-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+
+    .user-status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #94a3b8;
+
+      &.activo {
+        background: #16a34a;
+      }
+    }
+
+    .user-status-text {
+      font-size: 11px;
+      color: #64748b;
+    }
+  }
+}
+
+.user-avatar-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-right: 12px;
+
+  &.role-1 {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+  }
+  &.role-2 {
+    background: linear-gradient(135deg, #2e7d32, #438a47);
+  }
+  &.role-3 {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+  }
+}
+
+.filter-header-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.custom-searchbar {
+  --background: #f8fafc;
+  --border-radius: 10px;
+  --box-shadow: none;
+  padding: 0;
+}
+
+.role-filter-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 6px 2px 2px;
+
+  .chip-filter {
+    border: 1px solid #cbd5e1;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+
+    &.active {
+      background: #1e3c72;
+      color: #ffffff;
+      border-color: #1e3c72;
+    }
+
+    &.chip-admin.active {
+      background: #1e3c72;
+    }
+
+    &.chip-vendedor.active {
+      background: #2e7d32;
+      border-color: #2e7d32;
+    }
+
+    &.chip-almacen.active {
+      background: #d97706;
+      border-color: #d97706;
+    }
+  }
+}
+
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  margin-bottom: 24px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  .page-indicator {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e3c72;
+  }
+}
+
+.user-detail-card {
+  text-align: left !important;
+
+  .modal-header-icon {
+    &.role-1 { background: rgba(30, 60, 114, 0.12); color: #1e3c72; }
+    &.role-2 { background: rgba(46, 125, 50, 0.12); color: #2e7d32; }
+    &.role-3 { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+  }
+
+  .detail-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0 0 2px;
+    text-align: center;
+  }
+
+  .detail-username {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e3c72;
+    margin: 0 0 12px;
+    text-align: center;
+  }
+
+  .detail-badge-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 18px;
+
+    .status-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #e2e8f0;
+      color: #475569;
+
+      &.activo {
+        background: #dcfce7;
+        color: #166534;
+      }
+    }
+  }
+
+  .detail-grid {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px solid #e2e8f0;
+
+    .detail-row {
+      display: flex;
+      flex-direction: column;
+
+      .detail-label {
+        font-size: 11px;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .detail-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1e293b;
+        word-break: break-all;
+      }
+    }
+  }
 }

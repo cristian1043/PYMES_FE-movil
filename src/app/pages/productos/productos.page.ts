@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
@@ -43,7 +43,8 @@ export class ProductosPage implements OnInit {
     private productosService: ProductosService,
     private router: Router,
     private menuStateService: MenuStateService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -110,12 +111,14 @@ export class ProductosPage implements OnInit {
       this.loading = true;
       this.currentPage = 1;
       this.productos = [];
+      this.cdr.detectChanges();
     }
 
     this.productosService.getProductos(page, 15).pipe(
       finalize(() => {
         this.loading = false;
         if (event) event.target.complete();
+        this.cdr.detectChanges();
       })
     ).subscribe({
       next: (res) => {
@@ -138,9 +141,11 @@ export class ProductosPage implements OnInit {
           this.productos = [...this.productos, ...newItems];
         }
         this.filtrarProductos();
+        this.cdr.detectChanges();
       },
       error: (err) => {
         console.error('Error al cargar productos:', err);
+        this.cdr.detectChanges();
       }
     });
   }

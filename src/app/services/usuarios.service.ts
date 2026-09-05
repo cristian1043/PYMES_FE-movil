@@ -17,6 +17,10 @@ export interface UsuarioItem {
   rol_nombre?: string;
   estado?: string;
   password?: string;
+  banco?: string;
+  tipo_cuenta?: string;
+  numero_cuenta?: string;
+  [key: string]: any;
 }
 
 @Injectable({

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
@@ -23,10 +23,12 @@ export class ClientesPage implements OnInit {
 
   // Formulario nuevo cliente
   nombreCliente = '';
+  tipoDocumentoCliente = 'CC';
   documentoCliente = '';
   telefonoCliente = '';
   emailCliente = '';
   direccionCliente = '';
+  ciudadCliente = '';
   guardando = false;
 
   // Modal de confirmación personalizado
@@ -39,7 +41,8 @@ export class ClientesPage implements OnInit {
     private clientesService: ClientesService,
     private router: Router,
     private menuStateService: MenuStateService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -56,6 +59,7 @@ export class ClientesPage implements OnInit {
       return;
     }
     this.usuario = this.authService.getUsuario();
+    this.cdr.detectChanges();
   }
 
   toggleMenu(): void {
@@ -86,6 +90,7 @@ export class ClientesPage implements OnInit {
       this.loading = true;
       this.currentPage = 1;
       this.clientes = [];
+      this.cdr.detectChanges();
     }
 
     this.clientesService.getClientes(page, 15).subscribe({
@@ -111,11 +116,13 @@ export class ClientesPage implements OnInit {
         } else {
           this.clientes = [...this.clientes, ...newItems];
         }
+        this.cdr.detectChanges();
       },
       error: (err) => {
         this.loading = false;
         if (event) event.target.complete();
         console.error('Error al cargar clientes:', err);
+        this.cdr.detectChanges();
       }
     });
   }
