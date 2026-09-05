@@ -48,6 +48,7 @@ export class AppComponent implements OnInit {
       items: [
         { title: 'Reportes y Métricas', url: '/reportes', icon: 'bar-chart-outline', roles: [1, 2, 3] },
         { title: 'Gestión de Usuarios', url: '/usuarios', icon: 'shield-checkmark-outline', roles: [1] },
+        { title: 'Configuración Empresa', url: '/empresa', icon: 'business-outline', roles: [1] },
       ]
     }
   ];

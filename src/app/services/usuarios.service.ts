@@ -49,6 +49,19 @@ export class UsuariosService {
     return this.http.post<UsuarioItem>(`${this.apiUrl}/`, data, { headers });
   }
 
+  updateUsuario(id: number, data: Partial<UsuarioItem>): Observable<UsuarioItem> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.put<UsuarioItem>(`${this.apiUrl}/${id}`, data, { headers });
+  }
+
+  cambiarEstado(id: number, estado: string): Observable<UsuarioItem> {
+    return this.updateUsuario(id, { estado });
+  }
+
+  cambiarRol(id: number, id_rol: number): Observable<UsuarioItem> {
+    return this.updateUsuario(id, { id_rol });
+  }
+
   deleteUsuario(id: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers });

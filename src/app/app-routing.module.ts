@@ -65,6 +65,12 @@ const routes: Routes = [
     loadChildren: () => import('./pages/usuarios/usuarios.module').then(m => m.UsuariosPageModule)
   },
   {
+    path: 'empresa',
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: [1] },
+    loadChildren: () => import('./pages/empresa/empresa.module').then(m => m.EmpresaPageModule)
+  },
+  {
     path: 'folder/:folder',
     canActivate: [AuthGuard],
     loadChildren: () => import('./folder/folder.module').then(m => m.FolderPageModule)

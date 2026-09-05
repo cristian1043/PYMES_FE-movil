@@ -1,0 +1,207 @@
+<ion-page>
+  <!-- Encabezado Corporativo Móvil -->
+  <ion-header class="custom-app-header">
+    <div class="header-content">
+      <button class="header-menu-btn" (click)="toggleMenu()" title="Abrir Menú Lateral">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <div class="header-title-container">
+        <ion-icon name="business-outline" class="header-logo-icon"></ion-icon>
+        <span class="header-title-text">Configuración de Empresa</span>
+      </div>
+
+      <button class="header-back-home-btn" (click)="irAIndex()" title="Volver al Inicio">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </button>
+    </div>
+  </ion-header>
+
+  <ion-content class="empresa-content ion-padding">
+    <ion-refresher slot="fixed" (ionRefresh)="cargarDatosEmpresa($event)">
+      <ion-refresher-content pullingText="Desliza para actualizar..." refreshingSpinner="crescent"></ion-refresher-content>
+    </ion-refresher>
+
+    <!-- Spinner inicial -->
+    <div *ngIf="loading && !empresa" class="ion-text-center ion-padding" style="margin-top: 40px;">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p style="color: #64748b; font-weight: 600; margin-top: 10px;">Cargando configuración de la empresa...</p>
+    </div>
+
+    <div *ngIf="empresa" class="empresa-container">
+
+      <!-- TARJETA 1: DATOS FISCALES Y DE CONTACTO (Reflejo del Front Web) -->
+      <ion-card class="custom-card-touch">
+        <ion-card-header class="card-header-gradient">
+          <div class="header-title-wrap">
+            <div class="icon-circle">
+              <ion-icon name="business-outline"></ion-icon>
+            </div>
+            <div>
+              <h2 class="card-title-text">Datos de la Empresa</h2>
+              <p class="card-subtitle-text">Información corporativa y fiscal</p>
+            </div>
+          </div>
+          <span class="status-badge" [ngClass]="estado === 'Activo' ? 'badge-active' : 'badge-inactive'">
+            {{ estado === 'Activo' ? '🟢 Activa' : '🔴 Pausada' }}
+          </span>
+        </ion-card-header>
+
+        <ion-card-content class="card-content-padding">
+          <form (ngSubmit)="guardarDatos()">
+
+            <!-- Nombre / Razón Social -->
+            <div class="form-group-touch">
+              <label class="form-label-touch">Razón Social / Nombre *</label>
+              <input
+                type="text"
+                class="input-touch"
+                [(ngModel)]="nombre"
+                name="empresaNombre"
+                placeholder="ej: Empresa Ejemplo S.A.S."
+                required
+                minlength="3" />
+            </div>
+
+            <!-- NIT -->
+            <div class="form-group-touch">
+              <label class="form-label-touch">NIT / Identificación Fiscal *</label>
+              <input
+                type="text"
+                class="input-touch"
+                [(ngModel)]="nit"
+                name="empresaNit"
+                placeholder="ej: 900.123.456-7"
+                required />
+            </div>
+
+            <!-- Teléfono -->
+            <div class="form-group-touch">
+              <label class="form-label-touch">Teléfono de Contacto</label>
+              <input
+                type="tel"
+                class="input-touch"
+                [(ngModel)]="telefono"
+                name="empresaTelefono"
+                placeholder="ej: +57 300 123 4567" />
+            </div>
+
+            <!-- Correo Electrónico -->
+            <div class="form-group-touch">
+              <label class="form-label-touch">Correo Electrónico Empresarial</label>
+              <input
+                type="email"
+                class="input-touch"
+                [(ngModel)]="email"
+                name="empresaEmail"
+                placeholder="ej: contacto@empresa.com" />
+            </div>
+
+            <!-- Dirección Fiscal -->
+            <div class="form-group-touch">
+              <label class="form-label-touch">Dirección Fiscal / Sede Principal</label>
+              <input
+                type="text"
+                class="input-touch"
+                [(ngModel)]="direccion"
+                name="empresaDireccion"
+                placeholder="ej: Calle 10 #20-30, Oficina 401" />
+            </div>
+
+            <!-- Botón Guardar Cambios -->
+            <button
+              type="submit"
+              class="btn-submit-touch"
+              [disabled]="guardando || !nombre.trim() || !nit.trim()">
+              <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
+              <span *ngIf="!guardando">💾 Guardar Cambios de la Empresa</span>
+            </button>
+          </form>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- TARJETA 2: ESTADO OPERATIVO DE LA EMPRESA (Reflejo del Front Web) -->
+      <ion-card class="custom-card-touch card-danger-zone">
+        <ion-card-header class="header-danger-zone">
+          <div class="header-title-wrap">
+            <div class="icon-circle icon-danger">
+              <ion-icon name="power-outline"></ion-icon>
+            </div>
+            <div>
+              <h2 class="card-title-text" style="color: #991b1b;">Estado Operativo</h2>
+              <p class="card-subtitle-text">Pausar o reactivar operaciones</p>
+            </div>
+          </div>
+        </ion-card-header>
+
+        <ion-card-content class="card-content-padding">
+          <div class="operational-info-box">
+            <p *ngIf="estado === 'Activo'" class="operational-desc">
+              <strong>Empresa en línea y operativa.</strong> Al pausar las operaciones, los trabajadores no podrán ingresar ni realizar compras ni ventas hasta que vuelvas a reactivarla.
+            </p>
+            <p *ngIf="estado !== 'Activo'" class="operational-desc">
+              <strong>Empresa pausada actualmente.</strong> Las operaciones están restringidas temporalmente. Al reactivarla, tus empleados podrán ingresar a sus módulos normalmente.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            class="btn-status-toggle"
+            [ngClass]="estado === 'Activo' ? 'btn-pause' : 'btn-resume'"
+            (click)="solicitarCambioEstado()">
+            <ion-icon [name]="estado === 'Activo' ? 'pause-circle-outline' : 'play-circle-outline'"></ion-icon>
+            <span>{{ estado === 'Activo' ? '🔴 Desactivar / Pausar Empresa' : '🟢 Reactivar Empresa' }}</span>
+          </button>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN DE CAMBIO DE ESTADO DE LA EMPRESA -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalConfirmacionEstado">
+      <div class="custom-modal-card">
+        <div class="modal-header-icon" [ngClass]="estado === 'Activo' ? 'warning' : 'success'">
+          <svg *ngIf="estado === 'Activo'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <svg *ngIf="estado !== 'Activo'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+
+        <h3>{{ estado === 'Activo' ? '¿Pausar la Empresa?' : '¿Reactivar la Empresa?' }}</h3>
+
+        <p *ngIf="estado === 'Activo'">
+          Estás a punto de pausar <strong>{{ nombre }}</strong>. Los empleados no podrán facturar ni operar en la aplicación hasta que reactives la empresa.
+        </p>
+        <p *ngIf="estado !== 'Activo'">
+          ¿Deseas reactivar las operaciones de <strong>{{ nombre }}</strong>? Tus empleados volverán a tener acceso inmediato a sus módulos.
+        </p>
+
+        <div class="modal-buttons">
+          <button type="button" class="btn-modal btn-secondary" (click)="cancelarCambioEstado()" [disabled]="cambiandoEstado">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn-modal"
+            [ngClass]="estado === 'Activo' ? 'btn-danger' : 'btn-primary'"
+            (click)="confirmarCambioEstado()"
+            [disabled]="cambiandoEstado">
+            <ion-spinner *ngIf="cambiandoEstado" name="crescent"></ion-spinner>
+            <span *ngIf="!cambiandoEstado">{{ estado === 'Activo' ? 'Sí, Pausar Empresa' : 'Sí, Reactivar Empresa' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </ion-content>
+</ion-page>

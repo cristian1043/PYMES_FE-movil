@@ -78,6 +78,14 @@ export class InicioPage implements OnInit {
       icon: 'shield-checkmark-outline',
       color: 'dark',
       roles: [1]
+    },
+    {
+      titulo: 'Configuración de Empresa',
+      descripcion: 'Datos fiscales y control del estado operativo',
+      url: '/empresa',
+      icon: 'business-outline',
+      color: 'primary',
+      roles: [1]
     }
   ];
 

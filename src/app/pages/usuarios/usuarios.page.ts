@@ -27,10 +27,21 @@ export class UsuariosPage implements OnInit {
   // Filtros de búsqueda
   searchTerm = '';
   filtroRol: number | 'todos' = 'todos';
+  filtroEstado: 'todos' | 'Activo' | 'Inactivo' = 'todos';
 
   // Modal de detalle de usuario
   usuarioSeleccionado: UsuarioItem | null = null;
   mostrarModalDetalle = false;
+
+  // Modal de Edición de Usuario
+  mostrarModalEdicion = false;
+  usuarioEditando: Partial<UsuarioItem> = {};
+  guardandoEdicion = false;
+
+  // Confirmación de Cambio de Estado (Activar/Desactivar)
+  mostrarModalConfirmacionEstado = false;
+  usuarioParaCambioEstado: UsuarioItem | null = null;
+  nuevoEstadoPendiente = 'Activo';
 
   // Formulario nuevo usuario
   nombreUser = '';
@@ -197,6 +208,14 @@ export class UsuariosPage implements OnInit {
       filtrados = filtrados.filter(u => Number(u.id_rol) === Number(this.filtroRol));
     }
 
+    // Filtro por estado
+    if (this.filtroEstado !== 'todos') {
+      filtrados = filtrados.filter(u => {
+        const est = (u.estado || 'Activo').toLowerCase();
+        return this.filtroEstado === 'Activo' ? est === 'activo' : est !== 'activo';
+      });
+    }
+
     // Filtro por texto de búsqueda
     if (this.searchTerm && this.searchTerm.trim() !== '') {
       const term = this.searchTerm.toLowerCase().trim();
@@ -223,6 +242,168 @@ export class UsuariosPage implements OnInit {
     this.mostrarModalDetalle = false;
     this.usuarioSeleccionado = null;
     this.cdr.detectChanges();
+  }
+
+  solicitarCambioEstado(usuario: UsuarioItem, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.usuarioParaCambioEstado = usuario;
+    const estActual = (usuario.estado || 'Activo').toLowerCase();
+    this.nuevoEstadoPendiente = estActual === 'activo' ? 'Inactivo' : 'Activo';
+    this.mostrarModalConfirmacionEstado = true;
+    this.cdr.detectChanges();
+  }
+
+  confirmarCambioEstado(): void {
+    if (!this.usuarioParaCambioEstado || !this.usuarioParaCambioEstado.id) return;
+    const id = this.usuarioParaCambioEstado.id;
+    const nuevoEstado = this.nuevoEstadoPendiente;
+    this.mostrarModalConfirmacionEstado = false;
+
+    this.usuariosService.cambiarEstado(id, nuevoEstado).subscribe({
+      next: async () => {
+        if (this.usuarioSeleccionado && this.usuarioSeleccionado.id === id) {
+          this.usuarioSeleccionado.estado = nuevoEstado;
+        }
+        const u = this.usuarios.find(x => x.id === id);
+        if (u) u.estado = nuevoEstado;
+        this.filtrarUsuarios();
+        this.cdr.detectChanges();
+
+        const toast = await this.toastController.create({
+          message: `El usuario ahora está ${nuevoEstado === 'Activo' ? 'Activo 🟢' : 'Desvinculado / Inactivo 🔴'}`,
+          duration: 3000,
+          color: nuevoEstado === 'Activo' ? 'success' : 'dark',
+          position: 'top'
+        });
+        await toast.present();
+      },
+      error: async (err) => {
+        console.error('Error al cambiar estado:', err);
+        const toast = await this.toastController.create({
+          message: 'Error al cambiar estado del usuario.',
+          duration: 3000,
+          color: 'danger',
+          position: 'top'
+        });
+        await toast.present();
+      }
+    });
+  }
+
+  cancelarCambioEstado(): void {
+    this.mostrarModalConfirmacionEstado = false;
+    this.usuarioParaCambioEstado = null;
+    this.cdr.detectChanges();
+  }
+
+  cambiarRolUsuario(usuario: UsuarioItem, nuevoRolId: number): void {
+    if (!usuario.id) return;
+    this.usuariosService.cambiarRol(usuario.id, nuevoRolId).subscribe({
+      next: async () => {
+        usuario.id_rol = nuevoRolId;
+        usuario.rol_nombre = this.getNombreRol(nuevoRolId);
+        if (this.usuarioSeleccionado && this.usuarioSeleccionado.id === usuario.id) {
+          this.usuarioSeleccionado.id_rol = nuevoRolId;
+          this.usuarioSeleccionado.rol_nombre = this.getNombreRol(nuevoRolId);
+        }
+        this.filtrarUsuarios();
+        this.cdr.detectChanges();
+
+        const toast = await this.toastController.create({
+          message: `Rol asignado: ${this.getNombreRol(nuevoRolId)}`,
+          duration: 2500,
+          color: 'primary',
+          position: 'top'
+        });
+        await toast.present();
+      },
+      error: async () => {
+        const toast = await this.toastController.create({
+          message: 'Error al cambiar el rol del usuario.',
+          duration: 2500,
+          color: 'danger',
+          position: 'top'
+        });
+        await toast.present();
+      }
+    });
+  }
+
+  abrirModalEdicion(usuario: UsuarioItem): void {
+    this.usuarioEditando = {
+      id: usuario.id,
+      nombre: usuario.nombre,
+      apellido: usuario.apellido || '',
+      tipo_documento: usuario.tipo_documento || 'CC',
+      documento: usuario.documento || '',
+      telefono: usuario.telefono || '',
+      email: usuario.email,
+      username: usuario.username,
+      id_rol: Number(usuario.id_rol),
+      estado: usuario.estado || 'Activo',
+      banco: usuario.banco || '',
+      tipo_cuenta: usuario.tipo_cuenta || 'Ahorros',
+      numero_cuenta: usuario.numero_cuenta || ''
+    };
+    this.mostrarModalEdicion = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarModalEdicion(): void {
+    this.mostrarModalEdicion = false;
+    this.usuarioEditando = {};
+    this.cdr.detectChanges();
+  }
+
+  guardarEdicionUsuario(): void {
+    if (!this.usuarioEditando.id) return;
+    if (!this.usuarioEditando.nombre || !this.usuarioEditando.email) {
+      this.toastController.create({
+        message: 'Nombre y correo electrónico son requeridos.',
+        duration: 2500,
+        color: 'warning',
+        position: 'top'
+      }).then(t => t.present());
+      return;
+    }
+
+    this.guardandoEdicion = true;
+    const id = this.usuarioEditando.id;
+    this.usuariosService.updateUsuario(id, this.usuarioEditando)
+      .pipe(finalize(() => {
+        this.guardandoEdicion = false;
+        this.cdr.detectChanges();
+      }))
+      .subscribe({
+        next: async () => {
+          const idx = this.usuarios.findIndex(u => u.id === id);
+          if (idx !== -1) {
+            this.usuarios[idx] = { ...this.usuarios[idx], ...this.usuarioEditando } as UsuarioItem;
+          }
+          if (this.usuarioSeleccionado && this.usuarioSeleccionado.id === id) {
+            this.usuarioSeleccionado = { ...this.usuarioSeleccionado, ...this.usuarioEditando } as UsuarioItem;
+          }
+          this.filtrarUsuarios();
+          this.cerrarModalEdicion();
+
+          const toast = await this.toastController.create({
+            message: 'Datos del trabajador actualizados exitosamente.',
+            duration: 3000,
+            color: 'success',
+            position: 'top'
+          });
+          await toast.present();
+        },
+        error: async (err) => {
+          const toast = await this.toastController.create({
+            message: err?.error?.mensaje || 'Error al actualizar el usuario.',
+            duration: 3000,
+            color: 'danger',
+            position: 'top'
+          });
+          await toast.present();
+        }
+      });
   }
 
   cambiarPagina(delta: number): void {

@@ -276,6 +276,31 @@
             📦 Almacén
           </button>
         </div>
+
+        <!-- Filtro por Estado Operativo (Activos / Inactivos) -->
+        <div class="status-filter-chips">
+          <button
+            type="button"
+            class="chip-status"
+            [class.active]="filtroEstado === 'todos'"
+            (click)="filtroEstado = 'todos'; filtrarUsuarios()">
+            Cualquier Estado
+          </button>
+          <button
+            type="button"
+            class="chip-status chip-activo"
+            [class.active]="filtroEstado === 'Activo'"
+            (click)="filtroEstado = 'Activo'; filtrarUsuarios()">
+            🟢 Activos
+          </button>
+          <button
+            type="button"
+            class="chip-status chip-inactivo"
+            [class.active]="filtroEstado === 'Inactivo'"
+            (click)="filtroEstado = 'Inactivo'; filtrarUsuarios()">
+            🔴 Inactivos
+          </button>
+        </div>
       </div>
 
       <!-- Spinner de Carga -->
@@ -347,7 +372,7 @@
       </ion-infinite-scroll>
     </div>
 
-    <!-- MODAL DE DETALLE COMPLETO DE USUARIO -->
+    <!-- MODAL DE DETALLE COMPLETO DE USUARIO (Acciones táctiles completas) -->
     <div class="custom-modal-backdrop" *ngIf="mostrarModalDetalle && usuarioSeleccionado">
       <div class="custom-modal-card user-detail-card">
         <div class="modal-header-icon" [ngClass]="'role-' + usuarioSeleccionado.id_rol">
@@ -369,9 +394,37 @@
           </span>
         </div>
 
+        <!-- Selector Rápido de Rol (Tactile Role Switcher) -->
+        <div class="role-selector-section">
+          <label class="section-label">Cambiar Rol:</label>
+          <div class="role-chips-picker">
+            <button
+              type="button"
+              class="btn-role-pick"
+              [class.selected]="usuarioSeleccionado.id_rol == 1"
+              (click)="cambiarRolUsuario(usuarioSeleccionado, 1)">
+              👑 Admin
+            </button>
+            <button
+              type="button"
+              class="btn-role-pick"
+              [class.selected]="usuarioSeleccionado.id_rol == 2"
+              (click)="cambiarRolUsuario(usuarioSeleccionado, 2)">
+              💼 Vendedor
+            </button>
+            <button
+              type="button"
+              class="btn-role-pick"
+              [class.selected]="usuarioSeleccionado.id_rol == 3"
+              (click)="cambiarRolUsuario(usuarioSeleccionado, 3)">
+              📦 Almacén
+            </button>
+          </div>
+        </div>
+
         <div class="detail-grid">
           <div class="detail-row">
-            <span class="detail-label">Correo Electrónico:</span>
+            <span class="detail-label">Correo:</span>
             <span class="detail-value">{{ usuarioSeleccionado.email }}</span>
           </div>
           <div class="detail-row">
@@ -384,19 +437,158 @@
           </div>
           <div class="detail-row" *ngIf="usuarioSeleccionado.banco">
             <span class="detail-label">Banco / Cuenta:</span>
-            <span class="detail-value">{{ usuarioSeleccionado.banco }} ({{ usuarioSeleccionado.tipo_cuenta || 'Ahorros' }})</span>
+            <span class="detail-value">{{ usuarioSeleccionado.banco }} ({{ usuarioSeleccionado.tipo_cuenta || 'Ahorros' }} N° {{ usuarioSeleccionado.numero_cuenta || '' }})</span>
           </div>
         </div>
 
-        <div class="modal-buttons" style="margin-top: 20px;">
-          <button type="button" class="btn-modal btn-primary" (click)="cerrarModalDetalle()">
-            Cerrar Detalle
+        <!-- Botones Táctiles de Acción Móvil -->
+        <div class="user-detail-actions">
+          <button type="button" class="btn-action-touch btn-edit" (click)="abrirModalEdicion(usuarioSeleccionado)">
+            ✏️ Editar Información
+          </button>
+          <button
+            type="button"
+            class="btn-action-touch"
+            [ngClass]="usuarioSeleccionado.estado === 'Activo' ? 'btn-deactivate' : 'btn-activate'"
+            (click)="solicitarCambioEstado(usuarioSeleccionado)">
+            {{ usuarioSeleccionado.estado === 'Activo' ? '🔴 Desvincular Trabajador' : '🟢 Reactivar Trabajador' }}
+          </button>
+        </div>
+
+        <div class="modal-buttons" style="margin-top: 14px;">
+          <button type="button" class="btn-modal btn-secondary" (click)="cerrarModalDetalle()">
+            Cerrar Ficha
           </button>
         </div>
       </div>
     </div>
 
-    <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO -->
+    <!-- MODAL DE EDICIÓN COMPLETA DE TRABAJADOR -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalEdicion && usuarioEditando">
+      <div class="custom-modal-card user-edit-card">
+        <div class="modal-edit-header">
+          <h3>✏️ Editar Datos del Trabajador</h3>
+          <button type="button" class="close-btn-round" (click)="cerrarModalEdicion()">✕</button>
+        </div>
+
+        <div class="edit-form-content">
+          <div class="form-group">
+            <label class="form-label">Nombres *</label>
+            <input type="text" class="custom-input" [(ngModel)]="usuarioEditando.nombre" name="editNombre" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Apellidos</label>
+            <input type="text" class="custom-input" [(ngModel)]="usuarioEditando.apellido" name="editApellido" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tipo y N° Documento</label>
+            <div style="display: flex; gap: 8px;">
+              <select class="custom-select" style="max-width: 90px;" [(ngModel)]="usuarioEditando.tipo_documento" name="editTipoDoc">
+                <option value="CC">CC</option>
+                <option value="NIT">NIT</option>
+                <option value="CE">CE</option>
+                <option value="PAS">PAS</option>
+              </select>
+              <input type="text" class="custom-input" style="flex: 1;" [(ngModel)]="usuarioEditando.documento" name="editDocumento" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Correo Electrónico *</label>
+            <input type="email" class="custom-input" [(ngModel)]="usuarioEditando.email" name="editEmail" required />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Teléfono de Contacto</label>
+            <input type="tel" class="custom-input" [(ngModel)]="usuarioEditando.telefono" name="editTelefono" />
+          </div>
+
+          <!-- Información Bancaria de Nómina -->
+          <div class="bank-section-header">
+            🏦 Datos Bancarios (Nómina)
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Entidad Bancaria</label>
+            <select class="custom-select" [(ngModel)]="usuarioEditando.banco" name="editBanco">
+              <option value="">-- Sin registrar --</option>
+              <option value="Bancolombia">Bancolombia</option>
+              <option value="Davivienda">Davivienda</option>
+              <option value="Nequi">Nequi</option>
+              <option value="Daviplata">Daviplata</option>
+              <option value="Banco de Bogotá">Banco de Bogotá</option>
+              <option value="BBVA">BBVA</option>
+              <option value="Banco Agrario">Banco Agrario</option>
+              <option value="Otro">Otro Banco</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tipo de Cuenta</label>
+            <select class="custom-select" [(ngModel)]="usuarioEditando.tipo_cuenta" name="editTipoCuenta">
+              <option value="Ahorros">Cuenta de Ahorros</option>
+              <option value="Corriente">Cuenta Corriente</option>
+              <option value="Monedero">Monedero Digital (Nequi/Daviplata)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Número de Cuenta / Celular</label>
+            <input type="text" class="custom-input" [(ngModel)]="usuarioEditando.numero_cuenta" name="editNumCuenta" placeholder="Ej: 123-456789-00" />
+          </div>
+        </div>
+
+        <div class="modal-buttons" style="margin-top: 16px;">
+          <button type="button" class="btn-modal btn-secondary" (click)="cerrarModalEdicion()">
+            Cancelar
+          </button>
+          <button type="button" class="btn-modal btn-primary" (click)="guardarEdicionUsuario()" [disabled]="guardandoEdicion">
+            <ion-spinner *ngIf="guardandoEdicion" name="crescent"></ion-spinner>
+            <span *ngIf="!guardandoEdicion">💾 Guardar Cambios</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL CONFIRMACIÓN CAMBIO DE ESTADO (ACTIVAR / DESACTIVAR) -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalConfirmacionEstado && usuarioParaCambioEstado">
+      <div class="custom-modal-card">
+        <div class="modal-header-icon" [ngClass]="nuevoEstadoPendiente === 'Activo' ? 'success' : 'danger'">
+          <svg *ngIf="nuevoEstadoPendiente === 'Activo'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <svg *ngIf="nuevoEstadoPendiente !== 'Activo'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+        </div>
+        <h3>{{ nuevoEstadoPendiente === 'Activo' ? 'Reactivar Trabajador' : 'Desvincular Trabajador' }}</h3>
+        <p *ngIf="nuevoEstadoPendiente === 'Activo'">
+          ¿Deseas reactivar al trabajador <strong>{{ usuarioParaCambioEstado.nombre }}</strong> (@{{ usuarioParaCambioEstado.username }})? Podrá ingresar nuevamente al sistema con sus credenciales.
+        </p>
+        <p *ngIf="nuevoEstadoPendiente !== 'Activo'">
+          ¿Deseas desvincular a <strong>{{ usuarioParaCambioEstado.nombre }}</strong> (@{{ usuarioParaCambioEstado.username }})? El usuario no podrá acceder a las operaciones de la empresa mientras esté inactivo.
+        </p>
+        <div class="modal-buttons">
+          <button type="button" class="btn-modal btn-secondary" (click)="cancelarCambioEstado()">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn-modal"
+            [ngClass]="nuevoEstadoPendiente === 'Activo' ? 'btn-primary' : 'btn-danger'"
+            (click)="confirmarCambioEstado()">
+            {{ nuevoEstadoPendiente === 'Activo' ? 'Sí, Reactivar' : 'Sí, Desvincular' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO (NUEVO REGISTRO) -->
     <div class="custom-modal-backdrop" *ngIf="mostrarModalConfirmacion">
       <div class="custom-modal-card">
         <div class="modal-header-icon success">
