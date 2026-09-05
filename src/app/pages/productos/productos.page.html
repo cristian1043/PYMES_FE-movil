@@ -92,13 +92,18 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Código del Producto (Opcional)</label>
+              <label class="form-label">
+                Código del Producto
+                <span class="badge-readonly">🔒 Asignado por el sistema</span>
+              </label>
               <input
                 type="text"
-                class="custom-input"
+                class="custom-input readonly-input"
                 [(ngModel)]="nuevoCodigo"
                 name="nuevoCodigo"
-                placeholder="ej: PROD-001 (Generación automática)" />
+                readonly
+                placeholder="Cargando código secuencial..." />
+              <small class="field-hint">Este código es único y secuencial; no puede ser modificado.</small>
             </div>
 
             <div class="form-group">

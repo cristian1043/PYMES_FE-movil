@@ -40,4 +40,9 @@ export class ProductosService {
     const headers = this.authService.getAuthHeaders();
     return this.http.post<Producto>(`${this.apiUrl}/`, data, { headers });
   }
+
+  getSiguienteCodigo(): Observable<{ siguiente_codigo: string }> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<{ siguiente_codigo: string }>(`${this.apiUrl}/siguiente_codigo`, { headers });
+  }
 }

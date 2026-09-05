@@ -54,6 +54,8 @@ export class ProductosPage implements OnInit {
     this.verificarAutenticacion();
     if (this.activeTab === 'listado') {
       this.cargarProductos(1, true);
+    } else if (this.activeTab === 'nuevo') {
+      this.cargarSiguienteCodigo();
     }
   }
 
@@ -85,7 +87,22 @@ export class ProductosPage implements OnInit {
     this.activeTab = accion;
     if (accion === 'listado') {
       this.cargarProductos(1, true);
+    } else if (accion === 'nuevo') {
+      this.cargarSiguienteCodigo();
     }
+  }
+
+  cargarSiguienteCodigo(): void {
+    this.productosService.getSiguienteCodigo().subscribe({
+      next: (res) => {
+        if (res && res.siguiente_codigo) {
+          this.nuevoCodigo = res.siguiente_codigo;
+        }
+      },
+      error: (err) => {
+        console.error('Error al obtener siguiente código de producto:', err);
+      }
+    });
   }
 
   cargarProductos(page: number = 1, isInitial: boolean = false, event?: any): void {
@@ -175,16 +192,18 @@ export class ProductosPage implements OnInit {
       precio: Number(this.nuevoPrecio),
       stock: Number(this.nuevoStock || 0),
       descripcion: (this.nuevaDescripcion || '').trim()
-    }).subscribe({
-      next: (res) => {
+    }).pipe(
+      finalize(() => {
         this.guardando = false;
+      })
+    ).subscribe({
+      next: (res) => {
         this.limpiarFormulario();
         this.modalTitulo = '¡Producto Registrado!';
         this.modalMensaje = 'El producto ha sido registrado con éxito. ¿Quieres ver el listado de productos?';
         this.mostrarModalConfirmacion = true;
       },
       error: async (err) => {
-        this.guardando = false;
         console.error('Error al registrar producto:', err);
         const toast = await this.toastController.create({
           message: err?.error?.mensaje || 'No se pudo registrar el producto. Intenta nuevamente.',
@@ -204,6 +223,7 @@ export class ProductosPage implements OnInit {
       this.seleccionarAccion('listado');
     } else {
       this.activeTab = 'nuevo';
+      this.cargarSiguienteCodigo();
     }
   }
 
@@ -213,5 +233,6 @@ export class ProductosPage implements OnInit {
     this.nuevoPrecio = null;
     this.nuevoStock = null;
     this.nuevaDescripcion = '';
+    this.cargarSiguienteCodigo();
   }
 }

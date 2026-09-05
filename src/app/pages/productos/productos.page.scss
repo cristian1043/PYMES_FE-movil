@@ -159,6 +159,39 @@
   }
 }
 
+.readonly-input {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+  cursor: not-allowed;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+
+  &:focus {
+    border-color: #cbd5e1 !important;
+    box-shadow: none !important;
+  }
+}
+
+.badge-readonly {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0369a1;
+  background: #e0f2fe;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.field-hint {
+  display: block;
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
 .product-item {
   --padding-start: 16px;
   --border-radius: 12px;
