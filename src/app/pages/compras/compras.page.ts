@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
@@ -7,6 +7,7 @@ import { ProveedoresService, Proveedor } from '../../services/proveedores.servic
 import { ProductosService, Producto } from '../../services/productos.service';
 import { MenuStateService } from '../../services/menu-state.service';
 import { finalize } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-compras',
@@ -14,7 +15,7 @@ import { finalize } from 'rxjs/operators';
   styleUrls: ['./compras.page.scss'],
   standalone: false
 })
-export class ComprasPage implements OnInit {
+export class ComprasPage implements OnInit, OnDestroy {
   activeTab: 'hub' | 'nueva' | 'listado' = 'hub';
 
   // Catálogos
@@ -55,6 +56,8 @@ export class ComprasPage implements OnInit {
   modalTitulo = '';
   modalMensaje = '';
 
+  private queryParamsSub?: Subscription;
+
   constructor(
     private authService: AuthService,
     private comprasService: ComprasService,
@@ -69,29 +72,46 @@ export class ComprasPage implements OnInit {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
-    this.sincronizarTabDesdeUrl();
+    this.queryParamsSub = this.route.queryParamMap.subscribe((params) => {
+      const tabParam = params.get('tab');
+      const newTab = (tabParam === 'listado' || tabParam === 'nueva') ? tabParam : 'hub';
+      const tabChanged = this.activeTab !== newTab;
+      this.activeTab = newTab;
+
+      if (this.activeTab === 'nueva') {
+        this.cargarCatalogos();
+      } else if (this.activeTab === 'listado') {
+        if (tabChanged || this.compras.length === 0) {
+          this.cargarCompras(1, true);
+        }
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.queryParamsSub) {
+      this.queryParamsSub.unsubscribe();
+    }
   }
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
-    this.sincronizarTabDesdeUrl();
-  }
-
-  private sincronizarTabDesdeUrl(): void {
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
-    if (tabParam === 'listado' || tabParam === 'nueva') {
-      this.activeTab = tabParam;
-    } else {
-      this.activeTab = 'hub';
+    const targetTab = (tabParam === 'listado' || tabParam === 'nueva') ? tabParam : 'hub';
+    if (this.activeTab !== targetTab) {
+      this.activeTab = targetTab;
+      if (this.activeTab === 'nueva') {
+        this.cargarCatalogos();
+      } else if (this.activeTab === 'listado') {
+        this.cargarCompras(1, true);
+      }
+      this.cdr.detectChanges();
+    } else if (this.activeTab === 'listado' && this.compras.length === 0 && !this.loading) {
+      this.cargarCompras(1, true);
     }
-
-    if (this.activeTab === 'nueva') {
-      this.cargarCatalogos();
-    } else if (this.activeTab === 'listado') {
-      this.cargarCompras(this.currentPage || 1, true);
-    }
-    this.cdr.detectChanges();
   }
+
 
   private verificarAutenticacion(): void {
     if (!this.authService.isLoggedIn()) {
@@ -268,7 +288,7 @@ export class ComprasPage implements OnInit {
   cargarCompras(page: number = 1, isInitial: boolean = false, event?: any): void {
     if (isInitial) {
       this.loading = true;
-      this.currentPage = 1;
+      this.currentPage = page;
       this.compras = [];
     }
 
@@ -305,6 +325,13 @@ export class ComprasPage implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  cambiarPagina(delta: number): void {
+    const targetPage = this.currentPage + delta;
+    if (targetPage >= 1 && targetPage <= this.totalPages) {
+      this.cargarCompras(targetPage, true);
+    }
   }
 
   loadMoreData(event: any): void {

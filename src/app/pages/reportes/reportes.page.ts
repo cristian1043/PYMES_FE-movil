@@ -1,9 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ReportesService } from '../../services/reportes.service';
 import { MenuStateService } from '../../services/menu-state.service';
 import { finalize } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-reportes',
@@ -11,7 +12,7 @@ import { finalize } from 'rxjs/operators';
   styleUrls: ['./reportes.page.scss'],
   standalone: false
 })
-export class ReportesPage implements OnInit {
+export class ReportesPage implements OnInit, OnDestroy {
   activeTab: 'dashboard' | 'ventas' | 'inventario' | 'clientes' = 'dashboard';
   loading = false;
   usuario: any = null;
@@ -42,6 +43,8 @@ export class ReportesPage implements OnInit {
   clientesFiltrados: any[] = [];
   searchClientes = '';
 
+  private queryParamsSub?: Subscription;
+
   constructor(
     private authService: AuthService,
     private reportesService: ReportesService,
@@ -53,24 +56,42 @@ export class ReportesPage implements OnInit {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
-    this.sincronizarTabDesdeUrl();
+    this.queryParamsSub = this.route.queryParamMap.subscribe((params) => {
+      const tabParam = params.get('tab');
+      const newTab: 'dashboard' | 'ventas' | 'inventario' | 'clientes' =
+        (tabParam && ['dashboard', 'ventas', 'inventario', 'clientes'].includes(tabParam))
+          ? tabParam as any
+          : 'dashboard';
+      const tabChanged = this.activeTab !== newTab;
+      this.activeTab = newTab;
+
+      if (tabChanged || this.totalVentas === 0) {
+        this.cargarDatosActuales();
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.queryParamsSub) {
+      this.queryParamsSub.unsubscribe();
+    }
   }
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
-    this.sincronizarTabDesdeUrl();
+    const tabParam = this.route.snapshot.queryParamMap.get('tab');
+    const targetTab: 'dashboard' | 'ventas' | 'inventario' | 'clientes' =
+      (tabParam && ['dashboard', 'ventas', 'inventario', 'clientes'].includes(tabParam))
+        ? tabParam as any
+        : 'dashboard';
+    if (this.activeTab !== targetTab) {
+      this.activeTab = targetTab;
+      this.cargarDatosActuales();
+      this.cdr.detectChanges();
+    }
   }
 
-  private sincronizarTabDesdeUrl(): void {
-    const tabParam = this.route.snapshot.queryParamMap.get('tab');
-    if (tabParam && ['dashboard', 'ventas', 'inventario', 'clientes'].includes(tabParam)) {
-      this.activeTab = tabParam as any;
-    } else {
-      this.activeTab = 'dashboard';
-    }
-    this.cargarDatosActuales();
-    this.cdr.detectChanges();
-  }
 
   private verificarAutenticacion(): void {
     if (!this.authService.isLoggedIn()) {

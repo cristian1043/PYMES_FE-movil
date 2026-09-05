@@ -173,6 +173,25 @@
         </ion-item>
       </ion-list>
 
+      <!-- Barra de Paginación Visible -->
+      <div *ngIf="!loading && totalPages > 1" class="pagination-bar">
+        <ion-button
+          size="small"
+          fill="outline"
+          [disabled]="currentPage === 1"
+          (click)="cambiarPagina(-1)">
+          ‹ Anterior
+        </ion-button>
+        <span class="page-indicator">Página {{ currentPage }} de {{ totalPages }}</span>
+        <ion-button
+          size="small"
+          fill="outline"
+          [disabled]="currentPage >= totalPages"
+          (click)="cambiarPagina(1)">
+          Siguiente ›
+        </ion-button>
+      </div>
+
       <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
         <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más facturas..."></ion-infinite-scroll-content>
       </ion-infinite-scroll>

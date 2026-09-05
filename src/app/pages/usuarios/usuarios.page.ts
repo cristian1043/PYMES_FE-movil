@@ -1,10 +1,11 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { UsuariosService, UsuarioItem } from '../../services/usuarios.service';
 import { MenuStateService } from '../../services/menu-state.service';
 import { finalize } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-usuarios',
@@ -12,7 +13,7 @@ import { finalize } from 'rxjs/operators';
   styleUrls: ['./usuarios.page.scss'],
   standalone: false
 })
-export class UsuariosPage implements OnInit {
+export class UsuariosPage implements OnInit, OnDestroy {
   activeTab: 'hub' | 'nuevo' | 'listado' = 'hub';
 
   usuarios: UsuarioItem[] = [];
@@ -65,6 +66,8 @@ export class UsuariosPage implements OnInit {
   modalTitulo = '';
   modalMensaje = '';
 
+  private queryParamsSub?: Subscription;
+
   constructor(
     private authService: AuthService,
     private usuariosService: UsuariosService,
@@ -77,27 +80,42 @@ export class UsuariosPage implements OnInit {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
-    this.sincronizarTabDesdeUrl();
+    this.queryParamsSub = this.route.queryParamMap.subscribe((params) => {
+      const tabParam = params.get('tab');
+      const newTab = (tabParam === 'listado' || tabParam === 'nuevo') ? tabParam : 'hub';
+      const tabChanged = this.activeTab !== newTab;
+      this.activeTab = newTab;
+
+      if (this.activeTab === 'listado') {
+        if (tabChanged || this.usuarios.length === 0) {
+          this.cargarUsuarios(1, true);
+        }
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.queryParamsSub) {
+      this.queryParamsSub.unsubscribe();
+    }
   }
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
-    this.sincronizarTabDesdeUrl();
-  }
-
-  private sincronizarTabDesdeUrl(): void {
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
-    if (tabParam === 'listado' || tabParam === 'nuevo') {
-      this.activeTab = tabParam;
-    } else {
-      this.activeTab = 'hub';
+    const targetTab = (tabParam === 'listado' || tabParam === 'nuevo') ? tabParam : 'hub';
+    if (this.activeTab !== targetTab) {
+      this.activeTab = targetTab;
+      if (this.activeTab === 'listado') {
+        this.cargarUsuarios(1, true);
+      }
+      this.cdr.detectChanges();
+    } else if (this.activeTab === 'listado' && this.usuarios.length === 0 && !this.loading) {
+      this.cargarUsuarios(1, true);
     }
-
-    if (this.activeTab === 'listado') {
-      this.cargarUsuarios(this.currentPage || 1, true);
-    }
-    this.cdr.detectChanges();
   }
+
 
   private verificarAutenticacion(): void {
     if (!this.authService.isLoggedIn()) {
@@ -171,7 +189,7 @@ export class UsuariosPage implements OnInit {
   cargarUsuarios(page: number = 1, isInitial: boolean = false, event?: any): void {
     if (isInitial) {
       this.loading = true;
-      this.currentPage = 1;
+      this.currentPage = page;
       this.usuarios = [];
       this.usuariosFiltrados = [];
       this.cdr.detectChanges();

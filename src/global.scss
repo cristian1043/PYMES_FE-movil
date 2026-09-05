@@ -543,3 +543,26 @@ ion-button {
   border-radius: 12px;
   font-weight: 600;
 }
+
+/* ----------------------------------------------------------------------------
+ * 7. GLOBAL PAGINATION BAR
+ * ---------------------------------------------------------------------------- */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 16px;
+  margin-bottom: 24px;
+  padding: 8px 12px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  border: 1px solid #e2e8f0;
+
+  .page-indicator {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e3c72;
+  }
+}
+

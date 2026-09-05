@@ -1,9 +1,10 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ProveedoresService, Proveedor } from '../../services/proveedores.service';
 import { MenuStateService } from '../../services/menu-state.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-proveedores',
@@ -11,7 +12,7 @@ import { MenuStateService } from '../../services/menu-state.service';
   styleUrls: ['./proveedores.page.scss'],
   standalone: false
 })
-export class ProveedoresPage implements OnInit {
+export class ProveedoresPage implements OnInit, OnDestroy {
   activeTab: 'hub' | 'nuevo' | 'listado' = 'hub';
 
   proveedores: Proveedor[] = [];
@@ -34,6 +35,8 @@ export class ProveedoresPage implements OnInit {
   modalTitulo = '';
   modalMensaje = '';
 
+  private queryParamsSub?: Subscription;
+
   constructor(
     private authService: AuthService,
     private proveedoresService: ProveedoresService,
@@ -46,26 +49,40 @@ export class ProveedoresPage implements OnInit {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
-    this.sincronizarTabDesdeUrl();
+    this.queryParamsSub = this.route.queryParamMap.subscribe((params) => {
+      const tabParam = params.get('tab');
+      const newTab = (tabParam === 'listado' || tabParam === 'nuevo') ? tabParam : 'hub';
+      const tabChanged = this.activeTab !== newTab;
+      this.activeTab = newTab;
+
+      if (this.activeTab === 'listado') {
+        if (tabChanged || this.proveedores.length === 0) {
+          this.cargarProveedores(1, true);
+        }
+      }
+      this.cdr.detectChanges();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.queryParamsSub) {
+      this.queryParamsSub.unsubscribe();
+    }
   }
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
-    this.sincronizarTabDesdeUrl();
-  }
-
-  private sincronizarTabDesdeUrl(): void {
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
-    if (tabParam === 'listado' || tabParam === 'nuevo') {
-      this.activeTab = tabParam;
-    } else {
-      this.activeTab = 'hub';
+    const targetTab = (tabParam === 'listado' || tabParam === 'nuevo') ? tabParam : 'hub';
+    if (this.activeTab !== targetTab) {
+      this.activeTab = targetTab;
+      if (this.activeTab === 'listado') {
+        this.cargarProveedores(1, true);
+      }
+      this.cdr.detectChanges();
+    } else if (this.activeTab === 'listado' && this.proveedores.length === 0 && !this.loading) {
+      this.cargarProveedores(1, true);
     }
-
-    if (this.activeTab === 'listado') {
-      this.cargarProveedores(this.currentPage || 1, true);
-    }
-    this.cdr.detectChanges();
   }
 
   private verificarAutenticacion(): void {
@@ -107,10 +124,11 @@ export class ProveedoresPage implements OnInit {
   cargarProveedores(page: number = 1, isInitial: boolean = false, event?: any): void {
     if (isInitial) {
       this.loading = true;
-      this.currentPage = 1;
+      this.currentPage = page;
       this.proveedores = [];
       this.cdr.detectChanges();
     }
+
 
     this.proveedoresService.getProveedores(page, 15).subscribe({
       next: (res) => {
@@ -144,6 +162,13 @@ export class ProveedoresPage implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  cambiarPagina(delta: number): void {
+    const targetPage = this.currentPage + delta;
+    if (targetPage >= 1 && targetPage <= this.totalPages) {
+      this.cargarProveedores(targetPage, true);
+    }
   }
 
   loadMoreData(event: any): void {
