@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { ProductosService, Producto } from '../../services/productos.service';
+import { ProveedoresService, Proveedor } from '../../services/proveedores.service';
 import { MenuStateService } from '../../services/menu-state.service';
 import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -22,19 +23,36 @@ export class ProductosPage implements OnInit, OnDestroy {
   searchTerm = '';
   loading = false;
   usuario: any = null;
+  esAdmin = false;
   currentPage = 1;
   totalPages = 1;
   hasMorePages = true;
+
+  // Catálogos reales del sistema
+  categorias: any[] = [];
+  proveedores: any[] = [];
 
   // Formulario nuevo producto
   nuevoNombre = '';
   nuevoCodigo = '';
   nuevoPrecio: number | null = null;
+  nuevoCosto: number | null = null;
   nuevoStock: number | null = null;
   nuevaDescripcion = '';
+  nuevoIdCategoria: number = 1;
+  nuevoIdProveedor: number | null = null;
+  nuevaUnidadMedida = 'UND';
   guardando = false;
 
-  // Modal de confirmación personalizado
+  // Modal detalle de producto al tocar un ítem
+  productoSeleccionado: Producto | null = null;
+  mostrarModalDetalle = false;
+
+  // Modal confirmación eliminar producto (solo administradores)
+  mostrarModalEliminar = false;
+  eliminando = false;
+
+  // Modal de confirmación tras crear producto
   mostrarModalConfirmacion = false;
   modalTitulo = '';
   modalMensaje = '';
@@ -44,6 +62,7 @@ export class ProductosPage implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private productosService: ProductosService,
+    private proveedoresService: ProveedoresService,
     private router: Router,
     private route: ActivatedRoute,
     private menuStateService: MenuStateService,
@@ -53,6 +72,7 @@ export class ProductosPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
+    this.cargarCatalogos();
     this.queryParamsSub = this.route.queryParamMap.subscribe((params) => {
       const tabParam = params.get('tab');
       const newTab = (tabParam === 'listado' || tabParam === 'nuevo') ? tabParam : 'hub';
@@ -78,6 +98,7 @@ export class ProductosPage implements OnInit, OnDestroy {
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
+    this.cargarCatalogos();
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
     const targetTab = (tabParam === 'listado' || tabParam === 'nuevo') ? tabParam : 'hub';
     if (this.activeTab !== targetTab) {
@@ -93,13 +114,132 @@ export class ProductosPage implements OnInit, OnDestroy {
     }
   }
 
-
   private verificarAutenticacion(): void {
     if (!this.authService.isLoggedIn()) {
       this.router.navigate(['/login'], { replaceUrl: true });
       return;
     }
     this.usuario = this.authService.getUsuario();
+    this.esAdmin = this.authService.hasRole([1]) ||
+      (this.usuario?.rol === 'Administrador') ||
+      (Number(this.usuario?.id_rol) === 1);
+    this.cdr.detectChanges();
+  }
+
+  cargarCatalogos(): void {
+    this.productosService.getCategorias().subscribe({
+      next: (res) => {
+        if (Array.isArray(res)) {
+          this.categorias = res;
+          if (this.categorias.length > 0 && (!this.nuevoIdCategoria || this.nuevoIdCategoria === 1)) {
+            this.nuevoIdCategoria = this.categorias[0].id;
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error cargando categorías de productos:', err)
+    });
+
+    this.proveedoresService.getProveedores(1, 100).subscribe({
+      next: (res) => {
+        if (Array.isArray(res)) {
+          this.proveedores = res;
+        } else if (res && Array.isArray(res.items)) {
+          this.proveedores = res.items;
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error cargando proveedores para productos:', err)
+    });
+  }
+
+  getNombreCategoria(idCat?: number): string {
+    if (!idCat) return 'Sin categoría';
+    const c = this.categorias.find(cat => Number(cat.id) === Number(idCat));
+    return c ? c.nombre : `Categoría #${idCat}`;
+  }
+
+  getNombreProveedor(idProv?: number): string {
+    if (!idProv) return 'Sin proveedor distribuidor';
+    const p = this.proveedores.find(prov => Number(prov.id) === Number(idProv));
+    return p ? (p.nombre + (p.nit_documento ? ` (NIT: ${p.nit_documento})` : '')) : `Proveedor #${idProv}`;
+  }
+
+  getEstadoStock(stock?: number): { texto: string; color: string; badge: string } {
+    const s = Number(stock || 0);
+    if (s <= 2500) {
+      return { texto: `⚠️ Stock Bajo: ${s} unds`, color: 'warning', badge: 'stock-bajo' };
+    } else if (s > 10000) {
+      return { texto: `📦 Sobre-stock: ${s} unds`, color: 'tertiary', badge: 'stock-sobre' };
+    }
+    return { texto: `✅ Óptimo: ${s} unds`, color: 'success', badge: 'stock-optimo' };
+  }
+
+  verDetalleProducto(prod: Producto): void {
+    this.productoSeleccionado = prod;
+    this.mostrarModalDetalle = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarModalDetalle(): void {
+    this.mostrarModalDetalle = false;
+    this.productoSeleccionado = null;
+    this.cdr.detectChanges();
+  }
+
+  solicitarEliminarProducto(prod: Producto, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (!this.esAdmin) {
+      return;
+    }
+    this.productoSeleccionado = prod;
+    this.mostrarModalEliminar = true;
+    this.cdr.detectChanges();
+  }
+
+  cancelarEliminar(): void {
+    this.mostrarModalEliminar = false;
+    this.cdr.detectChanges();
+  }
+
+  confirmarEliminarProducto(): void {
+    if (!this.productoSeleccionado || !this.productoSeleccionado.id) return;
+    this.eliminando = true;
+    const id = this.productoSeleccionado.id;
+
+    this.productosService.deleteProducto(id).pipe(
+      finalize(() => {
+        this.eliminando = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: async () => {
+        this.mostrarModalEliminar = false;
+        this.mostrarModalDetalle = false;
+        this.productoSeleccionado = null;
+        this.cargarProductos(this.currentPage, true);
+        const toast = await this.toastController.create({
+          message: 'Producto eliminado correctamente',
+          duration: 3000,
+          color: 'success',
+          position: 'top'
+        });
+        await toast.present();
+        this.cdr.detectChanges();
+      },
+      error: async (err) => {
+        console.error('Error al eliminar producto:', err);
+        const msg = err?.error?.mensaje || 'No se puede eliminar el producto porque está asociado a compras o facturas.';
+        const toast = await this.toastController.create({
+          message: msg,
+          duration: 4000,
+          color: 'danger',
+          position: 'top'
+        });
+        await toast.present();
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   toggleMenu(): void {
@@ -237,13 +377,19 @@ export class ProductosPage implements OnInit, OnDestroy {
 
     this.guardando = true;
 
-    this.productosService.createProducto({
+    const productoPayload: Producto = {
       nombre: this.nuevoNombre.trim(),
       codigo: (this.nuevoCodigo || '').trim(),
       precio: Number(this.nuevoPrecio),
+      costo: this.nuevoCosto !== null ? Number(this.nuevoCosto) : Math.round(Number(this.nuevoPrecio) * 0.70 * 100) / 100,
       stock: Number(this.nuevoStock || 0),
-      descripcion: (this.nuevaDescripcion || '').trim()
-    }).pipe(
+      descripcion: (this.nuevaDescripcion || '').trim(),
+      id_categoria: Number(this.nuevoIdCategoria || 1),
+      id_proveedor: this.nuevoIdProveedor ? Number(this.nuevoIdProveedor) : undefined,
+      unidad_medida: this.nuevaUnidadMedida || 'UND'
+    };
+
+    this.productosService.createProducto(productoPayload).pipe(
       finalize(() => {
         this.guardando = false;
         this.cdr.detectChanges();
@@ -286,8 +432,12 @@ export class ProductosPage implements OnInit, OnDestroy {
     this.nuevoNombre = '';
     this.nuevoCodigo = '';
     this.nuevoPrecio = null;
+    this.nuevoCosto = null;
     this.nuevoStock = null;
     this.nuevaDescripcion = '';
+    this.nuevoIdCategoria = this.categorias.length > 0 ? this.categorias[0].id : 1;
+    this.nuevoIdProveedor = null;
+    this.nuevaUnidadMedida = 'UND';
     this.cargarSiguienteCodigo();
   }
 }

@@ -20,11 +20,15 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<any>(this.getUsuarioDesdeStorage());
   public currentUser$ = this.currentUserSubject.asObservable();
 
+  private empresaActivaSubject = new BehaviorSubject<any>(this.getEmpresaActivaDesdeStorage());
+  public empresaActiva$ = this.empresaActivaSubject.asObservable();
+
   constructor(private http: HttpClient) {
     // Limpiar residuos de localStorage persistente antiguo para forzar la validación de credenciales al iniciar
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('access_token');
       localStorage.removeItem('usuario');
+      localStorage.removeItem('empresa_activa');
     }
   }
 
@@ -50,12 +54,15 @@ export class AuthService {
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.removeItem('access_token');
       sessionStorage.removeItem('usuario');
+      sessionStorage.removeItem('empresa_activa');
     }
     if (typeof localStorage !== 'undefined') {
       localStorage.removeItem('access_token');
       localStorage.removeItem('usuario');
+      localStorage.removeItem('empresa_activa');
     }
     this.currentUserSubject.next(null);
+    this.empresaActivaSubject.next(null);
   }
 
   getToken(): string | null {
@@ -73,7 +80,41 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  getEmpresaActiva(): any {
+    return this.empresaActivaSubject.value;
+  }
+
+  setEmpresaActiva(empresa: any, rolId?: number): void {
+    if (!empresa) {
+      this.clearEmpresaActiva();
+      return;
+    }
+    const empData = { ...empresa };
+    if (rolId !== undefined && rolId !== null) {
+      empData.rol_id = Number(rolId);
+      const rolesNombres: Record<number, string> = { 1: 'Administrador', 2: 'Vendedor', 3: 'Almacenista' };
+      empData.rol_nombre = rolesNombres[Number(rolId)] || 'Vendedor';
+    }
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('empresa_activa', JSON.stringify(empData));
+    }
+    this.empresaActivaSubject.next(empData);
+  }
+
+  clearEmpresaActiva(): void {
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.removeItem('empresa_activa');
+    }
+    this.empresaActivaSubject.next(null);
+  }
+
   getRolId(): number {
+    // Si hay una empresa activa seleccionada, tiene prioridad el rol asignado en dicha empresa
+    const emp = this.getEmpresaActiva();
+    if (emp && emp.rol_id !== undefined && emp.rol_id !== null) {
+      return Number(emp.rol_id);
+    }
+
     const u = this.getUsuario();
     if (!u) return 0;
     if (u.id_rol !== undefined && u.id_rol !== null) return Number(u.id_rol);
@@ -97,6 +138,17 @@ export class AuthService {
     if (!userStr) return null;
     try {
       return JSON.parse(userStr);
+    } catch {
+      return null;
+    }
+  }
+
+  private getEmpresaActivaDesdeStorage(): any {
+    if (typeof sessionStorage === 'undefined') return null;
+    const empStr = sessionStorage.getItem('empresa_activa');
+    if (!empStr) return null;
+    try {
+      return JSON.parse(empStr);
     } catch {
       return null;
     }

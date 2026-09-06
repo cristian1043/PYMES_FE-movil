@@ -1,0 +1,229 @@
+<ion-page>
+  <!-- Encabezado Corporativo -->
+  <ion-header class="custom-app-header">
+    <div class="header-content">
+      <div class="header-title-container">
+        <ion-icon name="storefront-outline" class="header-logo-icon"></ion-icon>
+        <span class="header-title-text">PYMEsoft Móvil</span>
+      </div>
+
+      <button class="header-logout-btn" (click)="cerrarSesion()" title="Cerrar Sesión Global">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+          <polyline points="16 17 21 12 16 7"></polyline>
+          <line x1="21" y1="12" x2="9" y2="12"></line>
+        </svg>
+        <span class="logout-label">Salir</span>
+      </button>
+    </div>
+  </ion-header>
+
+  <ion-content class="workspace-background ion-padding">
+    <ion-refresher slot="fixed" (ionRefresh)="cargarEmpresas($event)">
+      <ion-refresher-content></ion-refresher-content>
+    </ion-refresher>
+
+    <!-- Banner Superior de Espacios de Trabajo -->
+    <div class="workspace-banner ion-margin-bottom">
+      <div class="banner-icon">🏢</div>
+      <div class="banner-text">
+        <h2>Mis Empresas y Espacios</h2>
+        <p>Selecciona la empresa con la que deseas operar hoy en el sistema</p>
+      </div>
+    </div>
+
+    <!-- Barra de Acción para Administradores -->
+    <div class="action-bar ion-margin-bottom" *ngIf="rolIdGlobal === 1">
+      <ion-button
+        expand="block"
+        color="success"
+        class="btn-nueva-empresa"
+        (click)="abrirModalNuevaEmpresa()">
+        <ion-icon name="add-circle-outline" slot="start"></ion-icon>
+        + Registrar Nueva Empresa
+      </ion-button>
+    </div>
+
+    <!-- Spinner de Carga -->
+    <div class="loading-container" *ngIf="loading && empresas.length === 0">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p>Cargando espacios de trabajo vinculados...</p>
+    </div>
+
+    <!-- Listado de Tarjetas de Empresa -->
+    <div class="companies-container" *ngIf="empresas.length > 0">
+      <div
+        *ngFor="let emp of empresas"
+        class="company-card"
+        [class.empresa-pausada]="emp.estado === 'Inactivo'"
+        [class.empresa-activa-actual]="emp.esActivaActual">
+
+        <!-- Banner de la Tarjeta -->
+        <div class="company-card-header">
+          <div class="company-icon">🏢</div>
+          <div class="company-badges">
+            <span
+              class="status-chip"
+              [class.chip-activo]="emp.estado === 'Activo'"
+              [class.chip-inactivo]="emp.estado === 'Inactivo'">
+              {{ emp.estado === 'Activo' ? '🟢 Activa' : '🔴 Pausada' }}
+            </span>
+            <span class="chip-actual" *ngIf="emp.esActivaActual">
+              ✨ En Uso
+            </span>
+          </div>
+        </div>
+
+        <!-- Contenido de la Tarjeta -->
+        <div class="company-card-body">
+          <h3 class="company-name">{{ emp.nombre }}</h3>
+          <p class="company-nit"><strong>NIT:</strong> {{ emp.nit }}</p>
+
+          <div class="company-extra-info" *ngIf="emp.direccion || emp.telefono">
+            <p *ngIf="emp.telefono" class="info-row">
+              <ion-icon name="call-outline"></ion-icon> {{ emp.telefono }}
+            </p>
+            <p *ngIf="emp.direccion" class="info-row">
+              <ion-icon name="location-outline"></ion-icon> {{ emp.direccion }}
+            </p>
+          </div>
+
+          <!-- Perfil / Rol en esta Empresa -->
+          <div class="company-role-box">
+            <span class="role-label">Tu Rol en esta Empresa:</span>
+            <div class="role-badge-container">
+              <span
+                class="role-badge"
+                [ngClass]="{
+                  'badge-admin': emp.rol_id === 1,
+                  'badge-almacen': emp.rol_id === 3,
+                  'badge-vendedor': emp.rol_id === 2
+                }">
+                <ng-container [ngSwitch]="emp.rol_id">
+                  <span *ngSwitchCase="1">👑 Administrador (Activo)</span>
+                  <span *ngSwitchCase="3">📦 Almacenista (Activo)</span>
+                  <span *ngSwitchDefault>🏷️ Vendedor (Activo)</span>
+                </ng-container>
+              </span>
+            </div>
+          </div>
+
+          <!-- Botón de Entrada Táctil -->
+          <ion-button
+            expand="block"
+            class="btn-ingresar"
+            [color]="emp.estado === 'Inactivo' && rolIdGlobal !== 1 ? 'medium' : 'primary'"
+            (click)="seleccionarEmpresa(emp)">
+            <span *ngIf="emp.estado === 'Inactivo' && rolIdGlobal !== 1">
+              ⛔ Operaciones Pausadas
+            </span>
+            <span *ngIf="emp.estado !== 'Inactivo' || rolIdGlobal === 1">
+              Ingresar al Espacio de Trabajo ➔
+            </span>
+          </ion-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estado Vacío -->
+    <div class="empty-state ion-padding text-center" *ngIf="!loading && empresas.length === 0">
+      <div class="empty-icon">📭</div>
+      <h3>Sin Espacios de Trabajo</h3>
+      <p>No tienes empresas asociadas activamente a tu usuario.</p>
+      <ion-button
+        *ngIf="rolIdGlobal === 1"
+        color="primary"
+        fill="outline"
+        (click)="abrirModalNuevaEmpresa()"
+        class="ion-margin-top">
+        + Registrar Primera Empresa
+      </ion-button>
+    </div>
+
+    <!-- Botón Cerrar Sesión Global -->
+    <div class="bottom-logout-section ion-margin-top ion-margin-bottom">
+      <ion-button
+        expand="block"
+        fill="outline"
+        color="medium"
+        (click)="cerrarSesion()">
+        <ion-icon name="log-out-outline" slot="start"></ion-icon>
+        Cerrar Sesión Global
+      </ion-button>
+    </div>
+  </ion-content>
+
+  <!-- MODAL: REGISTRAR NUEVA EMPRESA (Admin Global) -->
+  <div class="custom-modal-backdrop" *ngIf="mostrarModalNuevaEmpresa" (click)="cerrarModalNuevaEmpresa()"></div>
+  <div class="custom-modal-sheet" *ngIf="mostrarModalNuevaEmpresa">
+    <div class="modal-sheet-header">
+      <h4>🏢 Registrar Nueva Empresa</h4>
+      <button class="modal-close-btn" (click)="cerrarModalNuevaEmpresa()">✕</button>
+    </div>
+
+    <div class="modal-sheet-body">
+      <div class="form-group">
+        <label>Razón Social / Nombre de la Empresa *</label>
+        <ion-input
+          type="text"
+          placeholder="Ej: Inversiones ABC S.A.S."
+          [(ngModel)]="nuevoNombre"
+          class="custom-input">
+        </ion-input>
+      </div>
+
+      <div class="form-group">
+        <label>NIT / Identificación Fiscal *</label>
+        <ion-input
+          type="text"
+          placeholder="Ej: 901.234.567-8"
+          [(ngModel)]="nuevoNit"
+          class="custom-input">
+        </ion-input>
+      </div>
+
+      <div class="form-group">
+        <label>Teléfono de Contacto</label>
+        <ion-input
+          type="tel"
+          placeholder="Ej: 3001234567"
+          [(ngModel)]="nuevoTelefono"
+          class="custom-input">
+        </ion-input>
+      </div>
+
+      <div class="form-group">
+        <label>Correo Electrónico Corporativo</label>
+        <ion-input
+          type="email"
+          placeholder="contacto@empresa.com"
+          [(ngModel)]="nuevoEmail"
+          class="custom-input">
+        </ion-input>
+      </div>
+
+      <div class="form-group">
+        <label>Dirección Fiscal / Sede</label>
+        <ion-input
+          type="text"
+          placeholder="Ej: Carrera 10 # 20-30"
+          [(ngModel)]="nuevaDireccion"
+          class="custom-input">
+        </ion-input>
+      </div>
+    </div>
+
+    <div class="modal-sheet-footer">
+      <ion-button fill="clear" color="medium" (click)="cerrarModalNuevaEmpresa()">
+        Cancelar
+      </ion-button>
+      <ion-button
+        color="success"
+        [disabled]="guardandoEmpresa || !nuevoNombre.trim() || !nuevoNit.trim()"
+        (click)="guardarNuevaEmpresa()">
+        <ion-spinner name="crescent" *ngIf="guardandoEmpresa"></ion-spinner>
+        <span *ngIf="!guardandoEmpresa">Guardar Empresa</span>
+      </ion-button>
+    </div>
+  </div>
+</ion-page>

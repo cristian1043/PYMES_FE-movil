@@ -60,4 +60,20 @@ export class EmpresasService {
       headers: this.authService.getAuthHeaders()
     });
   }
+
+  cambiarEstadoEmpresa(id: number, estado: string): Observable<Empresa> {
+    return this.updateEmpresa(id, { estado });
+  }
+
+  getVinculacion(usuarioId: number, empresaId: number): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/usuario_empresas/vinculacion?usuario_id=${usuarioId}&empresa_id=${empresaId}`, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
+
+  actualizarVinculacion(data: { usuario_id: number; empresa_id: number; estado?: string; rol_id?: number }): Observable<any> {
+    return this.http.put<any>(`${environment.apiUrl}/usuario_empresas/vinculacion`, data, {
+      headers: this.authService.getAuthHeaders()
+    });
+  }
 }

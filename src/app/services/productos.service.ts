@@ -10,9 +10,13 @@ export interface Producto {
   nombre: string;
   descripcion?: string;
   precio: number;
+  costo?: number;
   stock?: number;
+  unidad_medida?: string;
   id_categoria?: number;
   categoria_nombre?: string;
+  id_proveedor?: number;
+  proveedor_nombre?: string;
 }
 
 @Injectable({
@@ -20,6 +24,7 @@ export interface Producto {
 })
 export class ProductosService {
   private apiUrl = `${environment.apiUrl}/productos`;
+  private categoriasUrl = `${environment.apiUrl}/categorias`;
 
   constructor(
     private http: HttpClient,
@@ -41,8 +46,23 @@ export class ProductosService {
     return this.http.post<Producto>(`${this.apiUrl}/`, data, { headers });
   }
 
+  updateProducto(id: number, data: Partial<Producto>): Observable<Producto> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.put<Producto>(`${this.apiUrl}/${id}`, data, { headers });
+  }
+
+  deleteProducto(id: number): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers });
+  }
+
   getSiguienteCodigo(): Observable<{ siguiente_codigo: string }> {
     const headers = this.authService.getAuthHeaders();
     return this.http.get<{ siguiente_codigo: string }>(`${this.apiUrl}/siguiente_codigo`, { headers });
+  }
+
+  getCategorias(): Observable<any[]> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<any[]>(`${this.categoriasUrl}/`, { headers });
   }
 }
