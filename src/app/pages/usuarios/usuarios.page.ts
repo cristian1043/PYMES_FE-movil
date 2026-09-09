@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { UsuariosService, UsuarioItem } from '../../services/usuarios.service';
+import { EmpresasService } from '../../services/empresas.service';
 import { MenuStateService } from '../../services/menu-state.service';
 import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -71,6 +72,7 @@ export class UsuariosPage implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private usuariosService: UsuariosService,
+    private empresasService: EmpresasService,
     private router: Router,
     private route: ActivatedRoute,
     private menuStateService: MenuStateService,
@@ -295,6 +297,7 @@ export class UsuariosPage implements OnInit, OnDestroy {
     const nuevoEstado = this.nuevoEstadoPendiente;
     this.mostrarModalConfirmacionEstado = false;
 
+    // 1. Sincronizar en /api/usuarios/<id>
     this.usuariosService.cambiarEstado(id, nuevoEstado).subscribe({
       next: async () => {
         if (this.usuarioSeleccionado && this.usuarioSeleccionado.id === id) {
@@ -304,6 +307,19 @@ export class UsuariosPage implements OnInit, OnDestroy {
         if (u) u.estado = nuevoEstado;
         this.filtrarUsuarios();
         this.cdr.detectChanges();
+
+        // 2. Sincronizar en la vinculación multitenant MySQL para reflejo web inmediato
+        const empActiva = this.authService.getEmpresaActiva();
+        if (empActiva && empActiva.id) {
+          const vincEstado = nuevoEstado === 'Activo' ? 'Activo' : 'Desvinculado';
+          this.empresasService.actualizarVinculacion({
+            usuario_id: id,
+            empresa_id: Number(empActiva.id),
+            estado: vincEstado
+          }).subscribe({
+            error: (e) => console.warn('Aviso: no se pudo actualizar vinculación empresa:', e)
+          });
+        }
 
         const toast = await this.toastController.create({
           message: `El usuario ahora está ${nuevoEstado === 'Activo' ? 'Activo 🟢' : 'Desvinculado / Inactivo 🔴'}`,
@@ -334,6 +350,8 @@ export class UsuariosPage implements OnInit, OnDestroy {
 
   cambiarRolUsuario(usuario: UsuarioItem, nuevoRolId: number): void {
     if (!usuario.id) return;
+
+    // 1. Sincronizar en /api/usuarios/<id>
     this.usuariosService.cambiarRol(usuario.id, nuevoRolId).subscribe({
       next: async () => {
         usuario.id_rol = nuevoRolId;
@@ -344,6 +362,18 @@ export class UsuariosPage implements OnInit, OnDestroy {
         }
         this.filtrarUsuarios();
         this.cdr.detectChanges();
+
+        // 2. Sincronizar en la vinculación multitenant MySQL para reflejo web inmediato
+        const empActiva = this.authService.getEmpresaActiva();
+        if (empActiva && empActiva.id) {
+          this.empresasService.actualizarVinculacion({
+            usuario_id: Number(usuario.id),
+            empresa_id: Number(empActiva.id),
+            rol_id: nuevoRolId
+          }).subscribe({
+            error: (e) => console.warn('Aviso: no se pudo actualizar rol en vinculación empresa:', e)
+          });
+        }
 
         const toast = await this.toastController.create({
           message: `Rol asignado: ${this.getNombreRol(nuevoRolId)}`,
@@ -528,6 +558,19 @@ export class UsuariosPage implements OnInit, OnDestroy {
     )
     .subscribe({
       next: (res) => {
+        // Vincular automáticamente a la empresa activa actual
+        const empActiva = this.authService.getEmpresaActiva();
+        if (empActiva && empActiva.id && res && res.id) {
+          this.empresasService.actualizarVinculacion({
+            usuario_id: res.id,
+            empresa_id: Number(empActiva.id),
+            estado: 'Activo',
+            rol_id: Number(this.idRolUser)
+          }).subscribe({
+            error: (e) => console.warn('Aviso: no se pudo vincular nuevo usuario a empresa activa:', e)
+          });
+        }
+
         this.limpiarFormulario();
         this.modalTitulo = '¡Usuario Registrado Exitosamente!';
         this.modalMensaje = `El usuario @${res.username} ha sido registrado y se le ha notificado a su correo ${res.email} con sus credenciales de acceso. ¿Deseas ver la lista de usuarios?`;

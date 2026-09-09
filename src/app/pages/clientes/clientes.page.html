@@ -1,5 +1,5 @@
 <ion-page>
-  <!-- Encabezado Corporativo de Módulo con Logo Arriba (Click Redirige al Index) y Menú Lateral -->
+  <!-- Encabezado Corporativo de Módulo -->
   <ion-header class="module-app-header">
     <div class="header-top-brand" (click)="irAIndex()" title="Ir al Inicio (Index)">
       <ion-icon name="storefront-outline" class="brand-icon"></ion-icon>
@@ -17,7 +17,7 @@
       </button>
 
       <div class="header-module-title">
-        Módulo de Clientes
+        Directorio de Clientes
       </div>
     </div>
   </ion-header>
@@ -36,7 +36,7 @@
         (click)="cancelarOVolver()"
         class="cancel-button">
         <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
-        Cancelar / Volver
+        {{ activeTab === 'hub' ? 'Volver al Inicio' : 'Volver a Opciones' }}
       </ion-button>
     </div>
 
@@ -46,8 +46,8 @@
         <div class="hub-icon-badge">
           <ion-icon name="people-outline"></ion-icon>
         </div>
-        <h2>Módulo de Clientes</h2>
-        <p>Selecciona la acción que deseas realizar en este módulo</p>
+        <h2>Directorio de Clientes</h2>
+        <p>Administra contactos, direcciones y datos bancarios protegidos</p>
       </div>
 
       <div class="hub-actions-grid">
@@ -57,7 +57,7 @@
           </div>
           <div class="action-info">
             <h3>Registrar Nuevo Cliente</h3>
-            <p>Agrega un nuevo cliente al directorio empresarial</p>
+            <p>Agrega un nuevo cliente con información comercial y método de pago</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
         </div>
@@ -68,7 +68,7 @@
           </div>
           <div class="action-info">
             <h3>Ver Directorio de Clientes</h3>
-            <p>Consulta la lista completa de clientes registrados y sus datos de contacto</p>
+            <p>Consulta lista completa, historial, teléfonos y datos de tarjetas</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
         </div>
@@ -85,54 +85,171 @@
         <ion-card-content>
           <form (ngSubmit)="onRegistrarCliente()">
             <div class="form-group">
-              <label class="form-label">Nombre Completo *</label>
+              <label class="form-label">Nombres *</label>
               <input
                 type="text"
                 class="custom-input"
                 [(ngModel)]="nombreCliente"
                 name="nombreCliente"
-                placeholder="ej: Andrés Morales"
+                placeholder="ej: Andrés"
                 required />
             </div>
 
             <div class="form-group">
-              <label class="form-label">N° Documento / NIT</label>
+              <label class="form-label">Apellidos</label>
               <input
                 type="text"
                 class="custom-input"
-                [(ngModel)]="documentoCliente"
-                name="documentoCliente"
-                placeholder="ej: 1098765432" />
+                [(ngModel)]="apellidoCliente"
+                name="apellidoCliente"
+                placeholder="ej: Morales Gómez" />
+            </div>
+
+            <div class="row-two-col">
+              <div class="form-group">
+                <label class="form-label">Tipo Documento</label>
+                <select class="custom-select" [(ngModel)]="tipoDocumentoCliente" name="tipoDocumentoCliente">
+                  <option value="CC">CC - Cédula</option>
+                  <option value="NIT">NIT - Tributario</option>
+                  <option value="CE">CE - Extranjería</option>
+                  <option value="PAS">Pasaporte</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">N° Documento *</label>
+                <input
+                  type="text"
+                  class="custom-input"
+                  [(ngModel)]="documentoCliente"
+                  name="documentoCliente"
+                  placeholder="ej: 1020304050" />
+              </div>
+            </div>
+
+            <div class="row-two-col">
+              <div class="form-group">
+                <label class="form-label">Teléfono / Celular</label>
+                <input
+                  type="tel"
+                  class="custom-input"
+                  [(ngModel)]="telefonoCliente"
+                  name="telefonoCliente"
+                  placeholder="ej: 3001234567" />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Correo Electrónico</label>
+                <input
+                  type="email"
+                  class="custom-input"
+                  [(ngModel)]="emailCliente"
+                  name="emailCliente"
+                  placeholder="cliente@empresa.com" />
+              </div>
             </div>
 
             <div class="form-group">
-              <label class="form-label">Teléfono de Contacto</label>
-              <input
-                type="tel"
-                class="custom-input"
-                [(ngModel)]="telefonoCliente"
-                name="telefonoCliente"
-                placeholder="ej: +57 300 1234567" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Correo Electrónico</label>
-              <input
-                type="email"
-                class="custom-input"
-                [(ngModel)]="emailCliente"
-                name="emailCliente"
-                placeholder="ej: andres@pyme.com" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Dirección de Residencia / Empresa</label>
+              <label class="form-label">Dirección de Residencia / Sede</label>
               <input
                 type="text"
                 class="custom-input"
                 [(ngModel)]="direccionCliente"
                 name="direccionCliente"
-                placeholder="ej: Calle 45 # 12 - 34, Bogotá" />
+                placeholder="ej: Calle 45 # 12 - 34" />
+            </div>
+
+            <!-- SECCIÓN DATOS DE TARJETA BANCARIA -->
+            <div class="card-payment-section ion-margin-top">
+              <div class="section-badge-header">
+                <ion-icon name="card-outline"></ion-icon>
+                <span>Método de Pago / Tarjeta Bancaria</span>
+              </div>
+
+              <div class="form-group ion-margin-top">
+                <label class="form-label">¿Registrar Tarjeta para este Cliente?</label>
+                <select class="custom-select" [(ngModel)]="tieneTarjetaCliente" name="tieneTarjetaCliente">
+                  <option value="No">No - Sin tarjeta bancaria</option>
+                  <option value="Sí">Sí - Registrar tarjeta</option>
+                </select>
+              </div>
+
+              <div *ngIf="tieneTarjetaCliente === 'Sí'" class="card-details-box">
+                <div class="row-two-col">
+                  <div class="form-group">
+                    <label class="form-label">Banco Emisor</label>
+                    <input
+                      type="text"
+                      class="custom-input"
+                      [(ngModel)]="bancoTarjetaCliente"
+                      name="bancoTarjetaCliente"
+                      placeholder="ej: Bancolombia" />
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Franquicia</label>
+                    <select class="custom-select" [(ngModel)]="franquiciaTarjetaCliente" name="franquiciaTarjetaCliente">
+                      <option value="VISA">VISA</option>
+                      <option value="Mastercard">Mastercard</option>
+                      <option value="American Express">American Express</option>
+                      <option value="Diners Club">Diners Club</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Número de Tarjeta (16 dígitos)</label>
+                  <input
+                    type="text"
+                    class="custom-input"
+                    [(ngModel)]="numeroTarjetaCliente"
+                    name="numeroTarjetaCliente"
+                    placeholder="4500 0000 0000 1234"
+                    maxlength="19" />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Titular de la Tarjeta</label>
+                  <input
+                    type="text"
+                    class="custom-input"
+                    [(ngModel)]="titularTarjetaCliente"
+                    name="titularTarjetaCliente"
+                    placeholder="Nombre tal como aparece en el plástico" />
+                </div>
+
+                <div class="row-two-col">
+                  <div class="form-group">
+                    <label class="form-label">Fecha Expiración</label>
+                    <input
+                      type="text"
+                      class="custom-input"
+                      [(ngModel)]="fechaExpiracionCliente"
+                      name="fechaExpiracionCliente"
+                      placeholder="MM/AA (ej: 12/28)"
+                      maxlength="5" />
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">CVC (Seguridad)</label>
+                    <input
+                      type="password"
+                      class="custom-input"
+                      [(ngModel)]="cvcTarjetaCliente"
+                      name="cvcTarjetaCliente"
+                      placeholder="123"
+                      maxlength="4" />
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Tipo de Cuenta / Tarjeta</label>
+                  <select class="custom-select" [(ngModel)]="tipoTarjetaCliente" name="tipoTarjetaCliente">
+                    <option value="Crédito">Tarjeta de Crédito</option>
+                    <option value="Débito">Tarjeta Débito</option>
+                  </select>
+                </div>
+              </div>
             </div>
 
             <div class="form-actions ion-margin-top">
@@ -140,7 +257,7 @@
                 expand="block"
                 type="submit"
                 color="primary"
-                [disabled]="guardando || !nombreCliente">
+                [disabled]="guardando || !nombreCliente.trim()">
                 <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
                 <span *ngIf="!guardando">Guardar Cliente</span>
               </ion-button>
@@ -152,38 +269,133 @@
 
     <!-- VISTA 3: DIRECTORIO DE CLIENTES -->
     <div *ngIf="activeTab === 'listado'" class="listado-container">
+      <!-- Buscador en Tiempo Real -->
+      <div class="search-container ion-margin-bottom">
+        <ion-searchbar
+          [(ngModel)]="searchTerm"
+          (ionInput)="onSearchChange()"
+          placeholder="Buscar por nombre, documento o teléfono..."
+          animated="true"
+          class="custom-searchbar">
+        </ion-searchbar>
+      </div>
+
       <div *ngIf="loading" class="ion-text-center ion-padding">
         <ion-spinner name="crescent" color="primary"></ion-spinner>
-        <p>Cargando lista de clientes...</p>
+        <p>Cargando directorio de clientes...</p>
       </div>
 
-      <div *ngIf="!loading && clientes.length === 0" class="ion-text-center ion-padding empty-state">
+      <div *ngIf="!loading && clientesFiltrados.length === 0" class="ion-text-center ion-padding empty-state">
         <ion-icon name="people-outline" class="empty-icon"></ion-icon>
         <h3>Sin Clientes</h3>
-        <p>No hay clientes registrados en el sistema.</p>
+        <p>No se encontraron clientes registrados con los criterios de búsqueda.</p>
       </div>
 
-      <ion-list *ngIf="!loading && clientes.length > 0">
-        <ion-item *ngFor="let cli of clientes" class="cliente-item">
-          <ion-icon name="person-outline" slot="start" color="secondary" style="font-size: 28px;"></ion-icon>
-          <ion-label>
-            <h2>{{ cli.nombre }}</h2>
-            <p>Doc: {{ cli.documento || 'N/A' }}</p>
-            <ion-note color="medium" *ngIf="cli.direccion">{{ cli.direccion }}</ion-note>
-          </ion-label>
-          <div slot="end" class="action-buttons">
-            <ion-button *ngIf="cli.telefono" fill="clear" color="success" [href]="'tel:' + cli.telefono">
-              <ion-icon slot="icon-only" name="call-outline"></ion-icon>
-            </ion-button>
-            <ion-button *ngIf="cli.email" fill="clear" color="primary" [href]="'mailto:' + cli.email">
-              <ion-icon slot="icon-only" name="mail-outline"></ion-icon>
-            </ion-button>
+      <!-- Tarjetas Táctiles Completas de Clientes -->
+      <div class="clients-cards-list" *ngIf="!loading && clientesFiltrados.length > 0">
+        <div
+          *ngFor="let cli of clientesFiltrados"
+          class="client-card"
+          (click)="verDetalleCliente(cli)">
+
+          <!-- Cabecera de la Tarjeta -->
+          <div class="card-top-row">
+            <div class="avatar-and-name">
+              <div class="client-avatar">
+                <ion-icon name="person-circle-outline"></ion-icon>
+              </div>
+              <div class="name-box">
+                <h3 class="client-title">{{ cli.nombre }} {{ cli.apellido || '' }}</h3>
+                <span class="doc-badge">
+                  {{ cli.tipo_documento || 'CC' }}: {{ cli.documento || 'Sin doc' }}
+                </span>
+              </div>
+            </div>
+            <span class="id-badge">#{{ cli.id }}</span>
           </div>
-        </ion-item>
-      </ion-list>
+
+          <!-- Información de Contacto -->
+          <div class="contact-rows">
+            <div class="contact-item" *ngIf="cli.email">
+              <ion-icon name="mail-outline"></ion-icon>
+              <span>{{ cli.email }}</span>
+            </div>
+            <div class="contact-item" *ngIf="cli.telefono">
+              <ion-icon name="call-outline"></ion-icon>
+              <span>{{ cli.telefono }}</span>
+            </div>
+            <div class="contact-item" *ngIf="cli.direccion">
+              <ion-icon name="location-outline"></ion-icon>
+              <span>{{ cli.direccion }}</span>
+            </div>
+          </div>
+
+          <!-- Método de Pago / Tarjeta -->
+          <div class="payment-method-row">
+            <span class="label-method">Método de Pago:</span>
+            <div *ngIf="cli.tiene_tarjeta === 'Sí'" class="card-status-container">
+              <!-- Admin: Botón para ver tarjeta confidencial -->
+              <button
+                type="button"
+                *ngIf="rolId === 1"
+                class="btn-card-confidential"
+                (click)="verTarjetaConfidencial(cli, $event)">
+                💳 {{ cli.franquicia_tarjeta || 'Tarjeta' }} ({{ cli.banco_tarjeta || 'Banco' }}) ➔
+              </button>
+              <!-- Vendedor: Badge informativo protegido -->
+              <span *ngIf="rolId !== 1" class="badge-card-protected">
+                🔒 Tarjeta Registrada (Protegida por Admin)
+              </span>
+            </div>
+            <span *ngIf="cli.tiene_tarjeta !== 'Sí'" class="text-no-card">
+              Sin tarjeta registrada
+            </span>
+          </div>
+
+          <!-- Botones de Acción Táctil -->
+          <div class="card-actions-row">
+            <div class="direct-contact-btns">
+              <a
+                *ngIf="cli.telefono"
+                class="action-btn call-btn"
+                [href]="'tel:' + cli.telefono"
+                (click)="$event.stopPropagation()"
+                title="Llamar">
+                <ion-icon name="call-outline"></ion-icon> Llamar
+              </a>
+              <a
+                *ngIf="cli.email"
+                class="action-btn mail-btn"
+                [href]="'mailto:' + cli.email"
+                (click)="$event.stopPropagation()"
+                title="Enviar correo">
+                <ion-icon name="mail-outline"></ion-icon> Correo
+              </a>
+            </div>
+
+            <div class="admin-edit-btns">
+              <button
+                type="button"
+                class="action-btn edit-btn"
+                (click)="abrirModalEdicion(cli, $event)"
+                title="Editar cliente">
+                <ion-icon name="create-outline"></ion-icon> Editar
+              </button>
+              <button
+                type="button"
+                *ngIf="rolId === 1"
+                class="action-btn delete-btn"
+                (click)="solicitarEliminarCliente(cli, $event)"
+                title="Eliminar cliente">
+                <ion-icon name="trash-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Barra de Paginación Visible -->
-      <div *ngIf="!loading && totalPages > 1" class="pagination-bar">
+      <div *ngIf="!loading && totalPages > 1" class="pagination-bar ion-margin-top">
         <ion-button
           size="small"
           fill="outline"
@@ -206,7 +418,257 @@
       </ion-infinite-scroll>
     </div>
 
-    <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO -->
+    <!-- MODAL 1: DETALLE COMPLETO DEL CLIENTE -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalDetalle" (click)="cerrarModalDetalle()"></div>
+    <div class="custom-modal-sheet" *ngIf="mostrarModalDetalle && clienteSeleccionado">
+      <div class="modal-sheet-header">
+        <h4>👤 Ficha del Cliente #{{ clienteSeleccionado.id }}</h4>
+        <button class="modal-close-btn" (click)="cerrarModalDetalle()">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <div class="detail-section">
+          <h3>{{ clienteSeleccionado.nombre }} {{ clienteSeleccionado.apellido || '' }}</h3>
+          <p class="detail-doc">
+            <strong>Documento:</strong> {{ clienteSeleccionado.tipo_documento || 'CC' }} {{ clienteSeleccionado.documento || 'Sin registrar' }}
+          </p>
+        </div>
+
+        <div class="detail-group">
+          <label>Teléfono de Contacto</label>
+          <p>{{ clienteSeleccionado.telefono || 'Sin registrar' }}</p>
+        </div>
+
+        <div class="detail-group">
+          <label>Correo Electrónico</label>
+          <p>{{ clienteSeleccionado.email || 'Sin registrar' }}</p>
+        </div>
+
+        <div class="detail-group">
+          <label>Dirección Fiscal / Sede</label>
+          <p>{{ clienteSeleccionado.direccion || 'Sin registrar' }}</p>
+        </div>
+
+        <div class="detail-group">
+          <label>Método de Pago / Tarjeta</label>
+          <div *ngIf="clienteSeleccionado.tiene_tarjeta === 'Sí'">
+            <button
+              type="button"
+              *ngIf="rolId === 1"
+              class="btn-card-confidential ion-margin-top"
+              (click)="verTarjetaConfidencial(clienteSeleccionado, $event)">
+              💳 Ver Tarjeta Confidencial ({{ clienteSeleccionado.banco_tarjeta }}) ➔
+            </button>
+            <span *ngIf="rolId !== 1" class="badge-card-protected">
+              🔒 Tarjeta Registrada (Protegida por Admin)
+            </span>
+          </div>
+          <p *ngIf="clienteSeleccionado.tiene_tarjeta !== 'Sí'">Sin tarjeta registrada.</p>
+        </div>
+      </div>
+      <div class="modal-sheet-footer">
+        <ion-button fill="outline" color="primary" (click)="abrirModalEdicion(clienteSeleccionado)">
+          ✏️ Editar Datos
+        </ion-button>
+        <ion-button color="medium" (click)="cerrarModalDetalle()">
+          Cerrar
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- MODAL 2: TARJETA CONFIDENCIAL (ADMIN ONLY) -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalTarjeta" (click)="cerrarModalTarjeta()"></div>
+    <div class="custom-modal-sheet" *ngIf="mostrarModalTarjeta && clienteSeleccionado">
+      <div class="modal-sheet-header bg-dark">
+        <h4>🔒 Tarjeta Confidencial del Cliente</h4>
+        <button class="modal-close-btn" (click)="cerrarModalTarjeta()">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <div class="confidential-alert">
+          <strong>⚠️ Confidencialidad Administrativa:</strong> Esta información bancaria es accesible exclusivamente por Administradores.
+        </div>
+
+        <!-- Maqueta Visual de Tarjeta de Crédito -->
+        <div class="credit-card-mockup">
+          <div class="card-bank-row">
+            <span class="card-bank-name">{{ clienteSeleccionado.banco_tarjeta || 'Banco Emisor' }}</span>
+            <span class="card-franchise-badge">{{ clienteSeleccionado.franquicia_tarjeta || 'VISA' }}</span>
+          </div>
+
+          <div class="card-number-row">
+            <span class="card-number">
+              {{ clienteSeleccionado.numero_tarjeta || ('**** **** **** ' + (clienteSeleccionado.ultimos_digitos_tarjeta || '4321')) }}
+            </span>
+          </div>
+
+          <div class="card-bottom-row">
+            <div class="card-holder-box">
+              <span class="card-lbl">Titular</span>
+              <span class="card-holder-name">
+                {{ clienteSeleccionado.titular_tarjeta || (clienteSeleccionado.nombre + ' ' + (clienteSeleccionado.apellido || '')) }}
+              </span>
+            </div>
+            <div class="card-expiry-box">
+              <span class="card-lbl">Expira</span>
+              <span class="card-expiry-val">{{ clienteSeleccionado.fecha_expiracion || '12/28' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-security-meta ion-margin-top">
+          <div class="meta-row">
+            <span class="meta-label">Código de Seguridad (CVC):</span>
+            <span class="meta-value cvc-code">{{ clienteSeleccionado.cvc_tarjeta || '***' }}</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-label">Tipo de Tarjeta:</span>
+            <span class="meta-value">{{ clienteSeleccionado.tipo_tarjeta || 'Crédito' }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-sheet-footer">
+        <ion-button fill="outline" color="warning" (click)="cerrarModalTarjeta(); abrirModalEdicion(clienteSeleccionado)">
+          ✏️ Editar Tarjeta
+        </ion-button>
+        <ion-button color="medium" (click)="cerrarModalTarjeta()">
+          Cerrar
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- MODAL 3: EDICIÓN COMPLETA DE CLIENTE -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalEdicion" (click)="cerrarModalEdicion()"></div>
+    <div class="custom-modal-sheet" *ngIf="mostrarModalEdicion">
+      <div class="modal-sheet-header">
+        <h4>✏️ Editar Cliente #{{ clienteEditando.id }}</h4>
+        <button class="modal-close-btn" (click)="cerrarModalEdicion()">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <div class="form-group">
+          <label class="form-label">Nombres *</label>
+          <input type="text" class="custom-input" [(ngModel)]="clienteEditando.nombre" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Apellidos</label>
+          <input type="text" class="custom-input" [(ngModel)]="clienteEditando.apellido" />
+        </div>
+
+        <div class="row-two-col">
+          <div class="form-group">
+            <label class="form-label">Tipo Documento</label>
+            <select class="custom-select" [(ngModel)]="clienteEditando.tipo_documento">
+              <option value="CC">CC</option>
+              <option value="NIT">NIT</option>
+              <option value="CE">CE</option>
+              <option value="PAS">PAS</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">N° Documento</label>
+            <input type="text" class="custom-input" [(ngModel)]="clienteEditando.documento" />
+          </div>
+        </div>
+
+        <div class="row-two-col">
+          <div class="form-group">
+            <label class="form-label">Teléfono</label>
+            <input type="tel" class="custom-input" [(ngModel)]="clienteEditando.telefono" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="custom-input" [(ngModel)]="clienteEditando.email" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Dirección</label>
+          <input type="text" class="custom-input" [(ngModel)]="clienteEditando.direccion" />
+        </div>
+
+        <!-- Edición de Tarjeta -->
+        <div class="card-payment-section ion-margin-top">
+          <div class="section-badge-header">
+            <ion-icon name="card-outline"></ion-icon>
+            <span>Información Bancaria</span>
+          </div>
+
+          <div class="form-group ion-margin-top">
+            <label class="form-label">¿Tiene Tarjeta Registrada?</label>
+            <select class="custom-select" [(ngModel)]="clienteEditando.tiene_tarjeta">
+              <option value="No">No</option>
+              <option value="Sí">Sí</option>
+            </select>
+          </div>
+
+          <div *ngIf="clienteEditando.tiene_tarjeta === 'Sí'">
+            <div class="row-two-col">
+              <div class="form-group">
+                <label class="form-label">Banco</label>
+                <input type="text" class="custom-input" [(ngModel)]="clienteEditando.banco_tarjeta" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Franquicia</label>
+                <select class="custom-select" [(ngModel)]="clienteEditando.franquicia_tarjeta">
+                  <option value="VISA">VISA</option>
+                  <option value="Mastercard">Mastercard</option>
+                  <option value="American Express">American Express</option>
+                  <option value="Diners Club">Diners Club</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Número de Tarjeta</label>
+              <input type="text" class="custom-input" [(ngModel)]="clienteEditando.numero_tarjeta" />
+            </div>
+
+            <div class="row-two-col">
+              <div class="form-group">
+                <label class="form-label">Expiración (MM/AA)</label>
+                <input type="text" class="custom-input" [(ngModel)]="clienteEditando.fecha_expiracion" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">CVC</label>
+                <input type="password" class="custom-input" [(ngModel)]="clienteEditando.cvc_tarjeta" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-sheet-footer">
+        <ion-button fill="clear" color="medium" (click)="cerrarModalEdicion()">
+          Cancelar
+        </ion-button>
+        <ion-button color="success" [disabled]="guardandoEdicion" (click)="guardarEdicionCliente()">
+          <ion-spinner name="crescent" *ngIf="guardandoEdicion"></ion-spinner>
+          <span *ngIf="!guardandoEdicion">Guardar Cambios</span>
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- MODAL 4: CONFIRMAR ELIMINACIÓN (ADMIN ONLY) -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalEliminar" (click)="cancelarEliminar()"></div>
+    <div class="custom-modal-sheet" *ngIf="mostrarModalEliminar && clienteParaEliminar">
+      <div class="modal-sheet-header bg-danger text-white">
+        <h4>🗑️ Eliminar Cliente</h4>
+        <button class="modal-close-btn" (click)="cancelarEliminar()">✕</button>
+      </div>
+      <div class="modal-sheet-body">
+        <p>¿Estás seguro de que deseas eliminar permanentemente al cliente <strong>{{ clienteParaEliminar.nombre }}</strong>?</p>
+        <p class="text-muted small">Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-sheet-footer">
+        <ion-button fill="clear" color="medium" (click)="cancelarEliminar()">
+          Cancelar
+        </ion-button>
+        <ion-button color="danger" [disabled]="eliminando" (click)="confirmarEliminar()">
+          <ion-spinner name="crescent" *ngIf="eliminando"></ion-spinner>
+          <span *ngIf="!eliminando">Eliminar Cliente</span>
+        </ion-button>
+      </div>
+    </div>
+
+    <!-- MODAL CONFIRMACIÓN REGISTRO -->
     <div class="custom-modal-backdrop" *ngIf="mostrarModalConfirmacion">
       <div class="custom-modal-card">
         <div class="modal-header-icon success">

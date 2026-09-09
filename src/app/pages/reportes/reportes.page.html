@@ -117,7 +117,7 @@
             <ion-icon name="alert-circle-outline"></ion-icon>
           </div>
           <div class="kpi-data">
-            <p class="kpi-title">Stock Bajo (≤ 10)</p>
+            <p class="kpi-title">Stock Bajo (≤ 500)</p>
             <h3 class="kpi-value">{{ stockBajoCount }} ítems</h3>
             <span class="kpi-sub">Requiere compra</span>
           </div>
@@ -238,7 +238,7 @@
             <strong>{{ inventarioResumen?.total_productos || totalProductos }}</strong>
           </div>
           <div class="strip-item">
-            <span>Stock Bajo (≤10):</span>
+            <span>Stock Bajo (≤500):</span>
             <strong class="text-danger">{{ inventarioResumen?.productos_bajo_stock || stockBajoCount }}</strong>
           </div>
         </div>
@@ -261,7 +261,7 @@
         <div class="report-item-card" *ngFor="let p of productosFiltrados">
           <div class="item-card-header">
             <span class="badge-code">{{ p.codigo || ('PROD-' + p.id) }}</span>
-            <span class="badge-stock" [class.stock-critical]="p.stock <= 10">
+            <span class="badge-stock" [class.stock-critical]="p.stock <= 500">
               Stock: {{ p.stock }} {{ p.unidad_medida || 'UND' }}
             </span>
           </div>
