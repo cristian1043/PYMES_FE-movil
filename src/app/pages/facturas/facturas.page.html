@@ -174,7 +174,7 @@
       </ion-list>
 
       <!-- Barra de Paginación Visible -->
-      <div *ngIf="!loading && totalPages > 1" class="pagination-bar">
+      <div *ngIf="!loading && totalPages >= 1 && facturas.length > 0" class="pagination-bar">
         <ion-button
           size="small"
           fill="outline"

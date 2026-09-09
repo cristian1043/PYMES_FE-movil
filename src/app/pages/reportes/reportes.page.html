@@ -117,7 +117,7 @@
             <ion-icon name="alert-circle-outline"></ion-icon>
           </div>
           <div class="kpi-data">
-            <p class="kpi-title">Stock Bajo (≤ 500)</p>
+            <p class="kpi-title">Stock Bajo (≤ 2.500)</p>
             <h3 class="kpi-value">{{ stockBajoCount }} ítems</h3>
             <span class="kpi-sub">Requiere compra</span>
           </div>
@@ -204,7 +204,7 @@
       </div>
 
       <div class="report-cards-list" *ngIf="facturasFiltradas.length > 0">
-        <div class="report-item-card" *ngFor="let f of facturasFiltradas">
+        <div class="report-item-card" *ngFor="let f of facturasPaginadas">
           <div class="item-card-header">
             <span class="badge-code">{{ f.numero || ('FAC-' + f.id) }}</span>
             <span class="badge-status" [ngClass]="f.estado === 'Cancelada' ? 'status-danger' : 'status-success'">
@@ -220,6 +220,25 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Barra de Paginación Visible de Ventas -->
+      <div *ngIf="!loading && totalPagesVentas >= 1 && facturasFiltradas.length > 0" class="pagination-bar ion-margin-top">
+        <ion-button
+          size="small"
+          fill="outline"
+          [disabled]="pageVentas === 1"
+          (click)="cambiarPaginaVentas(-1)">
+          ‹ Anterior
+        </ion-button>
+        <span class="page-indicator">Página {{ pageVentas }} de {{ totalPagesVentas }} ({{ facturasFiltradas.length }} total)</span>
+        <ion-button
+          size="small"
+          fill="outline"
+          [disabled]="pageVentas >= totalPagesVentas"
+          (click)="cambiarPaginaVentas(1)">
+          Siguiente ›
+        </ion-button>
       </div>
     </div>
 
@@ -238,8 +257,8 @@
             <strong>{{ inventarioResumen?.total_productos || totalProductos }}</strong>
           </div>
           <div class="strip-item">
-            <span>Stock Bajo (≤500):</span>
-            <strong class="text-danger">{{ inventarioResumen?.productos_bajo_stock || stockBajoCount }}</strong>
+            <span>Stock Bajo (≤ 2.500):</span>
+            <strong class="text-danger">{{ inventarioResumen?.productos_bajo_stock ?? stockBajoCount }}</strong>
           </div>
         </div>
       </div>
@@ -258,11 +277,11 @@
       </div>
 
       <div class="report-cards-list" *ngIf="productosFiltrados.length > 0">
-        <div class="report-item-card" *ngFor="let p of productosFiltrados">
+        <div class="report-item-card" *ngFor="let p of productosPaginados">
           <div class="item-card-header">
             <span class="badge-code">{{ p.codigo || ('PROD-' + p.id) }}</span>
-            <span class="badge-stock" [class.stock-critical]="p.stock <= 500">
-              Stock: {{ p.stock }} {{ p.unidad_medida || 'UND' }}
+            <span class="badge-stock" [ngClass]="getEstadoStock(p.stock).cssClass">
+              {{ getEstadoStock(p.stock).texto }}
             </span>
           </div>
           <div class="item-card-body">
@@ -273,6 +292,25 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Barra de Paginación Visible de Inventario -->
+      <div *ngIf="!loading && totalPagesInventario >= 1 && productosFiltrados.length > 0" class="pagination-bar ion-margin-top">
+        <ion-button
+          size="small"
+          fill="outline"
+          [disabled]="pageInventario === 1"
+          (click)="cambiarPaginaInventario(-1)">
+          ‹ Anterior
+        </ion-button>
+        <span class="page-indicator">Página {{ pageInventario }} de {{ totalPagesInventario }} ({{ productosFiltrados.length }} total)</span>
+        <ion-button
+          size="small"
+          fill="outline"
+          [disabled]="pageInventario >= totalPagesInventario"
+          (click)="cambiarPaginaInventario(1)">
+          Siguiente ›
+        </ion-button>
       </div>
     </div>
 
@@ -297,9 +335,9 @@
       </div>
 
       <div class="report-cards-list" *ngIf="clientesFiltrados.length > 0">
-        <div class="report-item-card" *ngFor="let c of clientesFiltrados; let idx = index">
+        <div class="report-item-card" *ngFor="let c of clientesPaginados; let idx = index">
           <div class="item-card-header">
-            <span class="badge-rank">#{{ idx + 1 }}</span>
+            <span class="badge-rank">#{{ (pageClientes - 1) * perPageClientes + idx + 1 }}</span>
             <strong class="item-name">{{ c.nombre }}</strong>
             <span class="badge-invoices">{{ c.num_facturas }} Facturas</span>
           </div>
@@ -311,6 +349,25 @@
             </div>
           </div>
         </div>
+      </div>
+
+      <!-- Barra de Paginación Visible de Clientes -->
+      <div *ngIf="!loading && totalPagesClientes >= 1 && clientesFiltrados.length > 0" class="pagination-bar ion-margin-top">
+        <ion-button
+          size="small"
+          fill="outline"
+          [disabled]="pageClientes === 1"
+          (click)="cambiarPaginaClientes(-1)">
+          ‹ Anterior
+        </ion-button>
+        <span class="page-indicator">Página {{ pageClientes }} de {{ totalPagesClientes }} ({{ clientesFiltrados.length }} total)</span>
+        <ion-button
+          size="small"
+          fill="outline"
+          [disabled]="pageClientes >= totalPagesClientes"
+          (click)="cambiarPaginaClientes(1)">
+          Siguiente ›
+        </ion-button>
       </div>
     </div>
   </ion-content>

@@ -31,18 +31,30 @@ export class ReportesPage implements OnInit, OnDestroy {
   ventasResumen: any = null;
   facturas: any[] = [];
   facturasFiltradas: any[] = [];
+  facturasPaginadas: any[] = [];
   searchFacturas = '';
+  pageVentas = 1;
+  perPageVentas = 5;
+  totalPagesVentas = 1;
 
   // Reporte Inventario
   inventarioResumen: any = null;
   productos: any[] = [];
   productosFiltrados: any[] = [];
+  productosPaginados: any[] = [];
   searchProductos = '';
+  pageInventario = 1;
+  perPageInventario = 5;
+  totalPagesInventario = 1;
 
   // Reporte Clientes
   clientesRanking: any[] = [];
   clientesFiltrados: any[] = [];
+  clientesPaginados: any[] = [];
   searchClientes = '';
+  pageClientes = 1;
+  perPageClientes = 5;
+  totalPagesClientes = 1;
 
   private queryParamsSub?: Subscription;
 
@@ -200,6 +212,7 @@ export class ReportesPage implements OnInit, OnDestroy {
         next: (res: any) => {
           this.inventarioResumen = res;
           this.productos = res?.productos || [];
+          this.stockBajoCount = res?.productos_bajo_stock ?? this.productos.filter(p => Number(p.stock || 0) <= 2500).length;
           this.filtrarProductos();
           this.cdr.detectChanges();
         },
@@ -229,6 +242,9 @@ export class ReportesPage implements OnInit, OnDestroy {
     }
   }
 
+  // ==========================================
+  // PAGINACIÓN Y FILTROS: VENTAS
+  // ==========================================
   filtrarFacturas(): void {
     if (!this.searchFacturas || this.searchFacturas.trim() === '') {
       this.facturasFiltradas = [...this.facturas];
@@ -240,8 +256,31 @@ export class ReportesPage implements OnInit, OnDestroy {
         (f.estado && f.estado.toLowerCase().includes(term))
       );
     }
+    this.pageVentas = 1;
+    this.actualizarPaginacionVentas();
   }
 
+  actualizarPaginacionVentas(): void {
+    this.totalPagesVentas = Math.max(1, Math.ceil(this.facturasFiltradas.length / this.perPageVentas));
+    if (this.pageVentas > this.totalPagesVentas) {
+      this.pageVentas = this.totalPagesVentas;
+    }
+    const start = (this.pageVentas - 1) * this.perPageVentas;
+    this.facturasPaginadas = this.facturasFiltradas.slice(start, start + this.perPageVentas);
+    this.cdr.detectChanges();
+  }
+
+  cambiarPaginaVentas(delta: number): void {
+    const target = this.pageVentas + delta;
+    if (target >= 1 && target <= this.totalPagesVentas) {
+      this.pageVentas = target;
+      this.actualizarPaginacionVentas();
+    }
+  }
+
+  // ==========================================
+  // PAGINACIÓN Y FILTROS: INVENTARIO
+  // ==========================================
   filtrarProductos(): void {
     if (!this.searchProductos || this.searchProductos.trim() === '') {
       this.productosFiltrados = [...this.productos];
@@ -252,8 +291,41 @@ export class ReportesPage implements OnInit, OnDestroy {
         (p.codigo && p.codigo.toLowerCase().includes(term))
       );
     }
+    this.pageInventario = 1;
+    this.actualizarPaginacionInventario();
   }
 
+  actualizarPaginacionInventario(): void {
+    this.totalPagesInventario = Math.max(1, Math.ceil(this.productosFiltrados.length / this.perPageInventario));
+    if (this.pageInventario > this.totalPagesInventario) {
+      this.pageInventario = this.totalPagesInventario;
+    }
+    const start = (this.pageInventario - 1) * this.perPageInventario;
+    this.productosPaginados = this.productosFiltrados.slice(start, start + this.perPageInventario);
+    this.cdr.detectChanges();
+  }
+
+  cambiarPaginaInventario(delta: number): void {
+    const target = this.pageInventario + delta;
+    if (target >= 1 && target <= this.totalPagesInventario) {
+      this.pageInventario = target;
+      this.actualizarPaginacionInventario();
+    }
+  }
+
+  getEstadoStock(stock?: number): { texto: string; cssClass: string } {
+    const s = Number(stock || 0);
+    if (s <= 2500) {
+      return { texto: `⚠️ Stock Bajo: ${s}`, cssClass: 'stock-critical' };
+    } else if (s > 10000) {
+      return { texto: `📦 Sobre-stock: ${s}`, cssClass: 'stock-over' };
+    }
+    return { texto: `✅ Óptimo: ${s}`, cssClass: '' };
+  }
+
+  // ==========================================
+  // PAGINACIÓN Y FILTROS: CLIENTES
+  // ==========================================
   filtrarClientes(): void {
     if (!this.searchClientes || this.searchClientes.trim() === '') {
       this.clientesFiltrados = [...this.clientesRanking];
@@ -264,6 +336,26 @@ export class ReportesPage implements OnInit, OnDestroy {
         (c.email && c.email.toLowerCase().includes(term)) ||
         (c.telefono && c.telefono.toLowerCase().includes(term))
       );
+    }
+    this.pageClientes = 1;
+    this.actualizarPaginacionClientes();
+  }
+
+  actualizarPaginacionClientes(): void {
+    this.totalPagesClientes = Math.max(1, Math.ceil(this.clientesFiltrados.length / this.perPageClientes));
+    if (this.pageClientes > this.totalPagesClientes) {
+      this.pageClientes = this.totalPagesClientes;
+    }
+    const start = (this.pageClientes - 1) * this.perPageClientes;
+    this.clientesPaginados = this.clientesFiltrados.slice(start, start + this.perPageClientes);
+    this.cdr.detectChanges();
+  }
+
+  cambiarPaginaClientes(delta: number): void {
+    const target = this.pageClientes + delta;
+    if (target >= 1 && target <= this.totalPagesClientes) {
+      this.pageClientes = target;
+      this.actualizarPaginacionClientes();
     }
   }
 

@@ -347,6 +347,11 @@
         background: #fef2f2;
         color: #dc2626;
       }
+
+      &.stock-over {
+        background: #f3e8ff;
+        color: #7e22ce;
+      }
     }
 
     .badge-invoices {

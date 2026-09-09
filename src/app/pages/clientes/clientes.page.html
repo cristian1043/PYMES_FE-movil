@@ -395,7 +395,7 @@
       </div>
 
       <!-- Barra de Paginación Visible -->
-      <div *ngIf="!loading && totalPages > 1" class="pagination-bar ion-margin-top">
+      <div *ngIf="!loading && totalPages >= 1 && clientesFiltrados.length > 0" class="pagination-bar ion-margin-top">
         <ion-button
           size="small"
           fill="outline"
