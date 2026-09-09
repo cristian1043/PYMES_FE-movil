@@ -45,6 +45,7 @@
       <button
         type="button"
         class="tab-btn"
+        *ngIf="rolId === 1"
         [class.active]="activeTab === 'dashboard'"
         (click)="cambiarTab('dashboard')">
         📊 Dashboard
@@ -52,6 +53,7 @@
       <button
         type="button"
         class="tab-btn"
+        *ngIf="rolId === 1"
         [class.active]="activeTab === 'ventas'"
         (click)="cambiarTab('ventas')">
         💰 Ventas
@@ -66,6 +68,7 @@
       <button
         type="button"
         class="tab-btn"
+        *ngIf="rolId === 1"
         [class.active]="activeTab === 'clientes'"
         (click)="cambiarTab('clientes')">
         👥 Clientes

@@ -37,6 +37,103 @@
   }
 }
 
+.empresa-activa-banner {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+
+  .empresa-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .empresa-icon {
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .empresa-details {
+      .empresa-tag {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #2a5298;
+        letter-spacing: 0.5px;
+      }
+      .empresa-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1e293b;
+        margin: 2px 0 1px;
+      }
+      .empresa-nit {
+        font-size: 12px;
+        color: #64748b;
+        margin: 0;
+      }
+    }
+  }
+
+  .empresa-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .empresa-rol-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+
+      &.badge-admin {
+        background: #e8f4fd;
+        color: #0c5460;
+        border: 1px solid #b8daff;
+      }
+      &.badge-almacen {
+        background: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+      }
+      &.badge-vendedor {
+        background: #e2f0d9;
+        color: #285b2a;
+        border: 1px solid #c3e6cb;
+      }
+    }
+
+    .btn-cambiar-empresa {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #f1f5f9;
+      color: #1e3c72;
+      border: 1px solid #cbd5e1;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &:active {
+        background: #e2e8f0;
+      }
+
+      ion-icon {
+        font-size: 15px;
+      }
+    }
+  }
+}
+
 .modules-section {
   padding-bottom: 24px;
 }

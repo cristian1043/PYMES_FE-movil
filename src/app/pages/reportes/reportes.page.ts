@@ -16,6 +16,7 @@ export class ReportesPage implements OnInit, OnDestroy {
   activeTab: 'dashboard' | 'ventas' | 'inventario' | 'clientes' = 'dashboard';
   loading = false;
   usuario: any = null;
+  rolId: number = 1;
 
   // Métricas Dashboard
   totalVentas = 0;
@@ -58,14 +59,20 @@ export class ReportesPage implements OnInit, OnDestroy {
     this.verificarAutenticacion();
     this.queryParamsSub = this.route.queryParamMap.subscribe((params) => {
       const tabParam = params.get('tab');
-      const newTab: 'dashboard' | 'ventas' | 'inventario' | 'clientes' =
+      let newTab: 'dashboard' | 'ventas' | 'inventario' | 'clientes' =
         (tabParam && ['dashboard', 'ventas', 'inventario', 'clientes'].includes(tabParam))
           ? tabParam as any
           : 'dashboard';
+
+      // El almacenista (rol 3) solo tiene permitido ver inventario
+      if (this.rolId === 3) {
+        newTab = 'inventario';
+      }
+
       const tabChanged = this.activeTab !== newTab;
       this.activeTab = newTab;
 
-      if (tabChanged || this.totalVentas === 0) {
+      if (tabChanged || (this.activeTab === 'inventario' && this.productos.length === 0) || this.totalVentas === 0) {
         this.cargarDatosActuales();
       }
       this.cdr.detectChanges();
@@ -81,14 +88,18 @@ export class ReportesPage implements OnInit, OnDestroy {
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
-    const targetTab: 'dashboard' | 'ventas' | 'inventario' | 'clientes' =
+    let targetTab: 'dashboard' | 'ventas' | 'inventario' | 'clientes' =
       (tabParam && ['dashboard', 'ventas', 'inventario', 'clientes'].includes(tabParam))
         ? tabParam as any
         : 'dashboard';
-    if (this.activeTab !== targetTab) {
+
+    if (this.rolId === 3) {
+      targetTab = 'inventario';
+    }
+
+    if (this.activeTab !== targetTab || (this.activeTab === 'inventario' && this.productos.length === 0)) {
       this.activeTab = targetTab;
       this.cargarDatosActuales();
-      this.cdr.detectChanges();
     }
   }
 
@@ -99,6 +110,11 @@ export class ReportesPage implements OnInit, OnDestroy {
       return;
     }
     this.usuario = this.authService.getUsuario();
+    this.rolId = this.authService.getRolId();
+
+    if (this.rolId === 3 && this.activeTab !== 'inventario') {
+      this.activeTab = 'inventario';
+    }
     this.cdr.detectChanges();
   }
 
@@ -111,7 +127,7 @@ export class ReportesPage implements OnInit, OnDestroy {
   }
 
   cancelarOVolver(): void {
-    if (this.activeTab === 'dashboard') {
+    if (this.rolId === 3 || this.activeTab === 'dashboard') {
       this.router.navigateByUrl('/inicio');
     } else {
       this.cambiarTab('dashboard');
@@ -119,6 +135,9 @@ export class ReportesPage implements OnInit, OnDestroy {
   }
 
   cambiarTab(tab: 'dashboard' | 'ventas' | 'inventario' | 'clientes'): void {
+    if (this.rolId === 3 && tab !== 'inventario') {
+      return;
+    }
     this.activeTab = tab;
     this.router.navigate([], { relativeTo: this.route, queryParams: { tab } });
     this.cargarDatosActuales();

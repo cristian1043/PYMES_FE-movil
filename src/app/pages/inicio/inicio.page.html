@@ -26,11 +26,36 @@
     <div class="welcome-banner ion-padding ion-margin-bottom" *ngIf="usuario">
       <div class="welcome-text">
         <h2>¡Bienvenido, {{ usuario.nombre || usuario.username }}! 👋</h2>
-        <p>Selecciona un módulo para gestionar las operaciones de tu negocio</p>
+        <p>Gestiona las operaciones de tu negocio con practicidad táctil</p>
       </div>
       <ion-badge color="tertiary" class="role-badge">
-        {{ usuario.rol || 'Usuario Activo' }}
+        {{ (empresaActiva && empresaActiva.rol_nombre) ? empresaActiva.rol_nombre : (usuario.rol || 'Usuario Activo') }}
       </ion-badge>
+    </div>
+
+    <!-- Tarjeta de Espacio de Trabajo / Empresa Activa -->
+    <div class="empresa-activa-banner ion-margin-bottom" *ngIf="empresaActiva">
+      <div class="empresa-info">
+        <div class="empresa-icon">🏢</div>
+        <div class="empresa-details">
+          <span class="empresa-tag">Espacio de Trabajo Activo</span>
+          <h3 class="empresa-title">{{ empresaActiva.nombre }}</h3>
+          <p class="empresa-nit">NIT: {{ empresaActiva.nit }}</p>
+        </div>
+      </div>
+      <div class="empresa-actions">
+        <span class="empresa-rol-badge" [ngClass]="{
+          'badge-admin': empresaActiva.rol_id === 1,
+          'badge-almacen': empresaActiva.rol_id === 3,
+          'badge-vendedor': empresaActiva.rol_id === 2
+        }">
+          {{ empresaActiva.rol_nombre || 'Vendedor' }}
+        </span>
+        <button type="button" class="btn-cambiar-empresa" (click)="cambiarEmpresa()" title="Cambiar espacio de trabajo">
+          <ion-icon name="swap-horizontal-outline"></ion-icon>
+          <span>Cambiar</span>
+        </button>
+      </div>
     </div>
 
     <!-- Grid de Módulos del Sistema -->

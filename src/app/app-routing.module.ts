@@ -18,6 +18,11 @@ const routes: Routes = [
     loadChildren: () => import('./pages/register/register.module').then(m => m.RegisterPageModule)
   },
   {
+    path: 'seleccionar-empresa',
+    canActivate: [AuthGuard],
+    loadChildren: () => import('./pages/seleccionar-empresa/seleccionar-empresa.module').then(m => m.SeleccionarEmpresaPageModule)
+  },
+  {
     path: 'inicio',
     canActivate: [AuthGuard],
     loadChildren: () => import('./pages/inicio/inicio.module').then(m => m.InicioPageModule)
@@ -25,7 +30,7 @@ const routes: Routes = [
   {
     path: 'productos',
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: [1, 2, 3] },
+    data: { roles: [1, 3] },
     loadChildren: () => import('./pages/productos/productos.module').then(m => m.ProductosPageModule)
   },
   {
@@ -55,7 +60,7 @@ const routes: Routes = [
   {
     path: 'reportes',
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: [1, 2, 3] },
+    data: { roles: [1, 3] },
     loadChildren: () => import('./pages/reportes/reportes.module').then(m => m.ReportesPageModule)
   },
   {

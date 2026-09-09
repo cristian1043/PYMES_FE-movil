@@ -68,7 +68,7 @@ export class LoginPage implements OnInit {
             position: 'top'
           });
           await toast.present();
-          this.router.navigateByUrl('/inicio');
+          this.router.navigateByUrl('/seleccionar-empresa');
         } else {
           this.errorMessage = res?.mensaje || 'Credenciales incorrectas.';
         }

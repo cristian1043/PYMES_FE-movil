@@ -20,6 +20,7 @@ interface ModuleCard {
 })
 export class InicioPage implements OnInit {
   usuario: any = null;
+  empresaActiva: any = null;
   modulosPermitidos: ModuleCard[] = [];
 
   private readonly todosModulos: ModuleCard[] = [
@@ -29,7 +30,7 @@ export class InicioPage implements OnInit {
       url: '/productos',
       icon: 'cube-outline',
       color: 'primary',
-      roles: [1, 2, 3]
+      roles: [1, 3]
     },
     {
       titulo: 'Facturas y Ventas',
@@ -69,7 +70,7 @@ export class InicioPage implements OnInit {
       url: '/reportes',
       icon: 'bar-chart-outline',
       color: 'danger',
-      roles: [1, 2, 3]
+      roles: [1, 3]
     },
     {
       titulo: 'Gestión de Usuarios',
@@ -108,8 +109,19 @@ export class InicioPage implements OnInit {
       this.router.navigate(['/login'], { replaceUrl: true });
       return;
     }
+
+    this.empresaActiva = this.authService.getEmpresaActiva();
+    if (!this.empresaActiva) {
+      this.router.navigate(['/seleccionar-empresa'], { replaceUrl: true });
+      return;
+    }
+
     this.usuario = this.authService.getUsuario();
     this.modulosPermitidos = this.todosModulos.filter(mod => this.authService.hasRole(mod.roles));
+  }
+
+  cambiarEmpresa(): void {
+    this.router.navigateByUrl('/seleccionar-empresa');
   }
 
   async toggleMenu(): Promise<void> {

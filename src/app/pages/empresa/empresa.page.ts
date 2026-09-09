@@ -72,6 +72,9 @@ export class EmpresaPage implements OnInit {
     this.loading = true;
     this.cdr.detectChanges();
 
+    const activeEmp = this.authService.getEmpresaActiva();
+    const targetId = activeEmp ? Number(activeEmp.id) : null;
+
     this.empresasService.getEmpresas()
       .pipe(
         finalize(() => {
@@ -83,7 +86,7 @@ export class EmpresaPage implements OnInit {
       .subscribe({
         next: (empresas) => {
           if (Array.isArray(empresas) && empresas.length > 0) {
-            this.empresa = empresas[0];
+            this.empresa = (targetId ? empresas.find(e => Number(e.id) === targetId) : null) || empresas[0];
             this.nombre = this.empresa.nombre || '';
             this.nit = this.empresa.nit || '';
             this.telefono = this.empresa.telefono || '';
@@ -142,6 +145,7 @@ export class EmpresaPage implements OnInit {
       .subscribe({
         next: async (res) => {
           this.empresa = res;
+          this.authService.setEmpresaActiva(this.empresa, this.authService.getRolId());
           const toast = await this.toastController.create({
             message: '¡Datos de la empresa actualizados exitosamente!',
             duration: 3000,
@@ -193,7 +197,10 @@ export class EmpresaPage implements OnInit {
       .subscribe({
         next: async (res) => {
           this.estado = res.estado || nuevoEstado;
-          if (this.empresa) this.empresa.estado = this.estado;
+          if (this.empresa) {
+            this.empresa.estado = this.estado;
+            this.authService.setEmpresaActiva(this.empresa, this.authService.getRolId());
+          }
           this.cdr.detectChanges();
 
           const toast = await this.toastController.create({

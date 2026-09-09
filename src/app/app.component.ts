@@ -23,6 +23,7 @@ interface MenuCategory {
 })
 export class AppComponent implements OnInit {
   usuario: any = null;
+  empresaActiva: any = null;
   menuCategoriasPermitidas: MenuCategory[] = [];
   isMenuOpen = false;
 
@@ -31,7 +32,8 @@ export class AppComponent implements OnInit {
       titulo: 'Gestión Principal',
       items: [
         { title: 'Inicio / Pantalla Principal', url: '/inicio', icon: 'home-outline', roles: [1, 2, 3] },
-        { title: 'Productos e Inventario', url: '/productos', icon: 'cube-outline', roles: [1, 2, 3] },
+        { title: 'Cambiar de Empresa / Espacio', url: '/seleccionar-empresa', icon: 'business-outline', roles: [1, 2, 3] },
+        { title: 'Productos e Inventario', url: '/productos', icon: 'cube-outline', roles: [1, 3] },
         { title: 'Facturas y Ventas', url: '/facturas', icon: 'document-text-outline', roles: [1, 2] },
         { title: 'Gestión de Compras', url: '/compras', icon: 'cart-outline', roles: [1, 3] },
       ]
@@ -46,9 +48,9 @@ export class AppComponent implements OnInit {
     {
       titulo: 'Analítica y Administración',
       items: [
-        { title: 'Reportes y Métricas', url: '/reportes', icon: 'bar-chart-outline', roles: [1, 2, 3] },
+        { title: 'Reportes y Métricas', url: '/reportes', icon: 'bar-chart-outline', roles: [1, 3] },
         { title: 'Gestión de Usuarios', url: '/usuarios', icon: 'shield-checkmark-outline', roles: [1] },
-        { title: 'Configuración Empresa', url: '/empresa', icon: 'business-outline', roles: [1] },
+        { title: 'Configuración Empresa', url: '/empresa', icon: 'settings-outline', roles: [1] },
       ]
     }
   ];
@@ -62,6 +64,11 @@ export class AppComponent implements OnInit {
   ngOnInit(): void {
     this.authService.currentUser$.subscribe(user => {
       this.usuario = user || this.authService.getUsuario();
+      this.actualizarMenu();
+    });
+
+    this.authService.empresaActiva$.subscribe(emp => {
+      this.empresaActiva = emp || this.authService.getEmpresaActiva();
       this.actualizarMenu();
     });
 
