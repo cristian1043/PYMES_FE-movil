@@ -162,7 +162,7 @@ export class ClientesPage implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }
 
-    this.clientesService.getClientes(page, 15).subscribe({
+    this.clientesService.getClientes(page, 10).subscribe({
       next: (res) => {
         this.loading = false;
         if (event) event.target.complete();

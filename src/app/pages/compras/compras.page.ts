@@ -292,7 +292,7 @@ export class ComprasPage implements OnInit, OnDestroy {
       this.compras = [];
     }
 
-    this.comprasService.getCompras(page, 15).pipe(
+    this.comprasService.getCompras(page, 10).pipe(
       finalize(() => {
         this.loading = false;
         if (event) event.target.complete();

@@ -127,7 +127,7 @@ export class FacturasPage implements OnInit, OnDestroy {
     }
 
 
-    this.facturasService.getFacturas(page, 15).subscribe({
+    this.facturasService.getFacturas(page, 10).subscribe({
       next: (res) => {
         this.loading = false;
         if (event) event.target.complete();

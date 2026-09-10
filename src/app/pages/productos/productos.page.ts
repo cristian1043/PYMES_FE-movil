@@ -292,7 +292,7 @@ export class ProductosPage implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }
 
-    this.productosService.getProductos(page, 15).pipe(
+    this.productosService.getProductos(page, 10).pipe(
       finalize(() => {
         this.loading = false;
         if (event) event.target.complete();

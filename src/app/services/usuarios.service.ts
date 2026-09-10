@@ -34,9 +34,14 @@ export class UsuariosService {
     private authService: AuthService
   ) {}
 
-  getUsuarios(page: number = 1, perPage: number = 15): Observable<any> {
+  getUsuarios(page: number = 1, perPage: number = 10): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
+  }
+
+  getUsuarioById(id: number): Observable<UsuarioItem> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<UsuarioItem>(`${this.apiUrl}/${id}`, { headers });
   }
 
   checkUsernameDisponible(username: string): Observable<{ disponible: boolean }> {

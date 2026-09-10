@@ -28,9 +28,15 @@
         <h2>¡Bienvenido, {{ usuario.nombre || usuario.username }}! 👋</h2>
         <p>Gestiona las operaciones de tu negocio con practicidad táctil</p>
       </div>
-      <ion-badge color="tertiary" class="role-badge">
-        {{ (empresaActiva && empresaActiva.rol_nombre) ? empresaActiva.rol_nombre : (usuario.rol || 'Usuario Activo') }}
-      </ion-badge>
+      <div class="welcome-actions-group">
+        <ion-badge color="tertiary" class="role-badge">
+          {{ (empresaActiva && empresaActiva.rol_nombre) ? empresaActiva.rol_nombre : (usuario.rol || 'Usuario Activo') }}
+        </ion-badge>
+        <button type="button" class="btn-perfil-quick" (click)="irAModulo('/perfil')" title="Ver mi información personal">
+          <ion-icon name="person-circle-outline"></ion-icon>
+          <span>Mi Perfil</span>
+        </button>
+      </div>
     </div>
 
     <!-- Tarjeta de Espacio de Trabajo / Empresa Activa -->

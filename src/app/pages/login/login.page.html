@@ -42,6 +42,14 @@
           </div>
         </div>
 
+        <!-- Enlace de Recuperación de Contraseña con 'Recupérala' resaltada -->
+        <div class="recuperar-link-wrapper ion-text-end">
+          <span class="recuperar-texto">¿Olvidaste tu contraseña?</span>
+          <button type="button" class="recuperar-btn-link" (click)="abrirModalRecuperar()">
+            <strong class="recuperar-highlight">Recupérala</strong>
+          </button>
+        </div>
+
         <div *ngIf="errorMessage" class="error-message">
           <p><ion-icon name="alert-circle-outline"></ion-icon> {{ errorMessage }}</p>
         </div>
@@ -55,9 +63,142 @@
         </button>
 
         <div class="register-link ion-text-center">
-          <p>¿No tienes una cuenta? <a routerLink="/register" class="register-text">Regístrate aquí</a></p>
+          <p>¿No tienes una cuenta? <button type="button" class="register-btn-inline" (click)="irARegistro()">Regístrate aquí</button></p>
         </div>
       </form>
     </div>
   </div>
 </ion-content>
+
+  <!-- Modal Táctil de Recuperación de Contraseña -->
+  <ion-modal [isOpen]="modalRecuperarAbierto" (didDismiss)="cerrarModalRecuperar()" class="modal-recuperar">
+    <ng-template>
+      <ion-header class="ion-no-border">
+        <ion-toolbar color="primary">
+          <ion-title>Recuperar Contraseña</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="cerrarModalRecuperar()">
+              <ion-icon name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding modal-recuperar-content">
+        <!-- Paso 1: Solicitar Código OTP -->
+        <div *ngIf="pasoRecuperacion === 1" class="recuperar-paso-box">
+          <div class="ion-text-center ion-margin-bottom">
+            <div class="recuperar-badge-icon">
+              <ion-icon name="mail-outline"></ion-icon>
+            </div>
+            <h3>¿Olvidaste tu contraseña?</h3>
+            <p class="recuperar-desc">
+              Ingresa tu correo registrado, usuario o documento. Te enviaremos un código de verificación de 6 dígitos.
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <ion-icon name="shield-outline"></ion-icon> Correo, Usuario o Documento
+            </label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                class="custom-input"
+                [(ngModel)]="recuperarIdentificador"
+                name="recuperarIdentificador"
+                placeholder="ej: usuario@pymesoft.com o 1098765432" />
+            </div>
+          </div>
+
+          <div *ngIf="recuperarError" class="error-message ion-margin-top">
+            <p><ion-icon name="alert-circle-outline"></ion-icon> {{ recuperarError }}</p>
+          </div>
+
+          <button
+            type="button"
+            class="submit-button ion-margin-top"
+            [disabled]="recuperando"
+            (click)="solicitarCodigo()">
+            <ion-spinner *ngIf="recuperando" name="crescent"></ion-spinner>
+            <span *ngIf="!recuperando">Enviar Código de Recuperación</span>
+          </button>
+        </div>
+
+        <!-- Paso 2: Ingresar Código y Nueva Contraseña -->
+        <div *ngIf="pasoRecuperacion === 2" class="recuperar-paso-box">
+          <div class="ion-text-center ion-margin-bottom">
+            <div class="recuperar-badge-icon success">
+              <ion-icon name="key-outline"></ion-icon>
+            </div>
+            <h3>Restablecer Contraseña</h3>
+            <p class="recuperar-desc">
+              {{ mensajePaso2 || 'Ingresa el código OTP recibido y escribe tu nueva contraseña segura.' }}
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <ion-icon name="checkmark-circle-outline"></ion-icon> Código OTP (6 dígitos)
+            </label>
+            <div class="input-wrapper">
+              <input
+                type="text"
+                class="custom-input ion-text-center"
+                [(ngModel)]="recuperarCodigo"
+                name="recuperarCodigo"
+                placeholder="Ej: 123456" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <ion-icon name="lock-closed-outline"></ion-icon> Nueva Contraseña
+            </label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                class="custom-input"
+                [(ngModel)]="recuperarNuevaPassword"
+                name="recuperarNuevaPassword"
+                placeholder="Mínimo 6 caracteres" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">
+              <ion-icon name="lock-closed-outline"></ion-icon> Confirmar Nueva Contraseña
+            </label>
+            <div class="input-wrapper">
+              <input
+                type="password"
+                class="custom-input"
+                [(ngModel)]="recuperarConfirmarPassword"
+                name="recuperarConfirmarPassword"
+                placeholder="Repite la contraseña" />
+            </div>
+          </div>
+
+          <div *ngIf="recuperarError" class="error-message ion-margin-top">
+            <p><ion-icon name="alert-circle-outline"></ion-icon> {{ recuperarError }}</p>
+          </div>
+
+          <button
+            type="button"
+            class="submit-button ion-margin-top"
+            [disabled]="recuperando"
+            (click)="confirmarNuevaPassword()">
+            <ion-spinner *ngIf="recuperando" name="crescent"></ion-spinner>
+            <span *ngIf="!recuperando">Guardar Nueva Contraseña</span>
+          </button>
+
+          <div class="ion-text-center ion-margin-top">
+            <button type="button" class="btn-reenviar" (click)="pasoRecuperacion = 1">
+              ← Solicitar otro código
+            </button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+

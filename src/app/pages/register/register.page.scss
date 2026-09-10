@@ -132,13 +132,19 @@
     margin: 0;
   }
 
-  .login-text {
+  .login-text,
+  .login-btn-inline {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-size: 14px;
     color: #1e3c72 !important;
     font-weight: 700;
-    text-decoration: none;
+    text-decoration: underline;
 
-    &:hover {
-      text-decoration: underline;
+    &:hover, &:active {
+      color: #2a5298 !important;
     }
   }
 }

@@ -1,0 +1,404 @@
+<ion-page>
+  <!-- Encabezado Corporativo del Módulo con Logo Arriba y Menú Lateral -->
+  <ion-header class="module-app-header">
+    <div class="header-top-brand" (click)="irAIndex()" title="Ir al Inicio (Index)">
+      <ion-icon name="storefront-outline" class="brand-icon"></ion-icon>
+      <span class="brand-name">PYMEsoft Móvil</span>
+      <span class="brand-home-badge">Inicio 🏠</span>
+    </div>
+
+    <div class="header-bottom-bar">
+      <button class="header-menu-btn" (click)="toggleMenu()" title="Abrir Menú de Opciones">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <div class="header-module-title">
+        Información Personal
+      </div>
+    </div>
+  </ion-header>
+
+  <ion-content [fullscreen]="true" class="perfil-background ion-padding">
+    <!-- Barra Superior de Navegación -->
+    <div class="module-action-bar ion-margin-bottom">
+      <ion-button
+        fill="outline"
+        color="secondary"
+        size="small"
+        (click)="irAIndex()"
+        class="back-button">
+        <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
+        Volver al Inicio
+      </ion-button>
+    </div>
+
+    <!-- Spinner de Carga Inicial -->
+    <div *ngIf="loading" class="spinner-container ion-text-center ion-padding">
+      <ion-spinner name="crescent" color="primary"></ion-spinner>
+      <p class="loading-text">Cargando tu información personal...</p>
+    </div>
+
+    <div *ngIf="!loading">
+      <!-- Tarjeta de Resumen de Perfil / Cabecera Visual -->
+      <div class="profile-hero-card ion-margin-bottom">
+        <div class="hero-avatar">
+          <ion-icon name="person-circle-outline"></ion-icon>
+        </div>
+        <div class="hero-content">
+          <h2 class="hero-name">{{ form.nombre }} {{ form.apellido }}</h2>
+          <p class="hero-username">@{{ form.username || 'usuario' }}</p>
+          <div class="hero-badges">
+            <span class="badge-role" [ngClass]="{
+              'role-admin': rolId === 1,
+              'role-vendedor': rolId === 2,
+              'role-almacen': rolId === 3
+            }">
+              {{ rolNombre }}
+            </span>
+            <span class="badge-empresa" *ngIf="empresaActiva">
+              🏢 {{ empresaActiva.nombre }}
+            </span>
+            <span class="badge-status-active">
+              ✅ Cuenta Activa
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de Edición de Datos Personales -->
+      <form (ngSubmit)="guardarPerfil()" class="profile-form">
+        <!-- SECCIÓN 1: DATOS BÁSICOS Y DE CONTACTO -->
+        <ion-card class="form-section-card ion-margin-bottom">
+          <ion-card-header class="section-card-header">
+            <div class="section-title-wrapper">
+              <span class="section-icon">👤</span>
+              <div>
+                <ion-card-title>Datos Personales y Contacto</ion-card-title>
+                <ion-card-subtitle>Modifica tu nombre, correo y número de contacto</ion-card-subtitle>
+              </div>
+            </div>
+          </ion-card-header>
+
+          <ion-card-content>
+            <ion-grid class="ion-no-padding">
+              <ion-row>
+                <!-- Nombre(s) -->
+                <ion-col size="12" size-md="6">
+                  <div class="custom-form-group">
+                    <label class="form-label">
+                      Nombre(s) <span class="required-asterisk">*</span>
+                    </label>
+                    <div class="input-with-icon">
+                      <ion-icon name="person-outline"></ion-icon>
+                      <input
+                        type="text"
+                        name="nombre"
+                        class="custom-input"
+                        [(ngModel)]="form.nombre"
+                        placeholder="Ej: Juan Carlos"
+                        required />
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Apellido(s) -->
+                <ion-col size="12" size-md="6">
+                  <div class="custom-form-group">
+                    <label class="form-label">Apellido(s)</label>
+                    <div class="input-with-icon">
+                      <ion-icon name="person-outline"></ion-icon>
+                      <input
+                        type="text"
+                        name="apellido"
+                        class="custom-input"
+                        [(ngModel)]="form.apellido"
+                        placeholder="Ej: Pérez Rodríguez" />
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Correo Electrónico -->
+                <ion-col size="12" size-md="6">
+                  <div class="custom-form-group">
+                    <label class="form-label">
+                      Correo Electrónico <span class="required-asterisk">*</span>
+                    </label>
+                    <div class="input-with-icon">
+                      <ion-icon name="mail-outline"></ion-icon>
+                      <input
+                        type="email"
+                        name="email"
+                        class="custom-input"
+                        [(ngModel)]="form.email"
+                        placeholder="ejemplo@correo.com"
+                        required />
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Número de Teléfono / Celular -->
+                <ion-col size="12" size-md="6">
+                  <div class="custom-form-group">
+                    <label class="form-label">
+                      Teléfono / Celular <span class="required-asterisk">*</span>
+                    </label>
+                    <div class="input-with-icon">
+                      <ion-icon name="call-outline"></ion-icon>
+                      <input
+                        type="tel"
+                        name="telefono"
+                        class="custom-input"
+                        [(ngModel)]="form.telefono"
+                        placeholder="Ej: 3001234567"
+                        required />
+                    </div>
+                  </div>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- SECCIÓN 2: IDENTIFICACIÓN Y CUENTA -->
+        <ion-card class="form-section-card ion-margin-bottom">
+          <ion-card-header class="section-card-header">
+            <div class="section-title-wrapper">
+              <span class="section-icon">🪪</span>
+              <div>
+                <ion-card-title>Identificación y Cuenta</ion-card-title>
+                <ion-card-subtitle>Documento de identidad y usuario de acceso</ion-card-subtitle>
+              </div>
+            </div>
+          </ion-card-header>
+
+          <ion-card-content>
+            <ion-grid class="ion-no-padding">
+              <ion-row>
+                <!-- Tipo de Documento -->
+                <ion-col size="12" size-md="6">
+                  <div class="custom-form-group">
+                    <label class="form-label">Tipo de Documento</label>
+                    <div class="select-wrapper">
+                      <select name="tipo_documento" class="custom-select" [(ngModel)]="form.tipo_documento">
+                        <option value="CC">Cédula de Ciudadanía (CC)</option>
+                        <option value="NIT">NIT (Empresarial)</option>
+                        <option value="CE">Cédula de Extranjería (CE)</option>
+                        <option value="PAS">Pasaporte (PAS)</option>
+                      </select>
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Número de Documento -->
+                <ion-col size="12" size-md="6">
+                  <div class="custom-form-group">
+                    <label class="form-label">Número de Documento</label>
+                    <div class="input-with-icon">
+                      <ion-icon name="id-card-outline"></ion-icon>
+                      <input
+                        type="text"
+                        name="documento"
+                        class="custom-input"
+                        [(ngModel)]="form.documento"
+                        placeholder="Ej: 1020304050" />
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Usuario (@username) - Solo lectura -->
+                <ion-col size="12">
+                  <div class="custom-form-group">
+                    <label class="form-label">Nombre de Usuario (Identificador de inicio de sesión)</label>
+                    <div class="input-with-icon readonly-input">
+                      <ion-icon name="at-outline"></ion-icon>
+                      <input
+                        type="text"
+                        name="username"
+                        class="custom-input"
+                        [value]="form.username"
+                        readonly
+                        disabled />
+                    </div>
+                    <small class="field-hint">El nombre de usuario es tu identificador único de cuenta y no se puede modificar.</small>
+                  </div>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- SECCIÓN 3: SEGURIDAD Y CAMBIO DE CONTRASEÑA -->
+        <ion-card class="form-section-card ion-margin-bottom">
+          <ion-card-header class="section-card-header" (click)="toggleSeccionPassword()" style="cursor: pointer;">
+            <div class="section-title-wrapper" style="justify-content: space-between; width: 100%;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="section-icon">🔒</span>
+                <div>
+                  <ion-card-title>Seguridad y Contraseña</ion-card-title>
+                  <ion-card-subtitle>{{ mostrarCambioPassword ? 'Ocultar cambio de contraseña' : 'Toca aquí si deseas cambiar tu contraseña' }}</ion-card-subtitle>
+                </div>
+              </div>
+              <ion-button fill="clear" size="small" color="primary">
+                <ion-icon [name]="mostrarCambioPassword ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+              </ion-button>
+            </div>
+          </ion-card-header>
+
+          <ion-card-content *ngIf="mostrarCambioPassword">
+            <div class="password-change-box">
+              <p class="password-info-text">
+                🔒 Por tu seguridad, debes ingresar tu <strong>contraseña actual</strong> para verificar tu identidad antes de establecer una nueva clave. Mínimo 6 caracteres.
+              </p>
+
+              <ion-grid class="ion-no-padding">
+                <ion-row>
+                  <!-- Contraseña Actual -->
+                  <ion-col size="12">
+                    <div class="custom-form-group">
+                      <label class="form-label">Contraseña Actual <span class="required-asterisk">*</span></label>
+                      <div class="input-with-icon">
+                        <ion-icon name="shield-checkmark-outline"></ion-icon>
+                        <input
+                          type="password"
+                          name="passwordActual"
+                          class="custom-input"
+                          [(ngModel)]="form.passwordActual"
+                          placeholder="Ingresa tu contraseña actual obligatoria" />
+                      </div>
+                    </div>
+                  </ion-col>
+
+                  <ion-col size="12" size-md="6">
+                    <div class="custom-form-group">
+                      <label class="form-label">Nueva Contraseña <span class="required-asterisk">*</span></label>
+                      <div class="input-with-icon">
+                        <ion-icon name="key-outline"></ion-icon>
+                        <input
+                          type="password"
+                          name="password"
+                          class="custom-input"
+                          [(ngModel)]="form.password"
+                          placeholder="Mínimo 6 caracteres" />
+                      </div>
+                    </div>
+                  </ion-col>
+
+                  <ion-col size="12" size-md="6">
+                    <div class="custom-form-group">
+                      <label class="form-label">Confirmar Nueva Contraseña <span class="required-asterisk">*</span></label>
+                      <div class="input-with-icon">
+                        <ion-icon name="lock-closed-outline"></ion-icon>
+                        <input
+                          type="password"
+                          name="confirmPassword"
+                          class="custom-input"
+                          [(ngModel)]="form.confirmPassword"
+                          placeholder="Repite la nueva contraseña" />
+                      </div>
+                    </div>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </div>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- SECCIÓN 4: INFORMACIÓN BANCARIA / NÓMINA (OPCIONAL) -->
+        <ion-card class="form-section-card ion-margin-bottom">
+          <ion-card-header class="section-card-header">
+            <div class="section-title-wrapper">
+              <span class="section-icon">🏦</span>
+              <div>
+                <ion-card-title>Información Bancaria / Nómina</ion-card-title>
+                <ion-card-subtitle>Datos para dispersión de nómina y pagos de la empresa</ion-card-subtitle>
+              </div>
+            </div>
+          </ion-card-header>
+
+          <ion-card-content>
+            <ion-grid class="ion-no-padding">
+              <ion-row>
+                <!-- Banco -->
+                <ion-col size="12" size-md="4">
+                  <div class="custom-form-group">
+                    <label class="form-label">Banco</label>
+                    <div class="input-with-icon">
+                      <ion-icon name="business-outline"></ion-icon>
+                      <input
+                        type="text"
+                        name="banco"
+                        class="custom-input"
+                        [(ngModel)]="form.banco"
+                        placeholder="Ej: Bancolombia, Davivienda" />
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Tipo de Cuenta -->
+                <ion-col size="12" size-md="4">
+                  <div class="custom-form-group">
+                    <label class="form-label">Tipo de Cuenta</label>
+                    <div class="select-wrapper">
+                      <select name="tipo_cuenta" class="custom-select" [(ngModel)]="form.tipo_cuenta">
+                        <option value="Ahorros">Cuenta de Ahorros</option>
+                        <option value="Corriente">Cuenta Corriente</option>
+                      </select>
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Número de Cuenta -->
+                <ion-col size="12" size-md="4">
+                  <div class="custom-form-group">
+                    <label class="form-label">Número de Cuenta</label>
+                    <div class="input-with-icon">
+                      <ion-icon name="card-outline"></ion-icon>
+                      <input
+                        type="text"
+                        name="numero_cuenta"
+                        class="custom-input"
+                        [(ngModel)]="form.numero_cuenta"
+                        placeholder="Ej: 123-456789-00" />
+                    </div>
+                  </div>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- BOTONES DE ACCIÓN PRINCIPALES -->
+        <div class="profile-actions-bar ion-margin-top ion-margin-bottom">
+          <ion-button
+            expand="block"
+            type="submit"
+            color="primary"
+            class="save-btn"
+            [disabled]="guardando">
+            <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
+            <span *ngIf="!guardando">
+              <ion-icon name="save-outline" slot="start"></ion-icon>
+              Guardar Cambios
+            </span>
+          </ion-button>
+
+          <ion-button
+            expand="block"
+            fill="outline"
+            color="medium"
+            type="button"
+            class="undo-btn ion-margin-top"
+            (click)="deshacerCambios()"
+            [disabled]="guardando">
+            <ion-icon name="refresh-outline" slot="start"></ion-icon>
+            Deshacer Cambios
+          </ion-button>
+        </div>
+      </form>
+    </div>
+  </ion-content>
+</ion-page>

@@ -34,7 +34,7 @@ export class ReportesPage implements OnInit, OnDestroy {
   facturasPaginadas: any[] = [];
   searchFacturas = '';
   pageVentas = 1;
-  perPageVentas = 5;
+  perPageVentas = 10;
   totalPagesVentas = 1;
 
   // Reporte Inventario
@@ -44,7 +44,7 @@ export class ReportesPage implements OnInit, OnDestroy {
   productosPaginados: any[] = [];
   searchProductos = '';
   pageInventario = 1;
-  perPageInventario = 5;
+  perPageInventario = 10;
   totalPagesInventario = 1;
 
   // Reporte Clientes
@@ -53,7 +53,7 @@ export class ReportesPage implements OnInit, OnDestroy {
   clientesPaginados: any[] = [];
   searchClientes = '';
   pageClientes = 1;
-  perPageClientes = 5;
+  perPageClientes = 10;
   totalPagesClientes = 1;
 
   private queryParamsSub?: Subscription;

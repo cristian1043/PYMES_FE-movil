@@ -52,6 +52,12 @@ export class AppComponent implements OnInit {
         { title: 'Gestión de Usuarios', url: '/usuarios', icon: 'shield-checkmark-outline', roles: [1] },
         { title: 'Configuración Empresa', url: '/empresa', icon: 'settings-outline', roles: [1] },
       ]
+    },
+    {
+      titulo: 'Mi Cuenta y Perfil',
+      items: [
+        { title: 'Información Personal', url: '/perfil', icon: 'person-outline', roles: [1, 2, 3] },
+      ]
     }
   ];
 

@@ -24,7 +24,7 @@
     <!-- Cuerpo del Panel / Lista de Módulos -->
     <div class="drawer-body">
       <!-- Perfil del Usuario y Empresa Activa -->
-      <div class="drawer-profile" *ngIf="usuario">
+      <div class="drawer-profile" *ngIf="usuario" (click)="navegar('/perfil')" style="cursor: pointer;" title="Ver y editar mi información personal">
         <ion-icon name="person-circle-outline" class="profile-avatar"></ion-icon>
         <div class="profile-info">
           <h4>{{ usuario.nombre || usuario.username }}</h4>
@@ -33,7 +33,7 @@
             <ion-badge color="tertiary" class="badge-role">
               {{ (empresaActiva && empresaActiva.rol_nombre) ? empresaActiva.rol_nombre : (usuario.rol || 'Usuario') }}
             </ion-badge>
-            <ion-badge color="primary" class="badge-empresa" *ngIf="empresaActiva" (click)="navegar('/seleccionar-empresa')">
+            <ion-badge color="primary" class="badge-empresa" *ngIf="empresaActiva" (click)="$event.stopPropagation(); navegar('/seleccionar-empresa')">
               🏢 {{ empresaActiva.nombre }}
             </ion-badge>
           </div>

@@ -29,11 +29,43 @@
     }
   }
 
-  .role-badge {
-    font-size: 12px;
-    padding: 6px 12px;
-    border-radius: 14px;
-    font-weight: 600;
+  .welcome-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+
+    .role-badge {
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 14px;
+      font-weight: 600;
+    }
+
+    .btn-perfil-quick {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      border-radius: 14px;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      transition: all 0.2s ease;
+
+      ion-icon {
+        font-size: 16px;
+      }
+
+      &:hover, &:active {
+        background: rgba(255, 255, 255, 0.35);
+        transform: scale(1.03);
+      }
+    }
   }
 }
 

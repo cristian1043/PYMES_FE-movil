@@ -31,7 +31,7 @@ export class ProductosService {
     private authService: AuthService
   ) {}
 
-  getProductos(page: number = 1, perPage: number = 15): Observable<any> {
+  getProductos(page: number = 1, perPage: number = 10): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
   }

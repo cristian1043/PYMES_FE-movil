@@ -87,6 +87,14 @@ export class InicioPage implements OnInit {
       icon: 'business-outline',
       color: 'primary',
       roles: [1]
+    },
+    {
+      titulo: 'Información Personal',
+      descripcion: 'Consulta y actualiza tus datos de contacto y perfil',
+      url: '/perfil',
+      icon: 'person-circle-outline',
+      color: 'tertiary',
+      roles: [1, 2, 3]
     }
   ];
 

@@ -130,7 +130,7 @@ export class ProveedoresPage implements OnInit, OnDestroy {
     }
 
 
-    this.proveedoresService.getProveedores(page, 15).subscribe({
+    this.proveedoresService.getProveedores(page, 10).subscribe({
       next: (res) => {
         this.loading = false;
         if (event) event.target.complete();

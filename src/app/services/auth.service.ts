@@ -80,6 +80,15 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  updateUsuarioEnStorage(usuarioActualizado: any): void {
+    const current = this.getUsuario() || {};
+    const merged = { ...current, ...usuarioActualizado };
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('usuario', JSON.stringify(merged));
+    }
+    this.currentUserSubject.next(merged);
+  }
+
   getEmpresaActiva(): any {
     return this.empresaActivaSubject.value;
   }
@@ -164,4 +173,26 @@ export class AuthService {
     }
     return headers;
   }
+
+  cambiarPassword(usuarioId: number, passwordActual: string, passwordNueva: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/cambiar-password`, {
+      usuario_id: usuarioId,
+      password_actual: passwordActual,
+      password_nueva: passwordNueva
+    }, { headers: this.getAuthHeaders() });
+  }
+
+  solicitarRecuperacionPassword(identificador: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/recuperar-password-solicitar`, {
+      identificador
+    });
+  }
+
+  confirmarRecuperacionPassword(tokenOCodigo: string, passwordNueva: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/recuperar-password-confirmar`, {
+      token: tokenOCodigo,
+      password_nueva: passwordNueva
+    });
+  }
 }
+

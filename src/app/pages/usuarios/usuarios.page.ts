@@ -197,7 +197,7 @@ export class UsuariosPage implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }
 
-    this.usuariosService.getUsuarios(page, 20)
+    this.usuariosService.getUsuarios(page, 10)
       .pipe(
         finalize(() => {
           this.loading = false;
