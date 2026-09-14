@@ -91,149 +91,93 @@
       </div>
     </div>
 
-    <!-- VISTA 2: FORMULARIO NUEVO USUARIO -->
+    <!-- VISTA 2: AFILIAR TRABAJADOR MEDIANTE EXTRACCIÓN DE DATOS -->
     <div *ngIf="activeTab === 'nuevo'" class="form-container">
       <ion-card class="form-card">
         <ion-card-header>
-          <ion-card-title>🛡️ Registrar Nuevo Usuario</ion-card-title>
+          <ion-card-title>👤 Afiliar Trabajador a la Empresa</ion-card-title>
+          <ion-card-subtitle>Extrae y revisa los datos personales del usuario mediante su @username</ion-card-subtitle>
         </ion-card-header>
 
         <ion-card-content>
-          <form (ngSubmit)="onRegistrarUsuario()">
-            <!-- Nombre -->
-            <div class="form-group">
-              <label class="form-label">Nombre *</label>
+          <!-- Buscador de usuario -->
+          <div class="form-group">
+            <label class="form-label">Identificador del Usuario (*)</label>
+            <div style="display: flex; gap: 8px;">
               <input
                 type="text"
                 class="custom-input"
-                [(ngModel)]="nombreUser"
-                name="nombreUser"
-                placeholder="ej: Carlos"
-                required />
+                [(ngModel)]="identificadorAfiliar"
+                placeholder="ej: cgaravito o N° de documento"
+                (keypress)="$event.key === 'Enter' && extraerDatosCandidato()" />
+              <ion-button color="primary" (click)="extraerDatosCandidato()" [disabled]="buscandoCandidato">
+                <ion-spinner *ngIf="buscandoCandidato" name="crescent"></ion-spinner>
+                <span *ngIf="!buscandoCandidato">🔍 Extraer</span>
+              </ion-button>
+            </div>
+            <small style="color: #64748b; font-size: 0.8rem; margin-top: 4px; display: block;">
+              El sistema extrae en tiempo real la información personal registrada por el usuario al crear su cuenta.
+            </small>
+          </div>
+
+          <!-- Mensaje de Error -->
+          <div *ngIf="candidatoError" class="error-message" style="margin-bottom: 15px;">
+            <p><ion-icon name="alert-circle-outline"></ion-icon> {{ candidatoError }}</p>
+          </div>
+
+          <!-- TARJETA DE PREVISUALIZACIÓN DE CANDIDATO EXTRAÍDO -->
+          <div *ngIf="candidatoAfiliar" style="border: 2px solid #3880ff; border-radius: 12px; padding: 16px; background: #f8fafc; margin-top: 15px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 12px;">
+              <h3 style="margin: 0; font-size: 1.1rem; font-weight: bold; color: #1e3c72;">
+                📋 Datos del Trabajador
+              </h3>
+              <span class="badge-role role-vendedor">
+                @{{ candidatoAfiliar.username || 'usuario' }}
+              </span>
             </div>
 
-            <!-- Apellido -->
-            <div class="form-group">
-              <label class="form-label">Apellido</label>
-              <input
-                type="text"
-                class="custom-input"
-                [(ngModel)]="apellidoUser"
-                name="apellidoUser"
-                placeholder="ej: Gómez" />
-            </div>
-
-            <!-- Tipo de Documento -->
-            <div class="form-group">
-              <label class="form-label">Tipo de Documento</label>
-              <select
-                class="custom-select"
-                [(ngModel)]="tipoDocumentoUser"
-                name="tipoDocumentoUser">
-                <option value="CC">Cédula de Ciudadanía (CC)</option>
-                <option value="NIT">NIT (Empresas)</option>
-                <option value="CE">Cédula Extranjería (CE)</option>
-                <option value="PAS">Pasaporte (PAS)</option>
-              </select>
-            </div>
-
-            <!-- N° Documento -->
-            <div class="form-group">
-              <label class="form-label">N° Documento</label>
-              <input
-                type="text"
-                class="custom-input"
-                [(ngModel)]="documentoUser"
-                name="documentoUser"
-                placeholder="ej: 1098765432" />
-            </div>
-
-            <!-- Teléfono -->
-            <div class="form-group">
-              <label class="form-label">Teléfono de Contacto</label>
-              <input
-                type="tel"
-                class="custom-input"
-                [(ngModel)]="telefonoUser"
-                name="telefonoUser"
-                placeholder="ej: +57 300 1234567" />
-            </div>
-
-            <!-- Nombre de Usuario @username (Único) -->
-            <div class="form-group">
-              <label class="form-label">Nombre de Usuario (@username) * (Único)</label>
-              <input
-                type="text"
-                class="custom-input"
-                [class.input-error]="usernameError"
-                [(ngModel)]="usernameUser"
-                (blur)="onUsernameChange()"
-                (input)="usernameError = ''; usernameSuccess = ''"
-                name="usernameUser"
-                placeholder="ej: cgomez"
-                required />
-              <span *ngIf="usernameChecking" class="field-hint">Verificando disponibilidad de @{{ usernameUser }}...</span>
-              <span *ngIf="usernameSuccess" class="field-hint success">{{ usernameSuccess }}</span>
-              <span *ngIf="usernameError" class="field-hint error">{{ usernameError }}</span>
-            </div>
-
-            <!-- Correo Electrónico (Para envío de credenciales) -->
-            <div class="form-group">
-              <label class="form-label">Correo Electrónico * (Para envío de credenciales)</label>
-              <input
-                type="email"
-                class="custom-input"
-                [(ngModel)]="emailUser"
-                name="emailUser"
-                placeholder="ej: carlos@pyme.com"
-                required />
-            </div>
-
-            <!-- Banner Informativo de Envío de Correo -->
-            <div class="email-notification-banner">
-              <ion-icon name="mail-unread-outline"></ion-icon>
-              <p>
-                <strong>Notificación Automática:</strong> Al guardar, el sistema enviará la confirmación de registro y las credenciales al correo del usuario para validar su cuenta.
+            <!-- Información Personal -->
+            <div style="display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 0.9rem; color: #334155; margin-bottom: 15px;">
+              <p style="margin: 0;"><strong>Nombre Completo:</strong> {{ candidatoAfiliar.nombre }} {{ candidatoAfiliar.apellido }}</p>
+              <p style="margin: 0;"><strong>Documento:</strong> {{ candidatoAfiliar.tipo_documento }} {{ candidatoAfiliar.documento }}</p>
+              <p style="margin: 0;">
+                <strong>Fecha de Nacimiento:</strong> {{ candidatoAfiliar.fecha_nacimiento || 'No registrada' }}
+                <span *ngIf="candidatoEdad" style="color: #3880ff; font-weight: bold;"> ({{ candidatoEdad }})</span>
+              </p>
+              <p style="margin: 0;"><strong>Lugar de Residencia:</strong> {{ candidatoAfiliar.lugar_residencia || 'No registrada' }}</p>
+              <p style="margin: 0;">
+                <strong>Estado Civil:</strong> {{ candidatoAfiliar.estado_civil || 'No registrado' }} |
+                <strong>Hijos:</strong> {{ candidatoAfiliar.numero_hijos !== undefined ? candidatoAfiliar.numero_hijos : 0 }}
+              </p>
+              <p style="margin: 0;"><strong>Correo Electrónico:</strong> {{ candidatoAfiliar.email }}</p>
+              <p style="margin: 0;"><strong>Teléfono:</strong> {{ candidatoAfiliar.telefono || 'Sin registrar' }}</p>
+              <p style="margin: 0;" *ngIf="candidatoAfiliar.banco">
+                <strong>Datos Bancarios:</strong> 🏦 {{ candidatoAfiliar.banco }} ({{ candidatoAfiliar.tipo_cuenta }}: {{ candidatoAfiliar.numero_cuenta }})
               </p>
             </div>
 
-            <!-- Contraseña de Acceso -->
-            <div class="form-group">
-              <label class="form-label">Contraseña de Acceso Temporal *</label>
-              <input
-                type="password"
-                class="custom-input"
-                [(ngModel)]="passwordUser"
-                name="passwordUser"
-                placeholder="Mínimo 6 caracteres"
-                required />
-            </div>
+            <hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 12px 0;">
 
-            <!-- Rol del Usuario -->
-            <div class="form-group">
-              <label class="form-label">Rol del Usuario *</label>
-              <select
-                class="custom-select"
-                [(ngModel)]="idRolUser"
-                name="idRolUser">
-                <option [value]="1">Administrador (Acceso Total)</option>
-                <option [value]="2">Vendedor (Productos, Facturas, Clientes)</option>
-                <option [value]="3">Almacenista (Productos, Compras, Proveedores, Reportes)</option>
+            <!-- Selección de Rol y Aprobación -->
+            <div class="form-group" style="margin-bottom: 15px;">
+              <label class="form-label" style="font-weight: bold; color: #0f172a;">Rol Operativo en esta Empresa (*)</label>
+              <select class="custom-select" [(ngModel)]="idRolAfiliar">
+                <option [value]="2">🏷️ Vendedor (Gestión de ventas y clientes)</option>
+                <option [value]="3">📦 Almacenista (Gestión de inventario y compras)</option>
+                <option [value]="1">👑 Administrador (Acceso total)</option>
               </select>
             </div>
 
-            <!-- Botón de Envío con Espaciado Adecuado -->
-            <div class="form-actions ion-margin-top">
-              <ion-button
-                expand="block"
-                type="submit"
-                color="primary"
-                [disabled]="guardando || !nombreUser || !usernameUser || !emailUser || !passwordUser || usernameError">
-                <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
-                <span *ngIf="!guardando">Crear Usuario y Enviar Credenciales</span>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+              <ion-button expand="block" fill="outline" color="medium" (click)="cancelarAfiliacion()" style="flex: 1;">
+                ❌ Cancelar
+              </ion-button>
+              <ion-button expand="block" color="success" (click)="aprobarYVincularCandidato()" [disabled]="afiliandoCandidato" style="flex: 1.5;">
+                <ion-spinner *ngIf="afiliandoCandidato" name="crescent"></ion-spinner>
+                <span *ngIf="!afiliandoCandidato">✅ Aprobar y Vincular</span>
               </ion-button>
             </div>
-          </form>
+          </div>
         </ion-card-content>
       </ion-card>
     </div>
@@ -243,10 +187,22 @@
 
       <!-- Barra de Búsqueda y Filtro de Rol -->
       <div class="filter-header-card">
+        <!-- Selector de Campo de Búsqueda -->
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 8px; padding: 0 4px;">
+          <span style="font-size: 0.8rem; font-weight: bold; color: #475569;">Filtrar por:</span>
+          <select [(ngModel)]="filtroCampo" (change)="filtrarUsuarios()" class="custom-select" style="max-width: 170px; padding: 4px 8px; font-size: 0.8rem;">
+            <option value="todos">🔍 Todos los campos</option>
+            <option value="username">@ Nombre de Usuario</option>
+            <option value="id"># ID de Usuario</option>
+            <option value="documento">🪪 N° Documento</option>
+            <option value="nombre">👤 Nombre / Apellido</option>
+          </select>
+        </div>
+
         <ion-searchbar
           [(ngModel)]="searchTerm"
           (ionInput)="filtrarUsuarios()"
-          placeholder="Buscar por nombre, @username o correo..."
+          placeholder="Buscar trabajadores..."
           class="custom-searchbar">
         </ion-searchbar>
 

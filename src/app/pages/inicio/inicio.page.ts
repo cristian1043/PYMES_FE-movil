@@ -119,13 +119,14 @@ export class InicioPage implements OnInit {
     }
 
     this.empresaActiva = this.authService.getEmpresaActiva();
-    if (!this.empresaActiva) {
-      this.router.navigate(['/seleccionar-empresa'], { replaceUrl: true });
-      return;
-    }
-
     this.usuario = this.authService.getUsuario();
-    this.modulosPermitidos = this.todosModulos.filter(mod => this.authService.hasRole(mod.roles));
+
+    if (this.empresaActiva) {
+      this.modulosPermitidos = this.todosModulos.filter(mod => this.authService.hasRole(mod.roles));
+    } else {
+      // Usuario independiente (sin empresa activa seleccionada): solo módulos personales
+      this.modulosPermitidos = this.todosModulos.filter(mod => mod.url === '/perfil');
+    }
   }
 
   cambiarEmpresa(): void {

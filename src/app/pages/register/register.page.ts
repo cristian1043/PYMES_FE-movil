@@ -18,6 +18,15 @@ export class RegisterPage {
   telefono = '';
   email = '';
   password = '';
+  fechaNacimiento = '';
+  lugarResidencia = '';
+  estadoCivil = 'Soltero(a)';
+  numeroHijos = 0;
+  banco = '';
+  tipoCuenta = 'Ahorros';
+  numeroCuenta = '';
+  edadCalculada = '';
+
   loading = false;
   errorMessage = '';
 
@@ -32,6 +41,22 @@ export class RegisterPage {
     this.router.navigate(['/login']);
   }
 
+  onFechaNacimientoChange(): void {
+    if (!this.fechaNacimiento) {
+      this.edadCalculada = '';
+      return;
+    }
+    const hoy = new Date();
+    const cumple = new Date(this.fechaNacimiento);
+    let edad = hoy.getFullYear() - cumple.getFullYear();
+    const m = hoy.getMonth() - cumple.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) {
+      edad--;
+    }
+    this.edadCalculada = `Edad: ${edad} años`;
+    this.cdr.detectChanges();
+  }
+
   onRegister(): void {
     if (
       !this.nombre ||
@@ -40,15 +65,17 @@ export class RegisterPage {
       !this.documento ||
       !this.telefono ||
       !this.email ||
-      !this.password
+      !this.password ||
+      !this.fechaNacimiento ||
+      !this.lugarResidencia
     ) {
-      this.errorMessage = 'Por favor completa todos los campos requeridos.';
+      this.errorMessage = 'Por favor completa todos los campos requeridos (*).';
       this.cdr.detectChanges();
       return;
     }
 
-    if (this.password.length < 6) {
-      this.errorMessage = 'La contraseña debe tener al menos 6 caracteres.';
+    if (this.password.length < 4) {
+      this.errorMessage = 'La contraseña debe tener al menos 4 caracteres.';
       this.cdr.detectChanges();
       return;
     }
@@ -57,10 +84,6 @@ export class RegisterPage {
     this.errorMessage = '';
     this.cdr.detectChanges();
 
-    const usernameGenerated = this.email.includes('@')
-      ? this.email.split('@')[0]
-      : this.email.trim();
-
     const payload = {
       nombre: this.nombre.trim(),
       apellido: this.apellido.trim(),
@@ -68,9 +91,16 @@ export class RegisterPage {
       documento: this.documento.trim(),
       telefono: this.telefono.trim(),
       email: this.email.trim().toLowerCase(),
-      username: usernameGenerated,
+      username: '', // El backend lo autogenera de forma única
       password: this.password,
-      id_rol: 2 // Rol Vendedor / Usuario por defecto
+      id_rol: 2,
+      fecha_nacimiento: this.fechaNacimiento,
+      lugar_residencia: this.lugarResidencia.trim(),
+      estado_civil: this.estadoCivil,
+      numero_hijos: Number(this.numeroHijos) || 0,
+      banco: this.banco.trim(),
+      tipo_cuenta: this.tipoCuenta,
+      numero_cuenta: this.numeroCuenta.trim()
     };
 
     this.authService.register(payload).pipe(
@@ -79,10 +109,11 @@ export class RegisterPage {
         this.cdr.detectChanges();
       })
     ).subscribe({
-      next: async (res) => {
+      next: async (res: any) => {
+        const uname = res?.username ? `@${res.username}` : '';
         const toast = await this.toastController.create({
-          message: '¡Cuenta creada con éxito! Ya puedes iniciar sesión.',
-          duration: 3500,
+          message: `¡Cuenta creada exitosamente! Tu identificador es ${uname}. Ya puedes iniciar sesión.`,
+          duration: 4500,
           color: 'success',
           position: 'top'
         });

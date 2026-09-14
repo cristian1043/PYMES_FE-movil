@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "199467296060",
+    "project_id": "pymesoft-2bc67",
+    "storage_bucket": "pymesoft-2bc67.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:199467296060:android:109a310727a81efd072a39",
+        "android_client_info": {
+          "package_name": "com.pymesoft.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBd_11r8MqkxW7-zFBJBNZa2P79RN4ML4g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

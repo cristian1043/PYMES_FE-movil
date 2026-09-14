@@ -69,6 +69,69 @@
             required />
         </div>
 
+        <!-- Fecha de Nacimiento -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="calendar-outline"></ion-icon> Fecha de Nacimiento *
+          </label>
+          <input
+            type="date"
+            class="custom-input"
+            [(ngModel)]="fechaNacimiento"
+            name="fechaNacimiento"
+            (ngModelChange)="onFechaNacimientoChange()"
+            required />
+          <small *ngIf="edadCalculada" style="color: #3880ff; font-weight: bold; margin-top: 4px; display: block;">
+            {{ edadCalculada }}
+          </small>
+        </div>
+
+        <!-- Lugar de Residencia -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="home-outline"></ion-icon> Lugar de Residencia *
+          </label>
+          <input
+            type="text"
+            class="custom-input"
+            [(ngModel)]="lugarResidencia"
+            name="lugarResidencia"
+            placeholder="ej: Barranquilla, Barrio El Prado"
+            required />
+        </div>
+
+        <!-- Estado Civil -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="heart-outline"></ion-icon> Estado Civil *
+          </label>
+          <select
+            class="custom-select"
+            [(ngModel)]="estadoCivil"
+            name="estadoCivil"
+            required>
+            <option value="Soltero(a)">Soltero(a)</option>
+            <option value="Casado(a)">Casado(a)</option>
+            <option value="Unión Libre">Unión Libre</option>
+            <option value="Divorciado(a)">Divorciado(a)</option>
+            <option value="Viudo(a)">Viudo(a)</option>
+          </select>
+        </div>
+
+        <!-- Número de Hijos -->
+        <div class="form-group">
+          <label class="form-label">
+            <ion-icon name="people-outline"></ion-icon> Número de Hijos
+          </label>
+          <input
+            type="number"
+            class="custom-input"
+            [(ngModel)]="numeroHijos"
+            name="numeroHijos"
+            min="0"
+            max="20" />
+        </div>
+
         <!-- Teléfono -->
         <div class="form-group">
           <label class="form-label">
@@ -111,13 +174,42 @@
             required />
         </div>
 
+        <!-- Datos Bancarios (Opcional) -->
+        <div class="form-group">
+          <label class="form-label" style="color: #666; font-size: 0.85rem;">
+            <ion-icon name="business-outline"></ion-icon> Banco (Nómina - Opcional)
+          </label>
+          <input
+            type="text"
+            class="custom-input"
+            [(ngModel)]="banco"
+            name="banco"
+            placeholder="ej: Bancolombia, Nequi..." />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="color: #666; font-size: 0.85rem;">
+            <ion-icon name="wallet-outline"></ion-icon> N° Cuenta (Opcional)
+          </label>
+          <input
+            type="text"
+            class="custom-input"
+            [(ngModel)]="numeroCuenta"
+            name="numeroCuenta"
+            placeholder="ej: 123456789" />
+        </div>
+
+        <div style="background: #f4f5f8; border-radius: 8px; padding: 10px; margin-bottom: 15px; font-size: 0.8rem; color: #555;">
+          ℹ️ <strong>Nota:</strong> El sistema te asignará un <strong>@username</strong> único. Con este identificador las empresas podrán vincularte a su equipo.
+        </div>
+
         <div *ngIf="errorMessage" class="error-message">
           <p><ion-icon name="alert-circle-outline"></ion-icon> {{ errorMessage }}</p>
         </div>
 
         <button
           type="submit"
-          [disabled]="loading || !nombre || !apellido || !tipoDocumento || !documento || !telefono || !email || !password"
+          [disabled]="loading || !nombre || !apellido || !tipoDocumento || !documento || !telefono || !email || !password || !fechaNacimiento || !lugarResidencia"
           class="submit-button">
           <ion-spinner *ngIf="loading" name="crescent"></ion-spinner>
           <span *ngIf="!loading">Crear Cuenta</span>

@@ -29,6 +29,11 @@ export class PerfilPage implements OnInit {
     tipo_documento: 'CC',
     documento: '',
     username: '',
+    fecha_nacimiento: '',
+    lugar_residencia: '',
+    estado_civil: '',
+    numero_hijos: 0,
+    edadCalculada: '',
     banco: '',
     tipo_cuenta: 'Ahorros',
     numero_cuenta: '',
@@ -68,6 +73,22 @@ export class PerfilPage implements OnInit {
     this.router.navigateByUrl('/inicio');
   }
 
+  onFechaNacimientoChange(): void {
+    if (!this.form.fecha_nacimiento) {
+      this.form.edadCalculada = '';
+      return;
+    }
+    const hoy = new Date();
+    const cumple = new Date(this.form.fecha_nacimiento);
+    let edad = hoy.getFullYear() - cumple.getFullYear();
+    const m = hoy.getMonth() - cumple.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) {
+      edad--;
+    }
+    this.form.edadCalculada = `${edad} años`;
+    this.cdr.detectChanges();
+  }
+
   cargarDatosPerfil(): void {
     if (!this.authService.isLoggedIn()) {
       this.router.navigate(['/login'], { replaceUrl: true });
@@ -78,14 +99,16 @@ export class PerfilPage implements OnInit {
     this.empresaActiva = this.authService.getEmpresaActiva();
     this.rolId = this.authService.getRolId();
 
-    const rolesMap: Record<number, string> = {
-      1: '👑 Administrador',
-      2: '🏷️ Vendedor',
-      3: '📦 Almacenista'
-    };
-    this.rolNombre = (this.empresaActiva && this.empresaActiva.rol_nombre)
-      ? this.empresaActiva.rol_nombre
-      : (rolesMap[this.rolId] || 'Usuario');
+    if (this.empresaActiva) {
+      const rolesMap: Record<number, string> = {
+        1: '👑 Administrador',
+        2: '🏷️ Vendedor',
+        3: '📦 Almacenista'
+      };
+      this.rolNombre = this.empresaActiva.rol_nombre || (rolesMap[this.rolId] || 'Usuario');
+    } else {
+      this.rolNombre = '';
+    }
 
     this.poblarFormulario(this.usuario);
 
@@ -122,6 +145,11 @@ export class PerfilPage implements OnInit {
       tipo_documento: u.tipo_documento || 'CC',
       documento: u.documento || '',
       username: u.username || '',
+      fecha_nacimiento: u.fecha_nacimiento || '',
+      lugar_residencia: u.lugar_residencia || '',
+      estado_civil: u.estado_civil || '',
+      numero_hijos: u.numero_hijos !== undefined ? Number(u.numero_hijos) : 0,
+      edadCalculada: '',
       banco: u.banco || '',
       tipo_cuenta: u.tipo_cuenta || 'Ahorros',
       numero_cuenta: u.numero_cuenta || '',
@@ -129,6 +157,9 @@ export class PerfilPage implements OnInit {
       password: '',
       confirmPassword: ''
     };
+    if (this.form.fecha_nacimiento) {
+      this.onFechaNacimientoChange();
+    }
     this.formOriginal = { ...this.form };
     this.cdr.detectChanges();
   }
@@ -205,8 +236,10 @@ export class PerfilPage implements OnInit {
       apellido: this.form.apellido ? this.form.apellido.trim() : '',
       email: this.form.email.trim().toLowerCase(),
       telefono: this.form.telefono.trim(),
-      tipo_documento: this.form.tipo_documento,
-      documento: this.form.documento ? this.form.documento.trim() : '',
+      fecha_nacimiento: this.form.fecha_nacimiento,
+      lugar_residencia: this.form.lugar_residencia ? this.form.lugar_residencia.trim() : '',
+      estado_civil: this.form.estado_civil,
+      numero_hijos: Number(this.form.numero_hijos) || 0,
       banco: this.form.banco ? this.form.banco.trim() : '',
       tipo_cuenta: this.form.tipo_cuenta || 'Ahorros',
       numero_cuenta: this.form.numero_cuenta ? this.form.numero_cuenta.trim() : ''

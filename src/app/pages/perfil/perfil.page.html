@@ -52,7 +52,7 @@
           <h2 class="hero-name">{{ form.nombre }} {{ form.apellido }}</h2>
           <p class="hero-username">@{{ form.username || 'usuario' }}</p>
           <div class="hero-badges">
-            <span class="badge-role" [ngClass]="{
+            <span class="badge-role" *ngIf="empresaActiva && rolNombre" [ngClass]="{
               'role-admin': rolId === 1,
               'role-vendedor': rolId === 2,
               'role-almacen': rolId === 3
@@ -61,6 +61,9 @@
             </span>
             <span class="badge-empresa" *ngIf="empresaActiva">
               🏢 {{ empresaActiva.nombre }}
+            </span>
+            <span class="badge-role" *ngIf="!empresaActiva" style="background: #e2e8f0; color: #475569;">
+              👤 Usuario Independiente
             </span>
             <span class="badge-status-active">
               ✅ Cuenta Activa
@@ -71,14 +74,14 @@
 
       <!-- Formulario de Edición de Datos Personales -->
       <form (ngSubmit)="guardarPerfil()" class="profile-form">
-        <!-- SECCIÓN 1: DATOS BÁSICOS Y DE CONTACTO -->
+        <!-- SECCIÓN 1: DATOS PERSONALES Y FAMILIARES -->
         <ion-card class="form-section-card ion-margin-bottom">
           <ion-card-header class="section-card-header">
             <div class="section-title-wrapper">
               <span class="section-icon">👤</span>
               <div>
-                <ion-card-title>Datos Personales y Contacto</ion-card-title>
-                <ion-card-subtitle>Modifica tu nombre, correo y número de contacto</ion-card-subtitle>
+                <ion-card-title>Datos Personales y Familiares</ion-card-title>
+                <ion-card-subtitle>Información básica, nacimiento y residencia</ion-card-subtitle>
               </div>
             </div>
           </ion-card-header>
@@ -117,6 +120,77 @@
                         class="custom-input"
                         [(ngModel)]="form.apellido"
                         placeholder="Ej: Pérez Rodríguez" />
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Fecha de Nacimiento -->
+                <ion-col size="12" size-md="6">
+                  <div class="custom-form-group">
+                    <label class="form-label">
+                      Fecha de Nacimiento
+                      <span *ngIf="form.edadCalculada" style="color: #3880ff; font-weight: bold; font-size: 0.8rem;">
+                        ({{ form.edadCalculada }})
+                      </span>
+                    </label>
+                    <div class="input-with-icon">
+                      <ion-icon name="calendar-outline"></ion-icon>
+                      <input
+                        type="date"
+                        name="fecha_nacimiento"
+                        class="custom-input"
+                        [(ngModel)]="form.fecha_nacimiento"
+                        (ngModelChange)="onFechaNacimientoChange()" />
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Lugar de Residencia -->
+                <ion-col size="12" size-md="6">
+                  <div class="custom-form-group">
+                    <label class="form-label">Lugar de Residencia</label>
+                    <div class="input-with-icon">
+                      <ion-icon name="home-outline"></ion-icon>
+                      <input
+                        type="text"
+                        name="lugar_residencia"
+                        class="custom-input"
+                        [(ngModel)]="form.lugar_residencia"
+                        placeholder="Ciudad, Barrio o Dirección" />
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Estado Civil -->
+                <ion-col size="12" size-md="6">
+                  <div class="custom-form-group">
+                    <label class="form-label">Estado Civil</label>
+                    <div class="select-wrapper">
+                      <select name="estado_civil" class="custom-select" [(ngModel)]="form.estado_civil">
+                        <option value="">Selecciona...</option>
+                        <option value="Soltero(a)">Soltero(a)</option>
+                        <option value="Casado(a)">Casado(a)</option>
+                        <option value="Unión Libre">Unión Libre</option>
+                        <option value="Divorciado(a)">Divorciado(a)</option>
+                        <option value="Viudo(a)">Viudo(a)</option>
+                      </select>
+                    </div>
+                  </div>
+                </ion-col>
+
+                <!-- Número de Hijos -->
+                <ion-col size="12" size-md="6">
+                  <div class="custom-form-group">
+                    <label class="form-label">Número de Hijos</label>
+                    <div class="input-with-icon">
+                      <ion-icon name="people-outline"></ion-icon>
+                      <input
+                        type="number"
+                        name="numero_hijos"
+                        class="custom-input"
+                        [(ngModel)]="form.numero_hijos"
+                        min="0"
+                        max="20" />
                     </div>
                   </div>
                 </ion-col>
@@ -163,14 +237,14 @@
           </ion-card-content>
         </ion-card>
 
-        <!-- SECCIÓN 2: IDENTIFICACIÓN Y CUENTA -->
+        <!-- SECCIÓN 2: IDENTIFICACIÓN Y CUENTA (SOLO LECTURA) -->
         <ion-card class="form-section-card ion-margin-bottom">
           <ion-card-header class="section-card-header">
             <div class="section-title-wrapper">
               <span class="section-icon">🪪</span>
               <div>
                 <ion-card-title>Identificación y Cuenta</ion-card-title>
-                <ion-card-subtitle>Documento de identidad y usuario de acceso</ion-card-subtitle>
+                <ion-card-subtitle>Datos de identidad asignados (solo lectura)</ion-card-subtitle>
               </div>
             </div>
           </ion-card-header>
@@ -182,13 +256,9 @@
                 <ion-col size="12" size-md="6">
                   <div class="custom-form-group">
                     <label class="form-label">Tipo de Documento</label>
-                    <div class="select-wrapper">
-                      <select name="tipo_documento" class="custom-select" [(ngModel)]="form.tipo_documento">
-                        <option value="CC">Cédula de Ciudadanía (CC)</option>
-                        <option value="NIT">NIT (Empresarial)</option>
-                        <option value="CE">Cédula de Extranjería (CE)</option>
-                        <option value="PAS">Pasaporte (PAS)</option>
-                      </select>
+                    <div class="input-with-icon readonly-input">
+                      <ion-icon name="card-outline"></ion-icon>
+                      <input type="text" [value]="form.tipo_documento" readonly class="custom-input" />
                     </div>
                   </div>
                 </ion-col>
@@ -197,14 +267,13 @@
                 <ion-col size="12" size-md="6">
                   <div class="custom-form-group">
                     <label class="form-label">Número de Documento</label>
-                    <div class="input-with-icon">
+                    <div class="input-with-icon readonly-input">
                       <ion-icon name="id-card-outline"></ion-icon>
                       <input
                         type="text"
-                        name="documento"
-                        class="custom-input"
-                        [(ngModel)]="form.documento"
-                        placeholder="Ej: 1020304050" />
+                        [value]="form.documento"
+                        readonly
+                        class="custom-input" />
                     </div>
                   </div>
                 </ion-col>
@@ -212,18 +281,16 @@
                 <!-- Usuario (@username) - Solo lectura -->
                 <ion-col size="12">
                   <div class="custom-form-group">
-                    <label class="form-label">Nombre de Usuario (Identificador de inicio de sesión)</label>
+                    <label class="form-label">Identificador del Sistema (@username)</label>
                     <div class="input-with-icon readonly-input">
                       <ion-icon name="at-outline"></ion-icon>
                       <input
                         type="text"
-                        name="username"
-                        class="custom-input"
-                        [value]="form.username"
+                        [value]="'@' + (form.username || 'usuario')"
                         readonly
-                        disabled />
+                        class="custom-input"
+                        style="color: #3880ff; font-weight: bold;" />
                     </div>
-                    <small class="field-hint">El nombre de usuario es tu identificador único de cuenta y no se puede modificar.</small>
                   </div>
                 </ion-col>
               </ion-row>

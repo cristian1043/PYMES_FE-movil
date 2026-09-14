@@ -26,16 +26,37 @@
     <div class="welcome-banner ion-padding ion-margin-bottom" *ngIf="usuario">
       <div class="welcome-text">
         <h2>¡Bienvenido, {{ usuario.nombre || usuario.username }}! 👋</h2>
-        <p>Gestiona las operaciones de tu negocio con practicidad táctil</p>
+        <p *ngIf="empresaActiva">Gestiona las operaciones de tu negocio con practicidad táctil</p>
+        <p *ngIf="!empresaActiva">Usuario Independiente (sin empresa asignada)</p>
       </div>
       <div class="welcome-actions-group">
-        <ion-badge color="tertiary" class="role-badge">
-          {{ (empresaActiva && empresaActiva.rol_nombre) ? empresaActiva.rol_nombre : (usuario.rol || 'Usuario Activo') }}
+        <ion-badge color="tertiary" class="role-badge" *ngIf="empresaActiva && empresaActiva.rol_nombre">
+          {{ empresaActiva.rol_nombre }}
         </ion-badge>
         <button type="button" class="btn-perfil-quick" (click)="irAModulo('/perfil')" title="Ver mi información personal">
           <ion-icon name="person-circle-outline"></ion-icon>
-          <span>Mi Perfil</span>
+          <span>Información Personal</span>
         </button>
+      </div>
+    </div>
+
+    <!-- Banner Informativo para Usuario Independiente -->
+    <div class="welcome-banner ion-padding ion-margin-bottom" *ngIf="!empresaActiva" style="background: #f8fafc; border-left: 4px solid #3b82f6; color: #1e293b;">
+      <h3 style="margin: 0 0 6px 0; font-size: 1rem; font-weight: bold; color: #1e3c72;">
+        💼 Vinculación a Empresas
+      </h3>
+      <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: #475569;">
+        Para obtener un rol en una empresa, comparte tu identificador <strong>@{{ usuario?.username || usuario?.email?.split('@')[0] }}</strong> con tu administrador.
+      </p>
+      <div style="display: flex; gap: 8px;">
+        <ion-button size="small" color="primary" (click)="irAModulo('/perfil')">
+          <ion-icon name="person-outline" slot="start"></ion-icon>
+          Información Personal
+        </ion-button>
+        <ion-button size="small" fill="outline" color="dark" (click)="cambiarEmpresa()">
+          <ion-icon name="business-outline" slot="start"></ion-icon>
+          Ver Empresas
+        </ion-button>
       </div>
     </div>
 

@@ -28,8 +28,18 @@ export class UsuariosPage implements OnInit, OnDestroy {
 
   // Filtros de búsqueda
   searchTerm = '';
+  filtroCampo: 'todos' | 'username' | 'id' | 'documento' | 'nombre' = 'todos';
   filtroRol: number | 'todos' = 'todos';
   filtroEstado: 'todos' | 'Activo' | 'Inactivo' = 'todos';
+
+  // Extracción y Afiliación de Candidato por @username
+  identificadorAfiliar = '';
+  buscandoCandidato = false;
+  candidatoAfiliar: any = null;
+  candidatoEdad = '';
+  candidatoError = '';
+  idRolAfiliar = 2;
+  afiliandoCandidato = false;
 
   // Modal de detalle de usuario
   usuarioSeleccionado: UsuarioItem | null = null;
@@ -254,20 +264,161 @@ export class UsuariosPage implements OnInit, OnDestroy {
       });
     }
 
-    // Filtro por texto de búsqueda
+    // Filtro por texto de búsqueda según el campo seleccionado
     if (this.searchTerm && this.searchTerm.trim() !== '') {
       const term = this.searchTerm.toLowerCase().trim();
-      filtrados = filtrados.filter(u =>
-        (u.nombre && u.nombre.toLowerCase().includes(term)) ||
-        (u.apellido && u.apellido.toLowerCase().includes(term)) ||
-        (u.username && u.username.toLowerCase().includes(term)) ||
-        (u.email && u.email.toLowerCase().includes(term)) ||
-        (u.documento && u.documento.toLowerCase().includes(term))
-      );
+      const termSinAt = term.replace(/^@/, '');
+      filtrados = filtrados.filter(u => {
+        if (this.filtroCampo === 'id') {
+          return u.id && u.id.toString().includes(term);
+        } else if (this.filtroCampo === 'username') {
+          return u.username && u.username.toLowerCase().includes(termSinAt);
+        } else if (this.filtroCampo === 'documento') {
+          return u.documento && u.documento.toLowerCase().includes(term);
+        } else if (this.filtroCampo === 'nombre') {
+          return (u.nombre && u.nombre.toLowerCase().includes(term)) ||
+                 (u.apellido && u.apellido.toLowerCase().includes(term));
+        } else {
+          return (u.nombre && u.nombre.toLowerCase().includes(term)) ||
+                 (u.apellido && u.apellido.toLowerCase().includes(term)) ||
+                 (u.username && u.username.toLowerCase().includes(termSinAt)) ||
+                 (u.email && u.email.toLowerCase().includes(term)) ||
+                 (u.documento && u.documento.toLowerCase().includes(term)) ||
+                 (u.id && u.id.toString() === term);
+        }
+      });
     }
 
     this.usuariosFiltrados = filtrados;
     this.cdr.detectChanges();
+  }
+
+  extraerDatosCandidato(): void {
+    const rawVal = (this.identificadorAfiliar || '').trim();
+    if (!rawVal) {
+      this.candidatoError = 'Ingresa el @username o documento del usuario a afiliar.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.buscandoCandidato = true;
+    this.candidatoError = '';
+    this.candidatoAfiliar = null;
+    this.candidatoEdad = '';
+    this.cdr.detectChanges();
+
+    const cleanU = rawVal.replace(/^@/, '');
+
+    // Primero intentar por username
+    this.usuariosService.getUsuarioByUsername(cleanU).subscribe({
+      next: (user) => {
+        this.procesarCandidatoEncontrado(user);
+      },
+      error: () => {
+        // Intentar por documento si falló por username
+        this.usuariosService.getUsuarioByDocumento(rawVal).subscribe({
+          next: (userDoc) => {
+            this.procesarCandidatoEncontrado(userDoc);
+          },
+          error: () => {
+            this.buscandoCandidato = false;
+            this.candidatoError = `No se encontró ningún usuario con el identificador '${rawVal}'. Verifica que haya creado previamente su cuenta.`;
+            this.cdr.detectChanges();
+          }
+        });
+      }
+    });
+  }
+
+  private procesarCandidatoEncontrado(u: any): void {
+    this.buscandoCandidato = false;
+    if (!u || !u.id) {
+      this.candidatoError = 'Usuario no encontrado.';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.candidatoAfiliar = u;
+    if (u.fecha_nacimiento) {
+      const cumple = new Date(u.fecha_nacimiento);
+      const hoy = new Date();
+      let edad = hoy.getFullYear() - cumple.getFullYear();
+      const m = hoy.getMonth() - cumple.getMonth();
+      if (m < 0 || (m === 0 && hoy.getDate() < cumple.getDate())) edad--;
+      this.candidatoEdad = `${edad} años`;
+    } else {
+      this.candidatoEdad = '';
+    }
+    this.cdr.detectChanges();
+  }
+
+  cancelarAfiliacion(): void {
+    this.candidatoAfiliar = null;
+    this.identificadorAfiliar = '';
+    this.candidatoError = '';
+    this.candidatoEdad = '';
+    this.activeTab = 'hub';
+    this.cdr.detectChanges();
+  }
+
+  aprobarYVincularCandidato(): void {
+    if (!this.candidatoAfiliar || !this.candidatoAfiliar.id) return;
+    const empActiva = this.authService.getEmpresaActiva();
+    if (!empActiva || !empActiva.id) {
+      this.toastController.create({
+        message: 'No hay una empresa activa seleccionada.',
+        duration: 3000,
+        color: 'warning',
+        position: 'top'
+      }).then(t => t.present());
+      return;
+    }
+
+    this.afiliandoCandidato = true;
+    this.cdr.detectChanges();
+
+    const uId = this.candidatoAfiliar.id;
+    const rolId = Number(this.idRolAfiliar) || 2;
+
+    // Actualizar rol y activar en vinculación de empresa
+    this.empresasService.actualizarVinculacion({
+      usuario_id: uId,
+      empresa_id: Number(empActiva.id),
+      rol_id: rolId,
+      estado: 'Activo'
+    }).pipe(
+      finalize(() => {
+        this.afiliandoCandidato = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: async () => {
+        this.usuariosService.cambiarRol(uId, rolId).subscribe();
+        this.usuariosService.cambiarEstado(uId, 'Activo').subscribe();
+
+        const toast = await this.toastController.create({
+          message: `¡Trabajador ${this.candidatoAfiliar.nombre} (@${this.candidatoAfiliar.username}) aprobado y vinculado exitosamente!`,
+          duration: 4000,
+          color: 'success',
+          position: 'top'
+        });
+        await toast.present();
+
+        this.candidatoAfiliar = null;
+        this.identificadorAfiliar = '';
+        this.seleccionarAccion('listado');
+      },
+      error: async (err) => {
+        console.error('Error al afiliar usuario:', err);
+        const toast = await this.toastController.create({
+          message: 'Error al vincular el trabajador a la empresa.',
+          duration: 3500,
+          color: 'danger',
+          position: 'top'
+        });
+        await toast.present();
+      }
+    });
   }
 
   verDetalleUsuario(u: UsuarioItem): void {

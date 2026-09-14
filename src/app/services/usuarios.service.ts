@@ -49,6 +49,17 @@ export class UsuariosService {
     return this.http.get<{ disponible: boolean }>(`${this.apiUrl}/check-username/${encodeURIComponent(username.trim())}`, { headers });
   }
 
+  getUsuarioByUsername(username: string): Observable<UsuarioItem> {
+    const headers = this.authService.getAuthHeaders();
+    const cleanU = username.trim().replace(/^@/, '');
+    return this.http.get<UsuarioItem>(`${this.apiUrl}/username/${encodeURIComponent(cleanU)}`, { headers });
+  }
+
+  getUsuarioByDocumento(doc: string): Observable<UsuarioItem> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<UsuarioItem>(`${this.apiUrl}/documento/${encodeURIComponent(doc.trim())}`, { headers });
+  }
+
   createUsuario(data: Partial<UsuarioItem>): Observable<UsuarioItem> {
     const headers = this.authService.getAuthHeaders();
     return this.http.post<UsuarioItem>(`${this.apiUrl}/`, data, { headers });
