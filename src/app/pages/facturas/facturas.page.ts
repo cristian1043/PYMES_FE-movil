@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { FacturasService, Factura } from '../../services/facturas.service';
+import { ClientesService, Cliente } from '../../services/clientes.service';
 import { MenuStateService } from '../../services/menu-state.service';
 import { Subscription } from 'rxjs';
 
@@ -22,14 +23,26 @@ export class FacturasPage implements OnInit, OnDestroy {
   totalPages = 1;
   hasMorePages = true;
 
-  // Formulario nueva factura
-  clienteNombre = '';
+  // Formulario nueva factura inteligente
+  tipoDocumento = 'CC'; // Predeterminado C.C.
   documentoCliente = '';
+  clienteNombre = '';
+  clienteTelefono = '';
+  clienteEmail = '';
+  clienteDireccion = '';
+  clienteId: number | null = null;
+  clienteEncontrado = false;
+  buscandoCliente = false;
+
   montoTotal: number | null = null;
   metodoPago = 'Efectivo';
   guardando = false;
 
-  // Modal de confirmación personalizado
+  // Modal detalle de factura
+  facturaSeleccionada: Factura | null = null;
+  mostrarModalDetalle = false;
+
+  // Modal de confirmación personalizado tras crear
   mostrarModalConfirmacion = false;
   modalTitulo = '';
   modalMensaje = '';
@@ -39,6 +52,7 @@ export class FacturasPage implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private facturasService: FacturasService,
+    private clientesService: ClientesService,
     private router: Router,
     private route: ActivatedRoute,
     private menuStateService: MenuStateService,
@@ -182,26 +196,84 @@ export class FacturasPage implements OnInit, OnDestroy {
     this.cargarFacturas(1, true, event);
   }
 
+  async buscarClientePorDocumento(): Promise<void> {
+    const doc = (this.documentoCliente || '').trim();
+    if (!doc) {
+      await this.mostrarToastSimple('Por favor ingresa un número de documento para consultar.', 'warning');
+      return;
+    }
+
+    this.buscandoCliente = true;
+    this.cdr.detectChanges();
+
+    this.clientesService.buscarPorDocumento(doc).subscribe({
+      next: async (cliente) => {
+        this.buscandoCliente = false;
+        if (cliente) {
+          this.clienteEncontrado = true;
+          this.clienteId = cliente.id || null;
+          this.clienteNombre = cliente.nombre || '';
+          this.tipoDocumento = cliente.tipo_documento || this.tipoDocumento;
+          this.clienteTelefono = cliente.telefono || '';
+          this.clienteEmail = cliente.email || '';
+          this.clienteDireccion = cliente.direccion || '';
+          await this.mostrarToastSimple('✅ Cliente verificado y vinculado a la factura', 'success');
+        }
+        this.cdr.detectChanges();
+      },
+      error: async (err) => {
+        this.buscandoCliente = false;
+        this.clienteEncontrado = false;
+        this.clienteId = null;
+        await this.mostrarToastSimple('ℹ️ Cliente no encontrado en el sistema. Puedes escribir su nombre para registrarlo automáticamente con esta venta.', 'warning');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  limpiarCliente(): void {
+    this.clienteEncontrado = false;
+    this.clienteId = null;
+    this.clienteNombre = '';
+    this.clienteTelefono = '';
+    this.clienteEmail = '';
+    this.clienteDireccion = '';
+    this.cdr.detectChanges();
+  }
+
+  verDetalleFactura(fact: Factura): void {
+    this.facturaSeleccionada = fact;
+    this.mostrarModalDetalle = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarModalDetalle(): void {
+    this.mostrarModalDetalle = false;
+    this.facturaSeleccionada = null;
+    this.cdr.detectChanges();
+  }
+
   async onCrearFactura(): Promise<void> {
     if (!this.clienteNombre || !this.montoTotal || this.montoTotal <= 0) {
-      const toast = await this.toastController.create({
-        message: 'Por favor ingresa el nombre del cliente y un monto válido.',
-        duration: 2500,
-        color: 'warning',
-        position: 'top'
-      });
-      await toast.present();
+      await this.mostrarToastSimple('Por favor ingresa el nombre del cliente y un monto válido.', 'warning');
       return;
     }
 
     this.guardando = true;
+    this.cdr.detectChanges();
 
-    this.facturasService.createFactura({
+    const payload: Partial<Factura> = {
       cliente_nombre: this.clienteNombre.trim(),
+      documento_cliente: (this.documentoCliente || '').trim(),
+      tipo_documento: this.tipoDocumento || 'CC',
+      cliente_id: this.clienteId || undefined,
+      id_cliente: this.clienteId || undefined,
       total: Number(this.montoTotal),
       metodo_pago: this.metodoPago,
       estado: 'Emitida'
-    }).subscribe({
+    };
+
+    this.facturasService.createFactura(payload).subscribe({
       next: (res) => {
         this.guardando = false;
         this.limpiarFormulario();
@@ -213,13 +285,8 @@ export class FacturasPage implements OnInit, OnDestroy {
       error: async (err) => {
         this.guardando = false;
         console.error('Error al emitir factura:', err);
-        const toast = await this.toastController.create({
-          message: err?.error?.mensaje || 'No se pudo registrar la factura. Intenta nuevamente.',
-          duration: 3000,
-          color: 'danger',
-          position: 'top'
-        });
-        await toast.present();
+        const msg = err?.error?.mensaje || 'No se pudo registrar la factura. Intenta nuevamente.';
+        await this.mostrarToastSimple(msg, 'danger');
         this.cdr.detectChanges();
       }
     });
@@ -237,9 +304,26 @@ export class FacturasPage implements OnInit, OnDestroy {
   }
 
   private limpiarFormulario(): void {
-    this.clienteNombre = '';
+    this.tipoDocumento = 'CC';
     this.documentoCliente = '';
+    this.clienteNombre = '';
+    this.clienteTelefono = '';
+    this.clienteEmail = '';
+    this.clienteDireccion = '';
+    this.clienteId = null;
+    this.clienteEncontrado = false;
+    this.buscandoCliente = false;
     this.montoTotal = null;
     this.metodoPago = 'Efectivo';
+  }
+
+  private async mostrarToastSimple(mensaje: string, color: string = 'primary'): Promise<void> {
+    const toast = await this.toastController.create({
+      message: mensaje,
+      duration: 3500,
+      color: color,
+      position: 'top'
+    });
+    await toast.present();
   }
 }

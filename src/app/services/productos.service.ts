@@ -17,6 +17,8 @@ export interface Producto {
   categoria_nombre?: string;
   id_proveedor?: number;
   proveedor_nombre?: string;
+  estado?: string;
+  imagen?: string;
 }
 
 @Injectable({
@@ -54,6 +56,11 @@ export class ProductosService {
   deleteProducto(id: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers });
+  }
+
+  cambiarEstadoProducto(id: number, estado: string): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.patch<any>(`${this.apiUrl}/${id}/estado`, { estado }, { headers });
   }
 
   getSiguienteCodigo(): Observable<{ siguiente_codigo: string }> {

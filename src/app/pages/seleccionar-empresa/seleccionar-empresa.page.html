@@ -23,12 +23,52 @@
       <ion-refresher-content></ion-refresher-content>
     </ion-refresher>
 
-    <!-- Banner Superior de Espacios de Trabajo -->
-    <div class="workspace-banner ion-margin-bottom">
-      <div class="banner-icon">🏢</div>
-      <div class="banner-text">
-        <h2>Mis Empresas y Espacios</h2>
-        <p>Selecciona la empresa con la que deseas operar hoy en el sistema</p>
+    <!-- SECCIÓN SUPERIOR FUSIONADA: TITULAR DE LA CUENTA Y ESPACIOS -->
+    <div class="titular-hero-card ion-margin-bottom" *ngIf="usuario">
+      <div class="titular-top-bar">
+        <div class="titular-avatar-wrap">
+          <img *ngIf="usuario.foto" [src]="usuario.foto" alt="Foto titular" class="titular-photo" />
+          <ion-icon *ngIf="!usuario.foto" name="person-circle-outline"></ion-icon>
+        </div>
+
+        <div class="titular-info-box">
+          <div class="titular-badge-row">
+            <span class="titular-pill">👤 Titular de la Cuenta</span>
+            <span class="status-pill-online">En Línea</span>
+          </div>
+          <h3 class="titular-name">{{ usuario.nombre }} {{ usuario.apellido || '' }}</h3>
+          <p class="titular-meta">
+            <span class="username-tag">@{{ usuario.username || 'usuario' }}</span>
+            <span class="doc-tag" *ngIf="usuario.documento">🪪 {{ usuario.tipo_documento || 'CC' }}: {{ usuario.documento }}</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="titular-actions-row">
+        <button
+          type="button"
+          class="btn-titular-perfil"
+          (click)="irAPerfilTitular()">
+          <ion-icon name="person-outline"></ion-icon>
+          <span>Ver Información Personal</span>
+        </button>
+
+        <button
+          type="button"
+          *ngIf="empresaActivaActual"
+          class="btn-titular-inicio"
+          (click)="volverAInicio()">
+          <ion-icon name="home-outline"></ion-icon>
+          <span>Ir al Inicio ({{ empresaActivaActual.nombre }})</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Título de Sección de Empresas -->
+    <div class="section-title-wrap ion-margin-bottom">
+      <div class="section-title-text">
+        <h4>🏢 Mis Espacios de Trabajo</h4>
+        <p>Selecciona una empresa para gestionar inventario, ventas y facturación</p>
       </div>
     </div>
 

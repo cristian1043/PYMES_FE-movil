@@ -46,7 +46,21 @@
       <!-- Tarjeta de Resumen de Perfil / Cabecera Visual -->
       <div class="profile-hero-card ion-margin-bottom">
         <div class="hero-avatar">
-          <ion-icon name="person-circle-outline"></ion-icon>
+          <img *ngIf="form.foto" [src]="form.foto" alt="Foto de perfil" class="avatar-photo" />
+          <ion-icon *ngIf="!form.foto" name="person-circle-outline"></ion-icon>
+          <button
+            type="button"
+            class="btn-avatar-cam"
+            (click)="fileFotoInput.click()"
+            title="Subir foto desde dispositivo o cámara">
+            <ion-icon name="camera"></ion-icon>
+          </button>
+          <input
+            #fileFotoInput
+            type="file"
+            accept="image/*"
+            style="display: none;"
+            (change)="onFotoSeleccionada($event)" />
         </div>
         <div class="hero-content">
           <h2 class="hero-name">{{ form.nombre }} {{ form.apellido }}</h2>

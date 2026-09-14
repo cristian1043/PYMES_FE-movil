@@ -75,16 +75,93 @@
       </div>
     </div>
 
-    <!-- VISTA 2: FORMULARIO NUEVA FACTURA -->
+    <!-- VISTA 2: FORMULARIO NUEVA FACTURA INTELIGENTE -->
     <div *ngIf="activeTab === 'nueva'" class="form-container">
       <ion-card class="form-card">
         <ion-card-header>
-          <ion-card-title>🧾 Crear Nueva Factura</ion-card-title>
+          <ion-card-title>🧾 Crear Nueva Factura Inteligente</ion-card-title>
+          <ion-card-subtitle>Extracción instantánea por documento del cliente</ion-card-subtitle>
         </ion-card-header>
 
         <ion-card-content>
           <form (ngSubmit)="onCrearFactura()">
+            <!-- Tipo de Documento (Predeterminado CC) -->
             <div class="form-group">
+              <label class="form-label">Tipo de Documento *</label>
+              <select
+                class="custom-select"
+                [(ngModel)]="tipoDocumento"
+                name="tipoDocumento"
+                [disabled]="clienteEncontrado"
+                required>
+                <option value="CC">Cédula de Ciudadanía (C.C.)</option>
+                <option value="NIT">NIT / Identificación Tributaria</option>
+                <option value="CE">Cédula de Extranjería (C.E.)</option>
+                <option value="PAS">Pasaporte</option>
+              </select>
+            </div>
+
+            <!-- Número de Documento con Botón de Lupa 🔍 -->
+            <div class="form-group">
+              <label class="form-label">
+                N° Documento Cliente *
+                <span class="badge-hint" *ngIf="clienteEncontrado">🔒 Vinculado</span>
+              </label>
+              <div class="search-input-group">
+                <input
+                  type="text"
+                  class="custom-input search-group-input"
+                  [(ngModel)]="documentoCliente"
+                  name="documentoCliente"
+                  placeholder="ej: 1098765432"
+                  [readonly]="clienteEncontrado"
+                  (keyup.enter)="buscarClientePorDocumento()"
+                  required />
+                <button
+                  type="button"
+                  class="btn-search-lupa"
+                  *ngIf="!clienteEncontrado"
+                  (click)="buscarClientePorDocumento()"
+                  [disabled]="buscandoCliente || !documentoCliente"
+                  title="Buscar y extraer cliente">
+                  <ion-spinner *ngIf="buscandoCliente" name="crescent"></ion-spinner>
+                  <ion-icon *ngIf="!buscandoCliente" name="search-outline"></ion-icon>
+                </button>
+                <button
+                  type="button"
+                  class="btn-clear-client"
+                  *ngIf="clienteEncontrado"
+                  (click)="limpiarCliente()"
+                  title="Cambiar cliente">
+                  <ion-icon name="close-circle-outline"></ion-icon>
+                </button>
+              </div>
+              <small class="field-hint" *ngIf="!clienteEncontrado">
+                Toca la <strong>lupa 🔍</strong> para extraer automáticamente los datos personales del cliente.
+              </small>
+            </div>
+
+            <!-- Tarjeta de Información Verificada del Cliente (Solo Lectura) -->
+            <div class="verified-client-card ion-margin-bottom" *ngIf="clienteEncontrado">
+              <div class="verified-header">
+                <ion-icon name="shield-checkmark" class="verified-icon"></ion-icon>
+                <div class="verified-title-box">
+                  <h4>{{ clienteNombre }}</h4>
+                  <p>{{ tipoDocumento }}: {{ documentoCliente }}</p>
+                </div>
+              </div>
+              <div class="verified-details" *ngIf="clienteTelefono || clienteEmail || clienteDireccion">
+                <span *ngIf="clienteTelefono">📞 {{ clienteTelefono }}</span>
+                <span *ngIf="clienteEmail">✉️ {{ clienteEmail }}</span>
+                <span *ngIf="clienteDireccion">📍 {{ clienteDireccion }}</span>
+              </div>
+              <small class="verified-lock-note">
+                🔒 <em>Datos personales extraídos de la base de datos (protegidos y bloqueados para garantizar consistencia contable).</em>
+              </small>
+            </div>
+
+            <!-- Campo Nombre (Solo si no fue encontrado previamente) -->
+            <div class="form-group" *ngIf="!clienteEncontrado">
               <label class="form-label">Nombre del Cliente *</label>
               <input
                 type="text"
@@ -93,20 +170,11 @@
                 name="clienteNombre"
                 placeholder="ej: María Rodríguez"
                 required />
+              <small class="field-hint">Si el cliente no existe, se registrará automáticamente en el sistema.</small>
             </div>
 
             <div class="form-group">
-              <label class="form-label">N° Documento Cliente</label>
-              <input
-                type="text"
-                class="custom-input"
-                [(ngModel)]="documentoCliente"
-                name="documentoCliente"
-                placeholder="ej: 1098765432" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Monto Total ($) *</label>
+              <label class="form-label">Monto Total a Facturar ($) *</label>
               <input
                 type="number"
                 class="custom-input"
@@ -114,12 +182,12 @@
                 name="montoTotal"
                 placeholder="ej: 150000"
                 step="0.01"
-                min="0"
+                min="0.01"
                 required />
             </div>
 
             <div class="form-group">
-              <label class="form-label">Método de Pago</label>
+              <label class="form-label">Método de Pago *</label>
               <select
                 class="custom-select"
                 [(ngModel)]="metodoPago"
@@ -158,17 +226,28 @@
         <p>No hay facturas registradas en la base de datos.</p>
       </div>
 
+      <!-- Lista Interactiva de Facturas -->
       <ion-list *ngIf="!loading && facturas.length > 0">
-        <ion-item *ngFor="let fact of facturas" class="factura-item">
+        <ion-item
+          *ngFor="let fact of facturas"
+          class="factura-item clickable-card"
+          button
+          (click)="verDetalleFactura(fact)">
           <ion-icon name="document-text-outline" slot="start" color="primary" style="font-size: 28px;"></ion-icon>
           <ion-label>
-            <h2>Factura {{ fact.numero_factura || '#' + fact.id }}</h2>
-            <p>Cliente: {{ fact.cliente_nombre || 'Cliente General' }}</p>
-            <ion-note color="medium" *ngIf="fact.fecha">{{ fact.fecha }}</ion-note>
+            <h2>Factura {{ fact.numero_factura || fact.numero || ('#' + fact.id) }}</h2>
+            <p class="fact-cliente">
+              <strong>{{ fact.cliente_nombre || 'Cliente General' }}</strong>
+            </p>
+            <p class="fact-doc-line" *ngIf="fact.cliente_documento || fact.documento_cliente">
+              <span class="doc-badge">{{ fact.cliente_tipo_documento || fact.tipo_documento || 'CC' }}</span>
+              <code>{{ fact.cliente_documento || fact.documento_cliente }}</code>
+            </p>
+            <ion-note color="medium" *ngIf="fact.fecha">📅 {{ fact.fecha }}</ion-note>
           </ion-label>
           <div slot="end" class="ion-text-right">
-            <ion-badge color="success">${{ fact.total | number:'1.2-2' }}</ion-badge>
-            <p style="font-size: 11px; margin: 4px 0 0; color: #3880ff;">{{ fact.estado || 'Emitida' }}</p>
+            <ion-badge color="success" class="badge-total">${{ fact.total | number:'1.2-2' }}</ion-badge>
+            <p style="font-size: 11px; margin: 4px 0 0; color: #3880ff; font-weight: 700;">{{ fact.estado || 'Emitida' }}</p>
           </div>
         </ion-item>
       </ion-list>
@@ -195,6 +274,59 @@
       <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
         <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más facturas..."></ion-infinite-scroll-content>
       </ion-infinite-scroll>
+    </div>
+
+    <!-- MODAL DETALLE DE FACTURA (Al tocar una factura) -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalDetalle && facturaSeleccionada">
+      <div class="custom-modal-card fact-detail-card">
+        <div class="modal-card-top-bar">
+          <span class="detail-top-badge">{{ facturaSeleccionada.numero_factura || facturaSeleccionada.numero || ('FAC-' + facturaSeleccionada.id) }}</span>
+          <button type="button" class="close-btn-round" (click)="cerrarModalDetalle()">✕</button>
+        </div>
+
+        <div class="modal-header-icon success">
+          <ion-icon name="receipt-outline" style="font-size: 34px; color: #166534;"></ion-icon>
+        </div>
+
+        <h3 class="detail-title">Factura de Venta</h3>
+        <p class="detail-subtitle">Estado: <strong>{{ facturaSeleccionada.estado || 'Emitida' }}</strong></p>
+
+        <div class="detail-grid">
+          <div class="detail-row">
+            <span class="detail-label">Cliente</span>
+            <span class="detail-value text-primary font-bold">{{ facturaSeleccionada.cliente_nombre || 'Cliente General' }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="facturaSeleccionada.cliente_documento || facturaSeleccionada.documento_cliente">
+            <span class="detail-label">Identificación del Cliente</span>
+            <span class="detail-value">
+              <strong>{{ facturaSeleccionada.cliente_tipo_documento || facturaSeleccionada.tipo_documento || 'CC' }}:</strong>
+              {{ facturaSeleccionada.cliente_documento || facturaSeleccionada.documento_cliente }}
+            </span>
+          </div>
+
+          <div class="detail-row" *ngIf="facturaSeleccionada.fecha">
+            <span class="detail-label">Fecha de Emisión</span>
+            <span class="detail-value">{{ facturaSeleccionada.fecha }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Método de Pago</span>
+            <span class="detail-value">{{ facturaSeleccionada.metodo_pago || 'Efectivo' }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Total Facturado</span>
+            <span class="detail-value text-success font-bold font-large">${{ facturaSeleccionada.total | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div class="modal-buttons ion-margin-top">
+          <button type="button" class="btn-modal btn-primary" (click)="cerrarModalDetalle()">
+            Cerrar
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO -->

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface LoginResponse {
@@ -63,6 +63,19 @@ export class AuthService {
     }
     this.currentUserSubject.next(null);
     this.empresaActivaSubject.next(null);
+  }
+
+  logoutGlobal(): Observable<any> {
+    const headers = this.getAuthHeaders();
+    return this.http.post<any>(`${this.apiUrl}/auth/logout-global`, {}, { headers }).pipe(
+      tap(() => {
+        this.logout();
+      }),
+      catchError(() => {
+        this.logout();
+        return of(null);
+      })
+    );
   }
 
   getToken(): string | null {

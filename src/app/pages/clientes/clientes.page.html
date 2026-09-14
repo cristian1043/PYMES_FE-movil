@@ -384,10 +384,11 @@
               <button
                 type="button"
                 *ngIf="rolId === 1"
-                class="action-btn delete-btn"
+                class="action-btn"
+                [ngClass]="cli.estado === 'Inactivo' ? 'restore-btn' : 'delete-btn'"
                 (click)="solicitarEliminarCliente(cli, $event)"
-                title="Eliminar cliente">
-                <ion-icon name="trash-outline"></ion-icon>
+                [title]="cli.estado === 'Inactivo' ? 'Reactivar cliente' : 'Desactivar cliente'">
+                <ion-icon [name]="cli.estado === 'Inactivo' ? 'refresh-circle-outline' : 'ban-outline'"></ion-icon>
               </button>
             </div>
           </div>
@@ -646,24 +647,30 @@
       </div>
     </div>
 
-    <!-- MODAL 4: CONFIRMAR ELIMINACIÓN (ADMIN ONLY) -->
+    <!-- MODAL 4: CONFIRMAR DESACTIVAR / REACTIVAR (ADMIN ONLY) -->
     <div class="custom-modal-backdrop" *ngIf="mostrarModalEliminar" (click)="cancelarEliminar()"></div>
     <div class="custom-modal-sheet" *ngIf="mostrarModalEliminar && clienteParaEliminar">
-      <div class="modal-sheet-header bg-danger text-white">
-        <h4>🗑️ Eliminar Cliente</h4>
+      <div class="modal-sheet-header" [ngClass]="clienteParaEliminar.estado === 'Inactivo' ? 'bg-success text-white' : 'bg-danger text-white'">
+        <h4>{{ clienteParaEliminar.estado === 'Inactivo' ? '✅ Reactivar Cliente' : '🚫 Desactivar Cliente' }}</h4>
         <button class="modal-close-btn" (click)="cancelarEliminar()">✕</button>
       </div>
       <div class="modal-sheet-body">
-        <p>¿Estás seguro de que deseas eliminar permanentemente al cliente <strong>{{ clienteParaEliminar.nombre }}</strong>?</p>
-        <p class="text-muted small">Esta acción no se puede deshacer.</p>
+        <div *ngIf="clienteParaEliminar.estado !== 'Inactivo'">
+          <p>¿Estás seguro de que deseas desactivar al cliente <strong>{{ clienteParaEliminar.nombre }} {{ clienteParaEliminar.apellido || '' }}</strong>?</p>
+          <p class="text-muted small">🔒 Los registros contables y facturas históricas de este cliente se mantendrán intactos para garantizar la integridad financiera.</p>
+        </div>
+        <div *ngIf="clienteParaEliminar.estado === 'Inactivo'">
+          <p>¿Deseas reactivar al cliente <strong>{{ clienteParaEliminar.nombre }} {{ clienteParaEliminar.apellido || '' }}</strong>?</p>
+          <p class="text-muted small">Podrás volver a emitir facturas y ventas a este cliente.</p>
+        </div>
       </div>
       <div class="modal-sheet-footer">
         <ion-button fill="clear" color="medium" (click)="cancelarEliminar()">
           Cancelar
         </ion-button>
-        <ion-button color="danger" [disabled]="eliminando" (click)="confirmarEliminar()">
+        <ion-button [color]="clienteParaEliminar.estado === 'Inactivo' ? 'success' : 'danger'" [disabled]="eliminando" (click)="confirmarEliminar()">
           <ion-spinner name="crescent" *ngIf="eliminando"></ion-spinner>
-          <span *ngIf="!eliminando">Eliminar Cliente</span>
+          <span *ngIf="!eliminando">{{ clienteParaEliminar.estado === 'Inactivo' ? 'Reactivar Cliente' : 'Desactivar Cliente' }}</span>
         </ion-button>
       </div>
     </div>

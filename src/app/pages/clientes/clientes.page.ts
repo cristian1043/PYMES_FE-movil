@@ -363,11 +363,10 @@ export class ClientesPage implements OnInit, OnDestroy {
   confirmarEliminar(): void {
     if (!this.clienteParaEliminar || !this.clienteParaEliminar.id) return;
     const id = this.clienteParaEliminar.id;
-
+    const nuevoEstado = (this.clienteParaEliminar.estado === 'Inactivo') ? 'Activo' : 'Inactivo';
     this.eliminando = true;
-    this.cdr.detectChanges();
 
-    this.clientesService.deleteCliente(id)
+    this.clientesService.cambiarEstadoCliente(id, nuevoEstado)
       .pipe(
         finalize(() => {
           this.eliminando = false;
@@ -378,16 +377,24 @@ export class ClientesPage implements OnInit, OnDestroy {
       )
       .subscribe({
         next: async () => {
-          this.clientes = this.clientes.filter(c => c.id !== id);
+          const cli = this.clientes.find(c => c.id === id);
+          if (cli) {
+            cli.estado = nuevoEstado;
+          }
           if (this.clienteSeleccionado && this.clienteSeleccionado.id === id) {
-            this.cerrarModalDetalle();
+            this.clienteSeleccionado.estado = nuevoEstado;
           }
           this.filtrarClientes();
-          await this.mostrarToast('Cliente eliminado del sistema.', 'success');
+          await this.mostrarToast(
+            nuevoEstado === 'Inactivo'
+              ? 'Cliente desactivado. Sus facturas se mantienen intactas.'
+              : 'Cliente reactivado exitosamente.',
+            'success'
+          );
         },
         error: async (err) => {
-          console.error('Error al eliminar cliente:', err);
-          const msg = err?.error?.mensaje || 'Error al eliminar cliente.';
+          console.error('Error al cambiar estado del cliente:', err);
+          const msg = err?.error?.mensaje || 'Error al actualizar estado del cliente.';
           await this.mostrarToast(msg, 'danger');
         }
       });

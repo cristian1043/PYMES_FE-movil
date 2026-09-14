@@ -8,10 +8,12 @@ export interface Proveedor {
   id: number;
   nombre: string;
   nit_documento?: string;
+  nit?: string;
   contacto?: string;
   telefono?: string;
   email?: string;
   direccion?: string;
+  estado?: string;
 }
 
 @Injectable({
@@ -33,5 +35,15 @@ export class ProveedoresService {
   createProveedor(data: Partial<Proveedor>): Observable<Proveedor> {
     const headers = this.authService.getAuthHeaders();
     return this.http.post<Proveedor>(`${this.apiUrl}/`, data, { headers });
+  }
+
+  deleteProveedor(id: number): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers });
+  }
+
+  cambiarEstadoProveedor(id: number, estado: string): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.patch<any>(`${this.apiUrl}/${id}/estado`, { estado }, { headers });
   }
 }

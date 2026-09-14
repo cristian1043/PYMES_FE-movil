@@ -22,6 +22,7 @@ export interface Cliente {
   titular_tarjeta?: string;
   fecha_expiracion?: string;
   cvc_tarjeta?: string;
+  estado?: string;
   created_at?: string;
 }
 
@@ -59,5 +60,15 @@ export class ClientesService {
   deleteCliente(id: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers });
+  }
+
+  cambiarEstadoCliente(id: number, estado: string): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.patch<any>(`${this.apiUrl}/${id}/estado`, { estado }, { headers });
+  }
+
+  buscarPorDocumento(documento: string): Observable<Cliente> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<Cliente>(`${this.apiUrl}/buscar?documento=${encodeURIComponent(documento)}`, { headers });
   }
 }

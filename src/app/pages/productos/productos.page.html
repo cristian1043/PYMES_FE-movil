@@ -189,6 +189,37 @@
               </select>
             </div>
 
+            <!-- Subir Foto del Producto (Administradores) -->
+            <div class="form-group" *ngIf="esAdmin">
+              <label class="form-label">📷 Foto del Producto [Admin]</label>
+              <div class="photo-upload-container">
+                <input
+                  type="file"
+                  #fileInput
+                  accept="image/*"
+                  style="display: none;"
+                  (change)="onImageSelected($event)" />
+                
+                <div *ngIf="!nuevaImagen" class="photo-upload-placeholder" (click)="fileInput.click()">
+                  <ion-icon name="camera-outline" class="upload-icon"></ion-icon>
+                  <span class="upload-text">Tomar foto o subir desde la galería</span>
+                  <small class="upload-hint">Formatos JPG, PNG (Máx. 3MB)</small>
+                </div>
+
+                <div *ngIf="nuevaImagen" class="photo-preview-box">
+                  <img [src]="nuevaImagen" alt="Vista previa del producto" class="photo-preview-img" />
+                  <div class="photo-preview-actions">
+                    <button type="button" class="btn-photo-action change" (click)="fileInput.click()">
+                      <ion-icon name="camera-reverse-outline"></ion-icon> Cambiar Foto
+                    </button>
+                    <button type="button" class="btn-photo-action remove" (click)="quitarImagen()">
+                      <ion-icon name="trash-outline"></ion-icon> Quitar Foto
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="form-actions ion-margin-top">
               <ion-button
                 expand="block"
@@ -231,8 +262,9 @@
           class="product-item clickable-card"
           button
           (click)="verDetalleProducto(prod)">
-          <div slot="start" class="prod-avatar-badge">
-            <ion-icon name="cube-outline" style="font-size: 26px;"></ion-icon>
+          <div slot="start" class="prod-avatar-badge" [class.has-img]="!!prod.imagen">
+            <img *ngIf="prod.imagen" [src]="prod.imagen" alt="Foto" class="prod-avatar-img" />
+            <ion-icon *ngIf="!prod.imagen" name="cube-outline" style="font-size: 26px;"></ion-icon>
           </div>
           <ion-label>
             <h2>{{ prod.nombre }}</h2>
@@ -244,6 +276,9 @@
               <ion-badge [color]="getEstadoStock(prod.stock).color" class="badge-stock">
                 {{ getEstadoStock(prod.stock).texto }}
               </ion-badge>
+              <ion-badge [color]="prod.estado === 'Inactivo' ? 'medium' : 'success'" class="badge-estado">
+                {{ prod.estado || 'Activo' }}
+              </ion-badge>
             </div>
           </ion-label>
           <div slot="end" class="ion-text-right item-end-container">
@@ -251,10 +286,11 @@
             <button
               *ngIf="esAdmin"
               type="button"
-              class="btn-delete-quick"
-              title="Eliminar Producto (Admin)"
-              (click)="solicitarEliminarProducto(prod, $event)">
-              <ion-icon name="trash-outline"></ion-icon>
+              class="btn-status-quick"
+              [ngClass]="prod.estado === 'Inactivo' ? 'btn-reactivate' : 'btn-deactivate'"
+              [title]="prod.estado === 'Inactivo' ? 'Reactivar Producto' : 'Desactivar Producto'"
+              (click)="solicitarCambiarEstado(prod, prod.estado === 'Inactivo' ? 'Activo' : 'Inactivo', $event)">
+              <ion-icon [name]="prod.estado === 'Inactivo' ? 'checkmark-circle-outline' : 'pause-circle-outline'"></ion-icon>
             </button>
             <ion-icon *ngIf="!esAdmin" name="chevron-forward-outline" color="medium" style="margin-left: 6px;"></ion-icon>
           </div>
@@ -293,8 +329,28 @@
           <button type="button" class="close-btn-round" (click)="cerrarModalDetalle()">✕</button>
         </div>
 
-        <div class="modal-header-icon cube-icon">
-          <ion-icon name="cube" style="font-size: 34px; color: #1e3c72;"></ion-icon>
+        <!-- Foto destacada del producto o icono -->
+        <div class="detail-photo-section">
+          <div *ngIf="productoSeleccionado.imagen" class="detail-img-box">
+            <img [src]="productoSeleccionado.imagen" alt="Foto del Producto" class="detail-product-img" />
+          </div>
+          <div *ngIf="!productoSeleccionado.imagen" class="modal-header-icon cube-icon">
+            <ion-icon name="cube" style="font-size: 34px; color: #1e3c72;"></ion-icon>
+          </div>
+          <!-- Administrador puede cambiar/subir foto desde aquí -->
+          <div *ngIf="esAdmin" class="detail-photo-upload-container ion-text-center ion-margin-top ion-margin-bottom">
+            <input
+              type="file"
+              #detailFileInput
+              accept="image/*"
+              style="display: none;"
+              (change)="onImageSelectedForDetail($event)" />
+            <button type="button" class="btn-detail-photo" (click)="detailFileInput.click()" [disabled]="subiendoFotoDetalle">
+              <ion-spinner *ngIf="subiendoFotoDetalle" name="crescent"></ion-spinner>
+              <ion-icon *ngIf="!subiendoFotoDetalle" name="camera-outline"></ion-icon>
+              <span>{{ productoSeleccionado.imagen ? 'Cambiar Foto [Admin]' : '📷 Subir Foto [Admin]' }}</span>
+            </button>
+          </div>
         </div>
 
         <h3 class="detail-title">{{ productoSeleccionado.nombre }}</h3>
@@ -303,6 +359,9 @@
         <div class="detail-badge-container">
           <span class="status-pill" [ngClass]="getEstadoStock(productoSeleccionado.stock).badge">
             {{ getEstadoStock(productoSeleccionado.stock).texto }}
+          </span>
+          <span class="status-pill" [ngClass]="productoSeleccionado.estado === 'Inactivo' ? 'estado-inactivo' : 'estado-activo'">
+            {{ productoSeleccionado.estado === 'Inactivo' ? '🔴 Inactivo' : '🟢 Activo' }}
           </span>
         </div>
 
@@ -342,12 +401,20 @@
         </div>
 
         <div class="modal-buttons ion-margin-top">
+          <!-- Desactivar o Reactivar con Soft-Delete para administradores -->
           <button
-            *ngIf="esAdmin"
+            *ngIf="esAdmin && productoSeleccionado.estado !== 'Inactivo'"
             type="button"
-            class="btn-modal btn-danger"
-            (click)="solicitarEliminarProducto(productoSeleccionado)">
-            🗑️ Eliminar Producto
+            class="btn-modal btn-warning"
+            (click)="solicitarCambiarEstado(productoSeleccionado, 'Inactivo')">
+            ⚠️ Desactivar Producto
+          </button>
+          <button
+            *ngIf="esAdmin && productoSeleccionado.estado === 'Inactivo'"
+            type="button"
+            class="btn-modal btn-success-action"
+            (click)="solicitarCambiarEstado(productoSeleccionado, 'Activo')">
+            ✅ Reactivar Producto
           </button>
           <button
             type="button"
@@ -359,29 +426,43 @@
       </div>
     </div>
 
-    <!-- MODAL CONFIRMAR ELIMINAR PRODUCTO (Solo Administrador) -->
-    <div class="custom-modal-backdrop" *ngIf="mostrarModalEliminar && productoSeleccionado">
+    <!-- MODAL CONFIRMAR DESACTIVAR / REACTIVAR PRODUCTO (Soft-Delete) -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalDesactivar && productoSeleccionado">
       <div class="custom-modal-card">
-        <div class="modal-header-icon danger">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 36px; height: 36px;">
-            <path d="M3 6h18"></path>
-            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            <line x1="10" y1="11" x2="10" y2="17"></line>
-            <line x1="14" y1="11" x2="14" y2="17"></line>
-          </svg>
+        <div class="modal-header-icon" [ngClass]="accionEstado === 'Inactivo' ? 'warning-soft' : 'success'">
+          <ion-icon [name]="accionEstado === 'Inactivo' ? 'alert-circle-outline' : 'checkmark-circle-outline'" style="font-size: 40px;"></ion-icon>
         </div>
-        <h3 style="color: #dc2626;">¿Eliminar Producto?</h3>
-        <p>
-          ¿Estás seguro de que deseas eliminar <strong>{{ productoSeleccionado.nombre }}</strong> ({{ productoSeleccionado.codigo }})?
-          Esta acción es permanente y no se podrá deshacer.
+        <h3 [style.color]="accionEstado === 'Inactivo' ? '#d97706' : '#166534'">
+          {{ accionEstado === 'Inactivo' ? '¿Desactivar Producto?' : '¿Reactivar Producto?' }}
+        </h3>
+        <p *ngIf="accionEstado === 'Inactivo'">
+          ¿Estás seguro de que deseas desactivar <strong>{{ productoSeleccionado.nombre }}</strong> ({{ productoSeleccionado.codigo }})?
+          <br><br>
+          <small class="soft-delete-hint">
+            🛡️ <strong>Desactivación segura:</strong> El producto se marcará como <em>Inactivo</em> sin ser borrado de la base de datos para no afectar facturas ni compras históricas.
+          </small>
+        </p>
+        <p *ngIf="accionEstado === 'Activo'">
+          ¿Estás seguro de que deseas reactivar <strong>{{ productoSeleccionado.nombre }}</strong> ({{ productoSeleccionado.codigo }})?
+          <br><br>
+          <small class="soft-delete-hint">
+            El producto volverá a estar disponible para cotizaciones, ventas e inventario regular.
+          </small>
         </p>
         <div class="modal-buttons">
-          <button type="button" class="btn-modal btn-secondary" [disabled]="eliminando" (click)="cancelarEliminar()">
+          <button type="button" class="btn-modal btn-secondary" [disabled]="procesandoEstado" (click)="cancelarCambiarEstado()">
             Cancelar
           </button>
-          <button type="button" class="btn-modal btn-danger" [disabled]="eliminando" (click)="confirmarEliminarProducto()">
-            <ion-spinner *ngIf="eliminando" name="crescent"></ion-spinner>
-            <span *ngIf="!eliminando">Sí, Eliminar</span>
+          <button
+            type="button"
+            class="btn-modal"
+            [ngClass]="accionEstado === 'Inactivo' ? 'btn-warning' : 'btn-success-action'"
+            [disabled]="procesandoEstado"
+            (click)="confirmarCambiarEstado()">
+            <ion-spinner *ngIf="procesandoEstado" name="crescent"></ion-spinner>
+            <span *ngIf="!procesandoEstado">
+              {{ accionEstado === 'Inactivo' ? 'Sí, Desactivar' : 'Sí, Reactivar' }}
+            </span>
           </button>
         </div>
       </div>

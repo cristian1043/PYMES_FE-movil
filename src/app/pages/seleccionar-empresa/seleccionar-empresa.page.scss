@@ -52,33 +52,158 @@
   --background: #f4f6f9;
 }
 
-.workspace-banner {
-  background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-  border-radius: 16px;
-  padding: 20px;
-  color: white;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  box-shadow: 0 4px 15px rgba(30, 60, 114, 0.2);
+.titular-hero-card {
+  background: linear-gradient(135deg, #0f2b5c 0%, #1e3c72 60%, #2a5298 100%);
+  border-radius: 18px;
+  padding: 18px;
+  color: #ffffff;
+  box-shadow: 0 6px 20px rgba(15, 43, 92, 0.2);
 
-  .banner-icon {
-    font-size: 40px;
-    line-height: 1;
+  .titular-top-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 14px;
   }
 
-  .banner-text {
-    h2 {
-      margin: 0 0 4px 0;
-      font-size: 20px;
-      font-weight: 700;
+  .titular-avatar-wrap {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+
+    ion-icon {
+      font-size: 54px;
+      color: #ffffff;
     }
-    p {
+
+    .titular-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .titular-info-box {
+    flex: 1;
+    overflow: hidden;
+
+    .titular-badge-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+
+      .titular-pill {
+        font-size: 10px;
+        font-weight: 800;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 2px 7px;
+        border-radius: 6px;
+        letter-spacing: 0.5px;
+      }
+
+      .status-pill-online {
+        font-size: 10px;
+        font-weight: 700;
+        background: #10b981;
+        color: #ffffff;
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+    }
+
+    .titular-name {
+      font-size: 17px;
+      font-weight: 800;
+      margin: 0 0 4px;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .titular-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       margin: 0;
-      font-size: 13px;
-      opacity: 0.88;
-      line-height: 1.35;
+      font-size: 12px;
+
+      .username-tag {
+        color: #93c5fd;
+        font-weight: 600;
+      }
+
+      .doc-tag {
+        background: rgba(255, 255, 255, 0.12);
+        padding: 1px 6px;
+        border-radius: 4px;
+        color: #e2e8f0;
+      }
     }
+  }
+
+  .titular-actions-row {
+    display: flex;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+
+    button {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:active {
+        transform: scale(0.97);
+      }
+
+      ion-icon {
+        font-size: 16px;
+      }
+
+      &.btn-titular-perfil {
+        background: #ffffff;
+        color: #1e3c72;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      &.btn-titular-inicio {
+        background: rgba(255, 255, 255, 0.18);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+      }
+    }
+  }
+}
+
+.section-title-wrap {
+  h4 {
+    margin: 0 0 2px;
+    font-size: 16px;
+    font-weight: 800;
+    color: #1e293b;
+  }
+  p {
+    margin: 0;
+    font-size: 12px;
+    color: #64748b;
   }
 }
 

@@ -56,6 +56,10 @@ export class ReportesPage implements OnInit, OnDestroy {
   perPageClientes = 10;
   totalPagesClientes = 1;
 
+  // Perfil Interactivo de Producto en Reportes
+  productoSeleccionado: any = null;
+  mostrarModalPerfilProducto = false;
+
   private queryParamsSub?: Subscription;
 
   constructor(
@@ -361,6 +365,27 @@ export class ReportesPage implements OnInit, OnDestroy {
 
   handleRefresh(event: any): void {
     this.cargarDatosActuales(event);
+  }
+
+  // ==========================================
+  // MODAL PERFIL DETALLADO DE PRODUCTO
+  // ==========================================
+  verPerfilProducto(producto: any): void {
+    this.productoSeleccionado = producto;
+    this.mostrarModalPerfilProducto = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarPerfilProducto(): void {
+    this.mostrarModalPerfilProducto = false;
+    this.productoSeleccionado = null;
+    this.cdr.detectChanges();
+  }
+
+  irAListaProductos(): void {
+    this.mostrarModalPerfilProducto = false;
+    this.productoSeleccionado = null;
+    this.router.navigate(['/productos'], { queryParams: { tab: 'listado' } });
   }
 }
 

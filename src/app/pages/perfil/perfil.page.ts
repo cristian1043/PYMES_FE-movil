@@ -37,6 +37,7 @@ export class PerfilPage implements OnInit {
     banco: '',
     tipo_cuenta: 'Ahorros',
     numero_cuenta: '',
+    foto: '',
     passwordActual: '',
     password: '',
     confirmPassword: ''
@@ -153,6 +154,7 @@ export class PerfilPage implements OnInit {
       banco: u.banco || '',
       tipo_cuenta: u.tipo_cuenta || 'Ahorros',
       numero_cuenta: u.numero_cuenta || '',
+      foto: u.foto || '',
       passwordActual: '',
       password: '',
       confirmPassword: ''
@@ -181,6 +183,34 @@ export class PerfilPage implements OnInit {
       this.cdr.detectChanges();
       this.mostrarToast('Cambios revertidos a los valores guardados.', 'medium');
     }
+  }
+
+  async onFotoSeleccionada(event: any): Promise<void> {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 3 * 1024 * 1024) {
+      const toast = await this.toastController.create({
+        message: 'La imagen supera los 3MB. Por favor selecciona una imagen más liviana.',
+        duration: 3500,
+        color: 'warning'
+      });
+      await toast.present();
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      this.form.foto = reader.result as string;
+      this.cdr.detectChanges();
+      const toast = await this.toastController.create({
+        message: 'Foto cargada con éxito. Recuerda pulsar "Guardar Cambios" para guardarla.',
+        duration: 3000,
+        color: 'success'
+      });
+      await toast.present();
+    };
+    reader.readAsDataURL(file);
   }
 
   async guardarPerfil(): Promise<void> {
@@ -242,7 +272,8 @@ export class PerfilPage implements OnInit {
       numero_hijos: Number(this.form.numero_hijos) || 0,
       banco: this.form.banco ? this.form.banco.trim() : '',
       tipo_cuenta: this.form.tipo_cuenta || 'Ahorros',
-      numero_cuenta: this.form.numero_cuenta ? this.form.numero_cuenta.trim() : ''
+      numero_cuenta: this.form.numero_cuenta ? this.form.numero_cuenta.trim() : '',
+      foto: this.form.foto || ''
     };
 
     // Función auxiliar para actualizar los datos personales en la base de datos

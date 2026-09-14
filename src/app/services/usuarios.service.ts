@@ -70,8 +70,9 @@ export class UsuariosService {
     return this.http.put<UsuarioItem>(`${this.apiUrl}/${id}`, data, { headers });
   }
 
-  cambiarEstado(id: number, estado: string): Observable<UsuarioItem> {
-    return this.updateUsuario(id, { estado });
+  cambiarEstado(id: number, estado: string): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.patch<any>(`${this.apiUrl}/${id}/estado`, { estado }, { headers });
   }
 
   cambiarRol(id: number, id_rol: number): Observable<UsuarioItem> {

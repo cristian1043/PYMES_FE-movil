@@ -44,13 +44,18 @@ export class ProductosPage implements OnInit, OnDestroy {
   nuevaUnidadMedida = 'UND';
   guardando = false;
 
+  // Fotos de producto (solo administradores)
+  nuevaImagen: string | null = null;
+  subiendoFotoDetalle = false;
+
   // Modal detalle de producto al tocar un ítem
   productoSeleccionado: Producto | null = null;
   mostrarModalDetalle = false;
 
-  // Modal confirmación eliminar producto (solo administradores)
-  mostrarModalEliminar = false;
-  eliminando = false;
+  // Modal confirmación desactivar/reactivar producto (Soft-Delete)
+  mostrarModalDesactivar = false;
+  accionEstado: 'Inactivo' | 'Activo' = 'Inactivo';
+  procesandoEstado = false;
 
   // Modal de confirmación tras crear producto
   mostrarModalConfirmacion = false;
@@ -187,59 +192,126 @@ export class ProductosPage implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  solicitarEliminarProducto(prod: Producto, event?: Event): void {
+  onImageSelected(event: any): void {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 3 * 1024 * 1024) {
+        this.mostrarToastSimple('La imagen no debe superar los 3MB', 'warning');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.nuevaImagen = reader.result as string;
+        this.cdr.detectChanges();
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  quitarImagen(): void {
+    this.nuevaImagen = null;
+    this.cdr.detectChanges();
+  }
+
+  onImageSelectedForDetail(event: any): void {
+    if (!this.productoSeleccionado || !this.productoSeleccionado.id || !this.esAdmin) return;
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 3 * 1024 * 1024) {
+        this.mostrarToastSimple('La imagen no debe superar los 3MB', 'warning');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const base64Img = reader.result as string;
+        this.subiendoFotoDetalle = true;
+        this.cdr.detectChanges();
+        this.productosService.updateProducto(this.productoSeleccionado!.id!, { imagen: base64Img }).pipe(
+          finalize(() => {
+            this.subiendoFotoDetalle = false;
+            this.cdr.detectChanges();
+          })
+        ).subscribe({
+          next: (prodActualizado) => {
+            if (this.productoSeleccionado) {
+              this.productoSeleccionado.imagen = base64Img;
+            }
+            const idx = this.productos.findIndex(p => p.id === this.productoSeleccionado?.id);
+            if (idx !== -1) {
+              this.productos[idx].imagen = base64Img;
+              this.filtrarProductos();
+            }
+            this.mostrarToastSimple('Foto del producto actualizada con éxito', 'success');
+          },
+          error: (err) => {
+            console.error('Error al actualizar foto:', err);
+            this.mostrarToastSimple('No se pudo actualizar la foto', 'danger');
+          }
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  solicitarCambiarEstado(prod: Producto, nuevoEstado: 'Inactivo' | 'Activo', event?: Event): void {
     if (event) event.stopPropagation();
     if (!this.esAdmin) {
       return;
     }
     this.productoSeleccionado = prod;
-    this.mostrarModalEliminar = true;
+    this.accionEstado = nuevoEstado;
+    this.mostrarModalDesactivar = true;
     this.cdr.detectChanges();
   }
 
-  cancelarEliminar(): void {
-    this.mostrarModalEliminar = false;
+  cancelarCambiarEstado(): void {
+    this.mostrarModalDesactivar = false;
     this.cdr.detectChanges();
   }
 
-  confirmarEliminarProducto(): void {
+  confirmarCambiarEstado(): void {
     if (!this.productoSeleccionado || !this.productoSeleccionado.id) return;
-    this.eliminando = true;
+    this.procesandoEstado = true;
     const id = this.productoSeleccionado.id;
+    const nuevoEstado = this.accionEstado;
 
-    this.productosService.deleteProducto(id).pipe(
+    this.productosService.cambiarEstadoProducto(id, nuevoEstado).pipe(
       finalize(() => {
-        this.eliminando = false;
+        this.procesandoEstado = false;
         this.cdr.detectChanges();
       })
     ).subscribe({
       next: async () => {
-        this.mostrarModalEliminar = false;
-        this.mostrarModalDetalle = false;
-        this.productoSeleccionado = null;
-        this.cargarProductos(this.currentPage, true);
-        const toast = await this.toastController.create({
-          message: 'Producto eliminado correctamente',
-          duration: 3000,
-          color: 'success',
-          position: 'top'
-        });
-        await toast.present();
+        if (this.productoSeleccionado) {
+          this.productoSeleccionado.estado = nuevoEstado;
+        }
+        const item = this.productos.find(p => p.id === id);
+        if (item) {
+          item.estado = nuevoEstado;
+        }
+        this.mostrarModalDesactivar = false;
+        this.filtrarProductos();
+        const accionMsg = nuevoEstado === 'Inactivo' ? 'Producto desactivado correctamente' : 'Producto reactivado correctamente';
+        this.mostrarToastSimple(accionMsg, 'success');
         this.cdr.detectChanges();
       },
       error: async (err) => {
-        console.error('Error al eliminar producto:', err);
-        const msg = err?.error?.mensaje || 'No se puede eliminar el producto porque está asociado a compras o facturas.';
-        const toast = await this.toastController.create({
-          message: msg,
-          duration: 4000,
-          color: 'danger',
-          position: 'top'
-        });
-        await toast.present();
+        console.error('Error al cambiar estado del producto:', err);
+        const msg = err?.error?.mensaje || 'No se pudo cambiar el estado del producto.';
+        this.mostrarToastSimple(msg, 'danger');
         this.cdr.detectChanges();
       }
     });
+  }
+
+  async mostrarToastSimple(msg: string, color: string = 'primary'): Promise<void> {
+    const toast = await this.toastController.create({
+      message: msg,
+      duration: 3000,
+      color: color,
+      position: 'top'
+    });
+    await toast.present();
   }
 
   toggleMenu(): void {
@@ -386,7 +458,9 @@ export class ProductosPage implements OnInit, OnDestroy {
       descripcion: (this.nuevaDescripcion || '').trim(),
       id_categoria: Number(this.nuevoIdCategoria || 1),
       id_proveedor: this.nuevoIdProveedor ? Number(this.nuevoIdProveedor) : undefined,
-      unidad_medida: this.nuevaUnidadMedida || 'UND'
+      unidad_medida: this.nuevaUnidadMedida || 'UND',
+      estado: 'Activo',
+      imagen: this.nuevaImagen || undefined
     };
 
     this.productosService.createProducto(productoPayload).pipe(
@@ -438,6 +512,7 @@ export class ProductosPage implements OnInit, OnDestroy {
     this.nuevoIdCategoria = this.categorias.length > 0 ? this.categorias[0].id : 1;
     this.nuevoIdProveedor = null;
     this.nuevaUnidadMedida = 'UND';
+    this.nuevaImagen = null;
     this.cargarSiguienteCodigo();
   }
 }

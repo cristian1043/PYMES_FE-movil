@@ -6,13 +6,25 @@ import { AuthService } from './auth.service';
 
 export interface Factura {
   id?: number;
+  numero?: string;
   numero_factura?: string;
   cliente_nombre?: string;
+  cliente_documento?: string;
+  cliente_tipo_documento?: string;
+  documento_cliente?: string;
+  tipo_documento?: string;
   cliente_id?: number;
+  id_cliente?: number;
   total: number;
+  subtotal?: number;
+  iva?: number;
+  descuento?: number;
   fecha?: string;
   estado?: string;
   metodo_pago?: string;
+  id_metodo_pago?: number;
+  cliente?: any;
+  detalles?: any[];
 }
 
 @Injectable({
@@ -31,7 +43,12 @@ export class FacturasService {
     return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
   }
 
-  createFactura(data: Factura): Observable<Factura> {
+  getFacturaById(id: number): Observable<Factura> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<Factura>(`${this.apiUrl}/${id}`, { headers });
+  }
+
+  createFactura(data: Partial<Factura>): Observable<Factura> {
     const headers = this.authService.getAuthHeaders();
     return this.http.post<Factura>(`${this.apiUrl}/`, data, { headers });
   }

@@ -277,7 +277,7 @@
       </div>
 
       <div class="report-cards-list" *ngIf="productosFiltrados.length > 0">
-        <div class="report-item-card" *ngFor="let p of productosPaginados">
+        <div class="report-item-card clickable-card" *ngFor="let p of productosPaginados" (click)="verPerfilProducto(p)">
           <div class="item-card-header">
             <span class="badge-code">{{ p.codigo || ('PROD-' + p.id) }}</span>
             <span class="badge-stock" [ngClass]="getEstadoStock(p.stock).cssClass">
@@ -289,6 +289,9 @@
             <div class="details-row">
               <span>Precio Unit: ${{ p.precio | number:'1.2-2' }}</span>
               <span class="highlight-total">Valor: ${{ (p.precio * p.stock) | number:'1.2-2' }}</span>
+            </div>
+            <div class="click-hint-row">
+              <small>🔍 Toca para ver ficha completa</small>
             </div>
           </div>
         </div>
@@ -368,6 +371,85 @@
           (click)="cambiarPaginaClientes(1)">
           Siguiente ›
         </ion-button>
+      </div>
+    </div>
+
+    <!-- MODAL DETALLE DE PRODUCTO DESDE REPORTES -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalPerfilProducto && productoSeleccionado">
+      <div class="custom-modal-card prod-detail-card">
+        <div class="modal-card-top-bar">
+          <span class="detail-top-badge">{{ productoSeleccionado.codigo || ('PROD-' + productoSeleccionado.id) }}</span>
+          <button type="button" class="close-btn-round" (click)="cerrarPerfilProducto()">✕</button>
+        </div>
+
+        <div class="product-avatar-wrap" *ngIf="productoSeleccionado.imagen">
+          <img [src]="productoSeleccionado.imagen" alt="Foto producto" class="product-modal-img" />
+        </div>
+        <div class="modal-header-icon info" *ngIf="!productoSeleccionado.imagen">
+          <ion-icon name="cube-outline" style="font-size: 34px; color: #1e3c72;"></ion-icon>
+        </div>
+
+        <h3 class="detail-title">{{ productoSeleccionado.nombre }}</h3>
+        <p class="detail-subtitle" *ngIf="productoSeleccionado.descripcion">{{ productoSeleccionado.descripcion }}</p>
+
+        <div class="status-tags-row ion-margin-bottom">
+          <span class="badge-stock" [ngClass]="getEstadoStock(productoSeleccionado.stock).cssClass">
+            {{ getEstadoStock(productoSeleccionado.stock).texto }}
+          </span>
+          <span class="badge-state" [ngClass]="productoSeleccionado.estado === 'Inactivo' ? 'state-inactive' : 'state-active'">
+            {{ productoSeleccionado.estado || 'Activo' }}
+          </span>
+        </div>
+
+        <div class="detail-grid">
+          <div class="detail-row">
+            <span class="detail-label">Stock en Bodega</span>
+            <span class="detail-value font-bold">{{ productoSeleccionado.stock }} {{ productoSeleccionado.unidad_medida || 'Unid' }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Precio de Venta</span>
+            <span class="detail-value text-success font-bold font-large">${{ productoSeleccionado.precio | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="rolId === 1 && productoSeleccionado.costo">
+            <span class="detail-label">Costo Mayorista</span>
+            <span class="detail-value text-muted">${{ productoSeleccionado.costo | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="rolId === 1 && productoSeleccionado.costo">
+            <span class="detail-label">Margen Bruto Estimado</span>
+            <span class="detail-value text-primary font-bold">
+              {{ (((productoSeleccionado.precio - productoSeleccionado.costo) / productoSeleccionado.precio) * 100) | number:'1.1-1' }}%
+            </span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Valor Total en Stock</span>
+            <span class="detail-value font-bold text-primary">
+              ${{ (productoSeleccionado.precio * productoSeleccionado.stock) | number:'1.2-2' }}
+            </span>
+          </div>
+
+          <div class="detail-row" *ngIf="productoSeleccionado.id_categoria">
+            <span class="detail-label">Categoría ID</span>
+            <span class="detail-value">#{{ productoSeleccionado.id_categoria }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="productoSeleccionado.id_proveedor">
+            <span class="detail-label">Proveedor ID</span>
+            <span class="detail-value">#{{ productoSeleccionado.id_proveedor }}</span>
+          </div>
+        </div>
+
+        <div class="modal-buttons ion-margin-top">
+          <button type="button" class="btn-modal btn-secondary" (click)="cerrarPerfilProducto()">
+            Volver al Stock
+          </button>
+          <button type="button" class="btn-modal btn-primary" (click)="irAListaProductos()">
+            📦 Ir a Productos
+          </button>
+        </div>
       </div>
     </div>
   </ion-content>

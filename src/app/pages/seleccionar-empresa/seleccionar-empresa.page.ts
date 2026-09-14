@@ -21,6 +21,7 @@ export interface EmpresaConRol extends Empresa {
 })
 export class SeleccionarEmpresaPage implements OnInit {
   usuario: any = null;
+  empresaActivaActual: any = null;
   rolIdGlobal: number = 2;
   empresas: EmpresaConRol[] = [];
   loading = false;
@@ -57,7 +58,12 @@ export class SeleccionarEmpresaPage implements OnInit {
       return;
     }
     this.usuario = this.authService.getUsuario();
+    this.empresaActivaActual = this.authService.getEmpresaActiva();
     this.rolIdGlobal = Number(this.usuario?.id_rol || this.usuario?.rol_id || 2);
+  }
+
+  irAPerfilTitular(): void {
+    this.router.navigateByUrl('/perfil');
   }
 
   cargarEmpresas(event?: any): void {
@@ -149,8 +155,13 @@ export class SeleccionarEmpresaPage implements OnInit {
   }
 
   async seleccionarEmpresa(emp: EmpresaConRol): Promise<void> {
-    // 1. Bloqueo si las operaciones de la empresa están pausadas y el usuario no es Admin Global
-    if (this.rolIdGlobal !== 1 && emp.estado === 'Inactivo') {
+    const esAdmin = this.rolIdGlobal === 1 ||
+      (this.usuario?.rol === 'Administrador') ||
+      Number(this.usuario?.id_rol) === 1 ||
+      emp.rol_id === 1;
+
+    // 1. Bloqueo si las operaciones de la empresa están pausadas y el usuario no es Admin
+    if (!esAdmin && emp.estado === 'Inactivo') {
       const toast = await this.toastController.create({
         message: '⛔ Acceso Denegado: Las operaciones de esta empresa han sido pausadas por el Administrador.',
         duration: 4000,
@@ -162,7 +173,7 @@ export class SeleccionarEmpresaPage implements OnInit {
     }
 
     // 2. Bloqueo si la vinculación del trabajador ha sido desactivada
-    if (this.rolIdGlobal !== 1 && emp.vinculacion_estado === 'Desvinculado') {
+    if (!esAdmin && emp.vinculacion_estado === 'Desvinculado') {
       const toast = await this.toastController.create({
         message: '⛔ Acceso Denegado: Tu vinculación en esta empresa ha sido desactivada.',
         duration: 4000,
@@ -184,6 +195,10 @@ export class SeleccionarEmpresaPage implements OnInit {
     });
     await toast.present();
 
+    this.router.navigateByUrl('/inicio');
+  }
+
+  volverAInicio(): void {
     this.router.navigateByUrl('/inicio');
   }
 
@@ -247,8 +262,14 @@ export class SeleccionarEmpresaPage implements OnInit {
   }
 
   cerrarSesion(): void {
-    this.authService.logout();
-    this.router.navigateByUrl('/login');
+    this.authService.logoutGlobal().subscribe({
+      next: () => {
+        this.router.navigateByUrl('/login');
+      },
+      error: () => {
+        this.router.navigateByUrl('/login');
+      }
+    });
   }
 
   private async mostrarToast(mensaje: string, color: string): Promise<void> {

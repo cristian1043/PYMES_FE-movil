@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { Location } from '@angular/common';
+import { Platform } from '@ionic/angular';
 import { AuthService } from './services/auth.service';
 import { MenuStateService } from './services/menu-state.service';
 
@@ -64,6 +66,8 @@ export class AppComponent implements OnInit {
   constructor(
     public authService: AuthService,
     private router: Router,
+    private location: Location,
+    private platform: Platform,
     private menuStateService: MenuStateService
   ) {}
 
@@ -80,6 +84,33 @@ export class AppComponent implements OnInit {
 
     this.menuStateService.isOpen$.subscribe(isOpen => {
       this.isMenuOpen = isOpen;
+    });
+
+    // Manejo global y controlado del botón físico / atrás nativo de Android (Triangulito)
+    this.platform.backButton.subscribeWithPriority(10, () => {
+      if (this.isMenuOpen) {
+        this.closeMenu();
+        return;
+      }
+      const url = this.router.url;
+      if (!url || url === '/' || url.includes('/login') || url.includes('/register')) {
+        return;
+      }
+      if (url.includes('/inicio')) {
+        // En pantalla de inicio, no hacer nada para evitar salir de sesión
+        return;
+      }
+      if (url.includes('/seleccionar-empresa')) {
+        if (this.authService.getEmpresaActiva()) {
+          this.closeMenu();
+          this.router.navigateByUrl('/inicio');
+          return;
+        }
+        return;
+      }
+      // Desde cualquier otro módulo (productos, facturas, clientes, etc.), volver de manera segura y limpia a Inicio
+      this.closeMenu();
+      this.router.navigateByUrl('/inicio');
     });
   }
 
