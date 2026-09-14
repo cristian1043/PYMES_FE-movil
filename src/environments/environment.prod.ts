@@ -1,8 +1,18 @@
 import { Capacitor } from '@capacitor/core';
 
 const getApiUrl = (): string => {
+  if (typeof localStorage !== 'undefined') {
+    const custom = localStorage.getItem('api_url');
+    if (custom) return custom;
+  }
+
   try {
     if (Capacitor.isNativePlatform()) {
+      const ua = (typeof navigator !== 'undefined' && navigator.userAgent) ? navigator.userAgent.toLowerCase() : '';
+      const isEmulator = ua.includes('sdk') || ua.includes('emulator') || ua.includes('x86') || ua.includes('goldfish') || ua.includes('ranchu');
+      if (isEmulator) {
+        return 'http://10.0.2.2:5000/api';
+      }
       return 'http://192.168.1.26:5000/api';
     }
   } catch (e) {
@@ -18,11 +28,10 @@ const getApiUrl = (): string => {
       return `http://${hostname}:5000/api`;
     }
   }
-  return 'http://192.168.1.26:5000/api';
+  return 'http://10.0.2.2:5000/api';
 };
 
 export const environment = {
   production: true,
   apiUrl: getApiUrl()
 };
-
