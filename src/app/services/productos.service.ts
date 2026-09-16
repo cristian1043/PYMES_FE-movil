@@ -34,9 +34,11 @@ export class ProductosService {
     private authService: AuthService
   ) {}
 
-  getProductos(page: number = 1, perPage: number = 10): Observable<any> {
+  getProductos(page: number = 1, perPage: number = 10, empresaId?: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
+    const empId = empresaId || this.authService.getEmpresaActiva()?.id;
+    const empParam = empId ? `&empresa_id=${empId}` : '';
+    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}${empParam}`, { headers });
   }
 
   getProductoById(id: number): Observable<Producto> {
@@ -46,6 +48,10 @@ export class ProductosService {
 
   createProducto(data: Producto): Observable<Producto> {
     const headers = this.authService.getAuthHeaders();
+    if (!data.id_empresa) {
+      const emp = this.authService.getEmpresaActiva();
+      if (emp?.id) data.id_empresa = emp.id;
+    }
     return this.http.post<Producto>(`${this.apiUrl}/`, data, { headers });
   }
 

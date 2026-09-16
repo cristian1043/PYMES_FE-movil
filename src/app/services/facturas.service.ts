@@ -25,6 +25,7 @@ export interface Factura {
   id_metodo_pago?: number;
   cliente?: any;
   detalles?: any[];
+  id_empresa?: number;
 }
 
 @Injectable({
@@ -38,9 +39,11 @@ export class FacturasService {
     private authService: AuthService
   ) {}
 
-  getFacturas(page: number = 1, perPage: number = 15): Observable<any> {
+  getFacturas(page: number = 1, perPage: number = 15, empresaId?: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
+    const empId = empresaId || this.authService.getEmpresaActiva()?.id;
+    const empParam = empId ? `&empresa_id=${empId}` : '';
+    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}${empParam}`, { headers });
   }
 
   getFacturaById(id: number): Observable<Factura> {
@@ -50,6 +53,10 @@ export class FacturasService {
 
   createFactura(data: Partial<Factura>): Observable<Factura> {
     const headers = this.authService.getAuthHeaders();
+    if (!data.id_empresa) {
+      const emp = this.authService.getEmpresaActiva();
+      if (emp?.id) data.id_empresa = emp.id;
+    }
     return this.http.post<Factura>(`${this.apiUrl}/`, data, { headers });
   }
 }

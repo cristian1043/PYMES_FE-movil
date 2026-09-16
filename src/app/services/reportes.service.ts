@@ -15,28 +15,33 @@ export class ReportesService {
     private authService: AuthService
   ) {}
 
-  getReporteInventario(): Observable<any> {
-    const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/inventario`, { headers });
+  private getEmpresaQuery(empresaId?: number): string {
+    const empId = empresaId || this.authService.getEmpresaActiva()?.id;
+    return empId ? `?empresa_id=${empId}` : '';
   }
 
-  getReporteVentas(): Observable<any> {
+  getReporteInventario(empresaId?: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/ventas`, { headers });
+    return this.http.get<any>(`${this.apiUrl}/inventario${this.getEmpresaQuery(empresaId)}`, { headers });
   }
 
-  getDashboardMetrics(): Observable<any> {
+  getReporteVentas(empresaId?: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/dashboard`, { headers });
+    return this.http.get<any>(`${this.apiUrl}/ventas${this.getEmpresaQuery(empresaId)}`, { headers });
   }
 
-  getReporteClientes(): Observable<any> {
+  getDashboardMetrics(empresaId?: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/clientes`, { headers });
+    return this.http.get<any>(`${this.apiUrl}/dashboard${this.getEmpresaQuery(empresaId)}`, { headers });
   }
 
-  getReporteTopProductos(): Observable<any> {
+  getReporteClientes(empresaId?: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/top-productos`, { headers });
+    return this.http.get<any>(`${this.apiUrl}/clientes${this.getEmpresaQuery(empresaId)}`, { headers });
+  }
+
+  getReporteTopProductos(empresaId?: number): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<any>(`${this.apiUrl}/top-productos${this.getEmpresaQuery(empresaId)}`, { headers });
   }
 }

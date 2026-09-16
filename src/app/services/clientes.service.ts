@@ -24,6 +24,7 @@ export interface Cliente {
   cvc_tarjeta?: string;
   estado?: string;
   created_at?: string;
+  id_empresa?: number;
 }
 
 @Injectable({
@@ -37,9 +38,11 @@ export class ClientesService {
     private authService: AuthService
   ) {}
 
-  getClientes(page: number = 1, perPage: number = 15): Observable<any> {
+  getClientes(page: number = 1, perPage: number = 15, empresaId?: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
+    const empId = empresaId || this.authService.getEmpresaActiva()?.id;
+    const empParam = empId ? `&empresa_id=${empId}` : '';
+    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}${empParam}`, { headers });
   }
 
   getCliente(id: number): Observable<Cliente> {
@@ -49,6 +52,10 @@ export class ClientesService {
 
   createCliente(data: Cliente): Observable<Cliente> {
     const headers = this.authService.getAuthHeaders();
+    if (!data.id_empresa) {
+      const emp = this.authService.getEmpresaActiva();
+      if (emp?.id) data.id_empresa = emp.id;
+    }
     return this.http.post<Cliente>(`${this.apiUrl}/`, data, { headers });
   }
 
@@ -67,8 +74,10 @@ export class ClientesService {
     return this.http.patch<any>(`${this.apiUrl}/${id}/estado`, { estado }, { headers });
   }
 
-  buscarPorDocumento(documento: string): Observable<Cliente> {
+  buscarPorDocumento(documento: string, empresaId?: number): Observable<Cliente> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<Cliente>(`${this.apiUrl}/buscar?documento=${encodeURIComponent(documento)}`, { headers });
+    const empId = empresaId || this.authService.getEmpresaActiva()?.id;
+    const empParam = empId ? `&empresa_id=${empId}` : '';
+    return this.http.get<Cliente>(`${this.apiUrl}/buscar?documento=${encodeURIComponent(documento)}${empParam}`, { headers });
   }
 }

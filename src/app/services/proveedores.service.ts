@@ -14,6 +14,7 @@ export interface Proveedor {
   email?: string;
   direccion?: string;
   estado?: string;
+  id_empresa?: number;
 }
 
 @Injectable({
@@ -27,13 +28,19 @@ export class ProveedoresService {
     private authService: AuthService
   ) {}
 
-  getProveedores(page: number = 1, perPage: number = 15): Observable<any> {
+  getProveedores(page: number = 1, perPage: number = 15, empresaId?: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
+    const empId = empresaId || this.authService.getEmpresaActiva()?.id;
+    const empParam = empId ? `&empresa_id=${empId}` : '';
+    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}${empParam}`, { headers });
   }
 
   createProveedor(data: Partial<Proveedor>): Observable<Proveedor> {
     const headers = this.authService.getAuthHeaders();
+    if (!data.id_empresa) {
+      const emp = this.authService.getEmpresaActiva();
+      if (emp?.id) data.id_empresa = emp.id;
+    }
     return this.http.post<Proveedor>(`${this.apiUrl}/`, data, { headers });
   }
 
