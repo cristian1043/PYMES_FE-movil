@@ -107,6 +107,15 @@
         </ion-card-header>
 
         <ion-card-content>
+          <!-- Alerta de Reabastecimiento Circular -->
+          <div *ngIf="paramProductoId" class="reabastecer-banner-compras" style="background: #fef3c7; border: 1.5px solid #fde68a; border-radius: 10px; padding: 10px 14px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+            <div>
+              <h4 style="margin: 0; font-size: 13px; font-weight: 700; color: #92400e;">📦 Reabastecimiento Activo</h4>
+              <p style="margin: 2px 0 0 0; font-size: 12px; color: #b45309;">Producto preseleccionado: <strong>{{ paramProductoNombre || 'Producto de Inventario' }}</strong></p>
+            </div>
+            <span style="font-size: 11px; background: #fef08a; color: #854d0e; padding: 3px 8px; border-radius: 6px; font-weight: 700;">Paso 3: Compra</span>
+          </div>
+
           <!-- 1. ENCABEZADO DE LA ORDEN -->
           <div class="form-group">
             <label class="form-label">N° Orden de Compra *</label>

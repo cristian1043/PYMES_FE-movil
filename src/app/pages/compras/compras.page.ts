@@ -51,6 +51,12 @@ export class ComprasPage implements OnInit, OnDestroy {
 
   guardando = false;
 
+  // Parámetros de reabastecimiento circular
+  paramProveedorId: number | null = null;
+  paramProductoId: number | null = null;
+  paramProductoNombre: string = '';
+  empresaActiva: any = null;
+
   // Modal de confirmación personalizado
   mostrarModalConfirmacion = false;
   modalTitulo = '';
@@ -74,6 +80,14 @@ export class ComprasPage implements OnInit, OnDestroy {
     this.verificarAutenticacion();
     this.queryParamsSub = this.route.queryParamMap.subscribe((params) => {
       const tabParam = params.get('tab');
+      const provIdParam = params.get('proveedor_id');
+      const prodIdParam = params.get('producto_id');
+      const prodNombreParam = params.get('producto_nombre');
+
+      if (provIdParam) this.paramProveedorId = Number(provIdParam);
+      if (prodIdParam) this.paramProductoId = Number(prodIdParam);
+      if (prodNombreParam) this.paramProductoNombre = prodNombreParam;
+
       const newTab = (tabParam === 'listado' || tabParam === 'nueva') ? tabParam : 'hub';
       const tabChanged = this.activeTab !== newTab;
       this.activeTab = newTab;
@@ -171,6 +185,10 @@ export class ComprasPage implements OnInit, OnDestroy {
         } else if (res && Array.isArray(res.items)) {
           this.proveedores = res.items;
         }
+        if (this.paramProveedorId) {
+          this.idProveedor = this.paramProveedorId;
+        }
+        this.cdr.detectChanges();
       },
       error: (err) => console.error('Error cargando proveedores:', err)
     });
@@ -187,6 +205,11 @@ export class ComprasPage implements OnInit, OnDestroy {
           this.productos = res;
         } else if (res && Array.isArray(res.items)) {
           this.productos = res.items;
+        }
+        if (this.paramProductoId) {
+          this.idProductoSeleccionado = this.paramProductoId;
+          this.onProductoSeleccionadoChange();
+          this.cantidad = 10;
         }
         this.cdr.detectChanges();
       },

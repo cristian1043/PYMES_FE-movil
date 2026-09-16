@@ -53,7 +53,16 @@
       <div class="hub-actions-grid">
         <div class="action-card" (click)="seleccionarAccion('nuevo')">
           <div class="action-icon bg-medium">
-            <ion-icon name="business-outline"></ion-icon>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18"></path>
+              <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"></path>
+              <path d="M9 9h1"></path>
+              <path d="M9 13h1"></path>
+              <path d="M9 17h1"></path>
+              <path d="M14 9h1"></path>
+              <path d="M14 13h1"></path>
+              <path d="M14 17h1"></path>
+            </svg>
           </div>
           <div class="action-info">
             <h3>Registrar Nuevo Proveedor</h3>
@@ -64,7 +73,12 @@
 
         <div class="action-card" (click)="seleccionarAccion('listado')">
           <div class="action-icon bg-primary">
-            <ion-icon name="bus-outline"></ion-icon>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1e3c72" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="1" y="3" width="15" height="13"></rect>
+              <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+              <circle cx="5.5" cy="18.5" r="2.5"></circle>
+              <circle cx="18.5" cy="18.5" r="2.5"></circle>
+            </svg>
           </div>
           <div class="action-info">
             <h3>Ver Directorio de Proveedores</h3>
@@ -163,13 +177,31 @@
         <p>No hay proveedores registrados aún.</p>
       </div>
 
+      <!-- Alerta de reabastecimiento si viene desde un producto -->
+      <div *ngIf="productoReabastecerId" class="reabastecer-alert-banner" style="background: #eff6ff; border: 1.5px solid #93c5fd; border-radius: 12px; padding: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+        <div>
+          <h4 style="margin: 0; font-size: 13px; font-weight: 700; color: #1e3c72;">📦 Reabasteciendo Producto:</h4>
+          <p style="margin: 2px 0 0 0; font-size: 12px; color: #2563eb; font-weight: 600;">{{ productoReabastecerNombre || 'Producto en Stock Bajo' }}</p>
+        </div>
+        <span style="font-size: 11px; background: #dbeafe; color: #1d4ed8; padding: 4px 8px; border-radius: 6px; font-weight: 700;">Paso 2: Proveedor</span>
+      </div>
+
       <ion-list *ngIf="!loading && proveedores.length > 0">
-        <ion-item *ngFor="let prov of proveedores" class="proveedor-item">
+        <ion-item *ngFor="let prov of proveedores" class="proveedor-item" [style.border]="prov.id === proveedorDestacadoId ? '2px solid #3b82f6' : 'none'" [style.border-radius]="prov.id === proveedorDestacadoId ? '10px' : '0'">
           <ion-icon name="business-outline" slot="start" color="tertiary" style="font-size: 28px;"></ion-icon>
           <ion-label>
-            <h2>{{ prov.nombre }}</h2>
+            <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+              <h2>{{ prov.nombre }}</h2>
+              <span *ngIf="prov.id === proveedorDestacadoId" style="font-size: 10px; background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Distribuidor Directo</span>
+            </div>
             <p>NIT/Doc: {{ prov.nit_documento || 'N/A' }}</p>
             <ion-note color="medium" *ngIf="prov.contacto">Contacto: {{ prov.contacto }}</ion-note>
+            <!-- Botón de acción para Administrador para emitir orden de compra con este proveedor -->
+            <div *ngIf="esAdmin" style="margin-top: 8px;">
+              <button type="button" style="background: #1e3c72; color: #ffffff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(30, 60, 114, 0.2);" (click)="irAComprarConProveedor(prov)">
+                🛒 Registrar Compra con este Proveedor
+              </button>
+            </div>
           </ion-label>
           <div slot="end" class="action-buttons">
             <ion-button *ngIf="prov.telefono" fill="clear" color="success" [href]="'tel:' + prov.telefono">

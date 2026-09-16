@@ -23,6 +23,7 @@ export class ProductosPage implements OnInit, OnDestroy {
   searchTerm = '';
   loading = false;
   usuario: any = null;
+  empresaActiva: any = null;
   esAdmin = false;
   currentPage = 1;
   totalPages = 1;
@@ -125,10 +126,30 @@ export class ProductosPage implements OnInit, OnDestroy {
       return;
     }
     this.usuario = this.authService.getUsuario();
+    this.empresaActiva = this.authService.getEmpresaActiva();
     this.esAdmin = this.authService.hasRole([1]) ||
       (this.usuario?.rol === 'Administrador') ||
       (Number(this.usuario?.id_rol) === 1);
     this.cdr.detectChanges();
+  }
+
+  reabastecerProducto(prod: Producto, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (this.mostrarModalDetalle) {
+      this.cerrarModalDetalle();
+    }
+    const provId = prod.id_proveedor ? prod.id_proveedor : '';
+    this.router.navigate(['/proveedores'], {
+      queryParams: {
+        tab: 'listado',
+        proveedor_id: provId,
+        producto_id: prod.id,
+        producto_nombre: prod.nombre,
+        reabastecer: 'true'
+      }
+    });
   }
 
   cargarCatalogos(): void {
@@ -460,7 +481,8 @@ export class ProductosPage implements OnInit, OnDestroy {
       id_proveedor: this.nuevoIdProveedor ? Number(this.nuevoIdProveedor) : undefined,
       unidad_medida: this.nuevaUnidadMedida || 'UND',
       estado: 'Activo',
-      imagen: this.nuevaImagen || undefined
+      imagen: this.nuevaImagen || undefined,
+      id_empresa: this.empresaActiva?.id ? Number(this.empresaActiva.id) : undefined
     };
 
     this.productosService.createProducto(productoPayload).pipe(

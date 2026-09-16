@@ -53,7 +53,11 @@
       <div class="hub-actions-grid">
         <div class="action-card" (click)="seleccionarAccion('nuevo')">
           <div class="action-icon bg-primary">
-            <ion-icon name="add-circle-outline"></ion-icon>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1e3c72" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
           </div>
           <div class="action-info">
             <h3>Registrar Nuevo Producto</h3>
@@ -64,7 +68,14 @@
 
         <div class="action-card" (click)="seleccionarAccion('listado')">
           <div class="action-icon bg-success">
-            <ion-icon name="list-outline"></ion-icon>
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
           </div>
           <div class="action-info">
             <h3>Ver Listado de Productos</h3>
@@ -279,6 +290,15 @@
               <ion-badge [color]="prod.estado === 'Inactivo' ? 'medium' : 'success'" class="badge-estado">
                 {{ prod.estado || 'Activo' }}
               </ion-badge>
+              <ion-badge color="primary" class="badge-empresa" *ngIf="empresaActiva">
+                🏢 {{ empresaActiva.nombre }}
+              </ion-badge>
+            </div>
+            <!-- Botón Reabastecer solo para Administrador cuando stock está bajo -->
+            <div *ngIf="esAdmin && prod.stock !== undefined && prod.stock !== null && prod.stock <= 5" class="restock-action-box" (click)="reabastecerProducto(prod, $event)">
+              <button type="button" class="btn-restock-pill">
+                📦 Reabastecer Stock (Pedir a Proveedor)
+              </button>
             </div>
           </ion-label>
           <div slot="end" class="ion-text-right item-end-container">
@@ -363,6 +383,19 @@
           <span class="status-pill" [ngClass]="productoSeleccionado.estado === 'Inactivo' ? 'estado-inactivo' : 'estado-activo'">
             {{ productoSeleccionado.estado === 'Inactivo' ? '🔴 Inactivo' : '🟢 Activo' }}
           </span>
+          <span class="status-pill" *ngIf="empresaActiva" style="background: #e0f2fe; color: #0369a1; font-weight: 700;">
+            🏢 {{ empresaActiva.nombre }}
+          </span>
+        </div>
+
+        <!-- Banner destacado de reabastecimiento si stock bajo para Administrador -->
+        <div *ngIf="esAdmin && productoSeleccionado.stock !== undefined && productoSeleccionado.stock !== null && productoSeleccionado.stock <= 5" class="modal-restock-banner" style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; padding: 12px; margin: 12px 0; text-align: center;">
+          <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 700; color: #b45309;">
+            ⚠️ Stock Bajo: Solo quedan {{ productoSeleccionado.stock }} unidades disponibles
+          </p>
+          <button type="button" class="btn-restock-large" style="background: #f59e0b; color: #ffffff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; cursor: pointer;" (click)="reabastecerProducto(productoSeleccionado)">
+            📦 Reabastecer Stock / Contactar Proveedor
+          </button>
         </div>
 
         <div class="detail-grid">

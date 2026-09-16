@@ -22,6 +22,12 @@ export class ProveedoresPage implements OnInit, OnDestroy {
   totalPages = 1;
   hasMorePages = true;
 
+  proveedorDestacadoId: number | null = null;
+  productoReabastecerId: number | null = null;
+  productoReabastecerNombre: string = '';
+  empresaActiva: any = null;
+  esAdmin = false;
+
   // Formulario nuevo proveedor
   nombreProveedor = '';
   nitProveedor = '';
@@ -51,6 +57,14 @@ export class ProveedoresPage implements OnInit, OnDestroy {
     this.verificarAutenticacion();
     this.queryParamsSub = this.route.queryParamMap.subscribe((params) => {
       const tabParam = params.get('tab');
+      const provIdParam = params.get('proveedor_id');
+      const prodIdParam = params.get('producto_id');
+      const prodNombreParam = params.get('producto_nombre');
+
+      this.proveedorDestacadoId = provIdParam ? Number(provIdParam) : null;
+      this.productoReabastecerId = prodIdParam ? Number(prodIdParam) : null;
+      this.productoReabastecerNombre = prodNombreParam || '';
+
       const newTab = (tabParam === 'listado' || tabParam === 'nuevo') ? tabParam : 'hub';
       const tabChanged = this.activeTab !== newTab;
       this.activeTab = newTab;
@@ -91,7 +105,22 @@ export class ProveedoresPage implements OnInit, OnDestroy {
       return;
     }
     this.usuario = this.authService.getUsuario();
+    this.empresaActiva = this.authService.getEmpresaActiva();
+    this.esAdmin = this.authService.hasRole([1]) ||
+      (this.usuario?.rol === 'Administrador') ||
+      (Number(this.usuario?.id_rol) === 1);
     this.cdr.detectChanges();
+  }
+
+  irAComprarConProveedor(prov: Proveedor): void {
+    this.router.navigate(['/compras'], {
+      queryParams: {
+        tab: 'nueva',
+        proveedor_id: prov.id,
+        producto_id: this.productoReabastecerId || '',
+        producto_nombre: this.productoReabastecerNombre || ''
+      }
+    });
   }
 
   toggleMenu(): void {

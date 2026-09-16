@@ -19,6 +19,7 @@ export interface Producto {
   proveedor_nombre?: string;
   estado?: string;
   imagen?: string;
+  id_empresa?: number;
 }
 
 @Injectable({

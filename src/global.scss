@@ -589,3 +589,22 @@ ion-button {
   }
 }
 
+/* ----------------------------------------------------------------------------
+ * 8. RESPONSIVE REFRESHER (DISABLE STUCK SPINNERS ON DESKTOP / PC)
+ * ---------------------------------------------------------------------------- */
+@media (min-width: 768px) {
+  ion-refresher {
+    display: none !important;
+    height: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+}
+
+ion-refresher {
+  pointer-events: none;
+  &.refresher-active, &.refresher-pulling {
+    pointer-events: auto;
+  }
+}
+

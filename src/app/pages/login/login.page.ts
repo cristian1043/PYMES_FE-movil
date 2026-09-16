@@ -34,11 +34,20 @@ export class LoginPage implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.verificarSiYaAutenticado();
     this.resetState();
   }
 
   ionViewWillEnter(): void {
+    this.verificarSiYaAutenticado();
     this.resetState();
+  }
+
+  private verificarSiYaAutenticado(): void {
+    if (this.authService.isLoggedIn()) {
+      const tieneEmpresa = !!this.authService.getEmpresaActiva();
+      this.router.navigate([tieneEmpresa ? '/inicio' : '/seleccionar-empresa'], { replaceUrl: true });
+    }
   }
 
   private resetState(): void {
@@ -208,7 +217,7 @@ export class LoginPage implements OnInit {
             position: 'top'
           });
           await toast.present();
-          this.router.navigateByUrl('/seleccionar-empresa');
+          this.router.navigate(['/seleccionar-empresa'], { replaceUrl: true });
         } else {
           this.errorMessage = res?.mensaje || 'Credenciales incorrectas.';
           this.loading = false;
