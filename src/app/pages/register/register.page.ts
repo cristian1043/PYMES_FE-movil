@@ -2,7 +2,7 @@ import { Component, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
-import { finalize } from 'rxjs/operators';
+import { finalize, timeout } from 'rxjs/operators';
 
 @Component({
   selector: 'app-register',
@@ -104,6 +104,7 @@ export class RegisterPage {
     };
 
     this.authService.register(payload).pipe(
+      timeout(45000),
       finalize(() => {
         this.loading = false;
         this.cdr.detectChanges();
@@ -122,11 +123,19 @@ export class RegisterPage {
       },
       error: async (err) => {
         console.error('Error al registrar usuario:', err);
-        this.errorMessage = err?.error?.mensaje || err?.error?.error || 'No se pudo crear la cuenta. Verifica que el documento o correo no estén ya registrados.';
+        if (err?.status === 0 || err?.name === 'TimeoutError') {
+          this.errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet o intenta de nuevo en unos segundos si el servidor se está activando.';
+        } else if (err?.error?.mensaje) {
+          this.errorMessage = err.error.mensaje;
+        } else if (err?.error?.error) {
+          this.errorMessage = err.error.error;
+        } else {
+          this.errorMessage = 'Error al registrar usuario. Verifica los datos e intenta nuevamente.';
+        }
         this.cdr.detectChanges();
         const toast = await this.toastController.create({
           message: this.errorMessage,
-          duration: 4000,
+          duration: 4500,
           color: 'danger',
           position: 'top'
         });

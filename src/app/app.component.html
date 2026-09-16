@@ -30,8 +30,8 @@
           <h4>{{ usuario.nombre || usuario.username }}</h4>
           <p>{{ usuario.email || 'Sesión Activa' }}</p>
           <div class="profile-badges">
-            <ion-badge color="tertiary" class="badge-role">
-              {{ (empresaActiva && empresaActiva.rol_nombre) ? empresaActiva.rol_nombre : (usuario.rol || 'Usuario') }}
+            <ion-badge [color]="empresaActiva ? 'tertiary' : 'medium'" class="badge-role">
+              {{ (empresaActiva && empresaActiva.rol_nombre) ? empresaActiva.rol_nombre : '👤 Usuario Independiente' }}
             </ion-badge>
             <ion-badge color="primary" class="badge-empresa" *ngIf="empresaActiva" (click)="$event.stopPropagation(); navegar('/seleccionar-empresa')">
               🏢 {{ empresaActiva.nombre }}

@@ -25,6 +25,22 @@ export class RoleGuard implements CanActivate {
       return true;
     }
 
+    const tieneEmpresa = !!this.authService.getEmpresaActiva();
+    const u = this.authService.getUsuario();
+    const esAdminGlobal = u && (Number(u.id_rol) === 1 || Number(u.rol_id) === 1 || (u.rol || '').toLowerCase().includes('admin'));
+
+    if (!tieneEmpresa && !esAdminGlobal) {
+      const toast = await this.toastController.create({
+        message: '🏢 Debes seleccionar una empresa activa para acceder a este módulo de gestión.',
+        duration: 3500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      this.router.navigate(['/seleccionar-empresa'], { replaceUrl: true });
+      return false;
+    }
+
     if (this.authService.hasRole(allowedRoles)) {
       return true;
     }
@@ -37,7 +53,7 @@ export class RoleGuard implements CanActivate {
     });
     await toast.present();
 
-    this.router.navigate(['/inicio'], { replaceUrl: true });
+    this.router.navigate([tieneEmpresa ? '/inicio' : '/seleccionar-empresa'], { replaceUrl: true });
     return false;
   }
 }

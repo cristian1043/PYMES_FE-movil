@@ -10,6 +10,7 @@ interface MenuItem {
   url: string;
   icon: string;
   roles: number[];
+  requiereEmpresa?: boolean;
 }
 
 interface MenuCategory {
@@ -33,32 +34,32 @@ export class AppComponent implements OnInit {
     {
       titulo: 'Gestión Principal',
       items: [
-        { title: 'Inicio / Pantalla Principal', url: '/inicio', icon: 'home-outline', roles: [1, 2, 3] },
-        { title: 'Cambiar de Empresa / Espacio', url: '/seleccionar-empresa', icon: 'business-outline', roles: [1, 2, 3] },
-        { title: 'Productos e Inventario', url: '/productos', icon: 'cube-outline', roles: [1, 3] },
-        { title: 'Facturas y Ventas', url: '/facturas', icon: 'document-text-outline', roles: [1, 2] },
-        { title: 'Gestión de Compras', url: '/compras', icon: 'cart-outline', roles: [1, 3] },
+        { title: 'Inicio / Pantalla Principal', url: '/inicio', icon: 'home-outline', roles: [1, 2, 3], requiereEmpresa: true },
+        { title: 'Cambiar de Empresa / Espacio', url: '/seleccionar-empresa', icon: 'business-outline', roles: [1, 2, 3], requiereEmpresa: false },
+        { title: 'Productos e Inventario', url: '/productos', icon: 'cube-outline', roles: [1, 3], requiereEmpresa: true },
+        { title: 'Facturas y Ventas', url: '/facturas', icon: 'document-text-outline', roles: [1, 2], requiereEmpresa: true },
+        { title: 'Gestión de Compras', url: '/compras', icon: 'cart-outline', roles: [1, 3], requiereEmpresa: true },
       ]
     },
     {
       titulo: 'Directorio de Relaciones',
       items: [
-        { title: 'Clientes', url: '/clientes', icon: 'people-outline', roles: [1, 2] },
-        { title: 'Proveedores', url: '/proveedores', icon: 'bus-outline', roles: [1, 3] },
+        { title: 'Clientes', url: '/clientes', icon: 'people-outline', roles: [1, 2], requiereEmpresa: true },
+        { title: 'Proveedores', url: '/proveedores', icon: 'bus-outline', roles: [1, 3], requiereEmpresa: true },
       ]
     },
     {
       titulo: 'Analítica y Administración',
       items: [
-        { title: 'Reportes y Métricas', url: '/reportes', icon: 'bar-chart-outline', roles: [1, 3] },
-        { title: 'Gestión de Usuarios', url: '/usuarios', icon: 'shield-checkmark-outline', roles: [1] },
-        { title: 'Configuración Empresa', url: '/empresa', icon: 'settings-outline', roles: [1] },
+        { title: 'Reportes y Métricas', url: '/reportes', icon: 'bar-chart-outline', roles: [1, 3], requiereEmpresa: true },
+        { title: 'Gestión de Usuarios', url: '/usuarios', icon: 'shield-checkmark-outline', roles: [1], requiereEmpresa: true },
+        { title: 'Configuración Empresa', url: '/empresa', icon: 'settings-outline', roles: [1], requiereEmpresa: true },
       ]
     },
     {
       titulo: 'Mi Cuenta y Perfil',
       items: [
-        { title: 'Información Personal', url: '/perfil', icon: 'person-outline', roles: [1, 2, 3] },
+        { title: 'Información Personal', url: '/perfil', icon: 'person-outline', roles: [1, 2, 3], requiereEmpresa: false },
       ]
     }
   ];
@@ -126,10 +127,24 @@ export class AppComponent implements OnInit {
       return;
     }
     this.usuario = activeUser;
+    this.empresaActiva = this.authService.getEmpresaActiva();
+    const tieneEmpresa = !!this.empresaActiva;
+
     this.menuCategoriasPermitidas = this.menuCategoriasRaw
       .map(cat => ({
         titulo: cat.titulo,
-        items: cat.items.filter(item => this.authService.hasRole(item.roles))
+        items: cat.items.filter(item => {
+          // Si el módulo requiere empresa activa y el usuario no tiene ninguna seleccionada, ocultar
+          if (item.requiereEmpresa && !tieneEmpresa) {
+            return false;
+          }
+          // Si no requiere empresa, mostrar siempre para usuarios autenticados
+          if (!item.requiereEmpresa) {
+            return true;
+          }
+          // Si requiere empresa, validar rol en dicha empresa activa
+          return this.authService.hasRole(item.roles);
+        })
       }))
       .filter(cat => cat.items.length > 0);
   }

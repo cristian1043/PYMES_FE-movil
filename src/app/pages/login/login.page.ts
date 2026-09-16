@@ -230,7 +230,7 @@ export class LoginPage implements OnInit {
         } else if (err.status === 429) {
           this.errorMessage = err?.error?.mensaje || '⚠️ Demasiados intentos fallidos. Bloqueo de seguridad activado. Espera 1 minuto.';
         } else if (err.status === 0) {
-          this.errorMessage = 'No se pudo conectar con el servidor. Verifica que Flask esté encendido.';
+          this.errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet o intenta de nuevo en unos segundos si el servidor se está activando.';
         } else {
           this.errorMessage = err?.error?.mensaje || 'Error al iniciar sesión. Intenta nuevamente.';
         }
