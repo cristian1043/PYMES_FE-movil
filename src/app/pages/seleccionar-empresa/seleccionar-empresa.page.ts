@@ -59,7 +59,8 @@ export class SeleccionarEmpresaPage implements OnInit {
     }
     this.usuario = this.authService.getUsuario();
     this.empresaActivaActual = this.authService.getEmpresaActiva();
-    this.rolIdGlobal = Number(this.usuario?.id_rol || this.usuario?.rol_id || 2);
+    const esSuperAdmin = Number(this.usuario?.id) === 1 || (this.usuario?.username || '').toLowerCase() === 'admin';
+    this.rolIdGlobal = esSuperAdmin ? 1 : 2;
   }
 
   irAPerfilTitular(): void {
@@ -97,7 +98,7 @@ export class SeleccionarEmpresaPage implements OnInit {
           // Consultar la vinculación de cada empresa para este usuario
           const vinculacionesObservables = empresasData.map((emp) =>
             this.empresasService.getVinculacion(usuarioId, Number(emp.id)).pipe(
-              catchError(() => of({ estado: 'Activo', rol_id: this.rolIdGlobal }))
+              catchError(() => of({ estado: 'No Vinculado', rol_id: 2 }))
             )
           );
 
@@ -110,13 +111,17 @@ export class SeleccionarEmpresaPage implements OnInit {
                 3: 'Almacenista'
               };
 
+              const esSuperAdmin = Number(this.usuario?.id) === 1 || (this.usuario?.username || '').toLowerCase() === 'admin';
+
               empresasData.forEach((emp, index) => {
                 const vinc = vinculaciones[index] || {};
-                const estadoVinc = vinc.estado || (this.rolIdGlobal === 1 ? 'Activo' : 'No Vinculado');
-                const rolVinc = Number(vinc.rol_id || this.rolIdGlobal);
+                const estadoVinc = vinc.estado || 'No Vinculado';
+                const rolVinc = Number(vinc.rol_id || 2);
 
-                // Admin global ve todas las empresas. Vendedores y almacenistas solo las activas
-                if (this.rolIdGlobal === 1 || estadoVinc === 'Activo') {
+                // Solo el Super Administrador de la plataforma ve todas las empresas.
+                // Cualquier otro usuario (incluyendo administradores de una empresa específica)
+                // únicamente ve las empresas donde tiene una vinculación Activa.
+                if (esSuperAdmin || estadoVinc === 'Activo') {
                   const esActivaActual = empresaActivaStorage && Number(empresaActivaStorage.id) === Number(emp.id);
 
                   empresasVisibles.push({
@@ -155,13 +160,11 @@ export class SeleccionarEmpresaPage implements OnInit {
   }
 
   async seleccionarEmpresa(emp: EmpresaConRol): Promise<void> {
-    const esAdmin = this.rolIdGlobal === 1 ||
-      (this.usuario?.rol === 'Administrador') ||
-      Number(this.usuario?.id_rol) === 1 ||
-      emp.rol_id === 1;
+    const esSuperAdmin = Number(this.usuario?.id) === 1 || (this.usuario?.username || '').toLowerCase() === 'admin';
+    const esAdminEmpresa = emp.rol_id === 1;
 
-    // 1. Bloqueo si las operaciones de la empresa están pausadas y el usuario no es Admin
-    if (!esAdmin && emp.estado === 'Inactivo') {
+    // 1. Bloqueo si las operaciones de la empresa están pausadas y el usuario no es Admin de esta empresa ni SuperAdmin
+    if (!esSuperAdmin && !esAdminEmpresa && emp.estado === 'Inactivo') {
       const toast = await this.toastController.create({
         message: '⛔ Acceso Denegado: Las operaciones de esta empresa han sido pausadas por el Administrador.',
         duration: 4000,
@@ -173,7 +176,7 @@ export class SeleccionarEmpresaPage implements OnInit {
     }
 
     // 2. Bloqueo si la vinculación del trabajador ha sido desactivada
-    if (!esAdmin && emp.vinculacion_estado === 'Desvinculado') {
+    if (!esSuperAdmin && emp.vinculacion_estado === 'Desvinculado') {
       const toast = await this.toastController.create({
         message: '⛔ Acceso Denegado: Tu vinculación en esta empresa ha sido desactivada.',
         duration: 4000,

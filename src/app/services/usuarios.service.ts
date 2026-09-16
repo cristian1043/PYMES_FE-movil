@@ -34,9 +34,13 @@ export class UsuariosService {
     private authService: AuthService
   ) {}
 
-  getUsuarios(page: number = 1, perPage: number = 10): Observable<any> {
+  getUsuarios(page: number = 1, perPage: number = 10, empresaId?: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}`, { headers });
+    let url = `${this.apiUrl}/?page=${page}&per_page=${perPage}`;
+    if (empresaId) {
+      url += `&empresa_id=${empresaId}`;
+    }
+    return this.http.get<any>(url, { headers });
   }
 
   getUsuarioById(id: number): Observable<UsuarioItem> {

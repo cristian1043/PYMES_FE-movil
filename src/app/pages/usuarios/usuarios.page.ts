@@ -207,7 +207,10 @@ export class UsuariosPage implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }
 
-    this.usuariosService.getUsuarios(page, 10)
+    const empActiva = this.authService.getEmpresaActiva();
+    const empId = empActiva?.id ? Number(empActiva.id) : undefined;
+
+    this.usuariosService.getUsuarios(page, 10, empId)
       .pipe(
         finalize(() => {
           this.loading = false;
@@ -393,9 +396,6 @@ export class UsuariosPage implements OnInit, OnDestroy {
       })
     ).subscribe({
       next: async () => {
-        this.usuariosService.cambiarRol(uId, rolId).subscribe();
-        this.usuariosService.cambiarEstado(uId, 'Activo').subscribe();
-
         const toast = await this.toastController.create({
           message: `¡Trabajador ${this.candidatoAfiliar.nombre} (@${this.candidatoAfiliar.username}) aprobado y vinculado exitosamente!`,
           duration: 4000,
@@ -448,42 +448,38 @@ export class UsuariosPage implements OnInit, OnDestroy {
     const nuevoEstado = this.nuevoEstadoPendiente;
     this.mostrarModalConfirmacionEstado = false;
 
-    // 1. Sincronizar en /api/usuarios/<id>
-    this.usuariosService.cambiarEstado(id, nuevoEstado).subscribe({
+    const empActiva = this.authService.getEmpresaActiva();
+    if (!empActiva || !empActiva.id) {
+      return;
+    }
+
+    const vincEstado = nuevoEstado === 'Activo' ? 'Activo' : 'Desvinculado';
+    this.empresasService.actualizarVinculacion({
+      usuario_id: id,
+      empresa_id: Number(empActiva.id),
+      estado: vincEstado
+    }).subscribe({
       next: async () => {
         if (this.usuarioSeleccionado && this.usuarioSeleccionado.id === id) {
-          this.usuarioSeleccionado.estado = nuevoEstado;
+          this.usuarioSeleccionado.estado = vincEstado;
         }
         const u = this.usuarios.find(x => x.id === id);
-        if (u) u.estado = nuevoEstado;
+        if (u) u.estado = vincEstado;
         this.filtrarUsuarios();
         this.cdr.detectChanges();
 
-        // 2. Sincronizar en la vinculación multitenant MySQL para reflejo web inmediato
-        const empActiva = this.authService.getEmpresaActiva();
-        if (empActiva && empActiva.id) {
-          const vincEstado = nuevoEstado === 'Activo' ? 'Activo' : 'Desvinculado';
-          this.empresasService.actualizarVinculacion({
-            usuario_id: id,
-            empresa_id: Number(empActiva.id),
-            estado: vincEstado
-          }).subscribe({
-            error: (e) => console.warn('Aviso: no se pudo actualizar vinculación empresa:', e)
-          });
-        }
-
         const toast = await this.toastController.create({
-          message: `El usuario ahora está ${nuevoEstado === 'Activo' ? 'Activo 🟢' : 'Desvinculado / Inactivo 🔴'}`,
+          message: `El trabajador ahora está ${vincEstado === 'Activo' ? 'Activo 🟢' : 'Desvinculado / Inactivo 🔴'} en ${empActiva.nombre}`,
           duration: 3000,
-          color: nuevoEstado === 'Activo' ? 'success' : 'dark',
+          color: vincEstado === 'Activo' ? 'success' : 'dark',
           position: 'top'
         });
         await toast.present();
       },
       error: async (err) => {
-        console.error('Error al cambiar estado:', err);
+        console.error('Error al cambiar estado en vinculación:', err);
         const toast = await this.toastController.create({
-          message: 'Error al cambiar estado del usuario.',
+          message: 'Error al cambiar estado del trabajador en la empresa.',
           duration: 3000,
           color: 'danger',
           position: 'top'
@@ -502,8 +498,16 @@ export class UsuariosPage implements OnInit, OnDestroy {
   cambiarRolUsuario(usuario: UsuarioItem, nuevoRolId: number): void {
     if (!usuario.id) return;
 
-    // 1. Sincronizar en /api/usuarios/<id>
-    this.usuariosService.cambiarRol(usuario.id, nuevoRolId).subscribe({
+    const empActiva = this.authService.getEmpresaActiva();
+    if (!empActiva || !empActiva.id) {
+      return;
+    }
+
+    this.empresasService.actualizarVinculacion({
+      usuario_id: Number(usuario.id),
+      empresa_id: Number(empActiva.id),
+      rol_id: nuevoRolId
+    }).subscribe({
       next: async () => {
         usuario.id_rol = nuevoRolId;
         usuario.rol_nombre = this.getNombreRol(nuevoRolId);
@@ -514,29 +518,18 @@ export class UsuariosPage implements OnInit, OnDestroy {
         this.filtrarUsuarios();
         this.cdr.detectChanges();
 
-        // 2. Sincronizar en la vinculación multitenant MySQL para reflejo web inmediato
-        const empActiva = this.authService.getEmpresaActiva();
-        if (empActiva && empActiva.id) {
-          this.empresasService.actualizarVinculacion({
-            usuario_id: Number(usuario.id),
-            empresa_id: Number(empActiva.id),
-            rol_id: nuevoRolId
-          }).subscribe({
-            error: (e) => console.warn('Aviso: no se pudo actualizar rol en vinculación empresa:', e)
-          });
-        }
-
         const toast = await this.toastController.create({
-          message: `Rol asignado: ${this.getNombreRol(nuevoRolId)}`,
+          message: `Rol de ${usuario.nombre} actualizado a: ${this.getNombreRol(nuevoRolId)} en ${empActiva.nombre}`,
           duration: 2500,
           color: 'primary',
           position: 'top'
         });
         await toast.present();
       },
-      error: async () => {
+      error: async (err) => {
+        console.error('Error al cambiar rol en empresa:', err);
         const toast = await this.toastController.create({
-          message: 'Error al cambiar el rol del usuario.',
+          message: 'Error al cambiar el rol del usuario en la empresa.',
           duration: 2500,
           color: 'danger',
           position: 'top'
