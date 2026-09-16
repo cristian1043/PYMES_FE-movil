@@ -277,6 +277,10 @@ export class ClientesPage implements OnInit, OnDestroy {
 
   abrirModalEdicion(cliente: Cliente, event?: Event): void {
     if (event) event.stopPropagation();
+    if (this.rolId !== 1) {
+      this.mostrarToast('Solo el Administrador tiene permisos para editar información de clientes.', 'warning');
+      return;
+    }
     this.clienteEditando = {
       id: cliente.id,
       nombre: cliente.nombre,
@@ -306,6 +310,10 @@ export class ClientesPage implements OnInit, OnDestroy {
   }
 
   guardarEdicionCliente(): void {
+    if (this.rolId !== 1) {
+      this.mostrarToast('Solo el Administrador puede guardar cambios de clientes.', 'warning');
+      return;
+    }
     if (!this.clienteEditando.id || !this.clienteEditando.nombre) {
       this.mostrarToast('El nombre del cliente es obligatorio.', 'warning');
       return;

@@ -71,7 +71,15 @@ export class PerfilPage implements OnInit {
   }
 
   irAIndex(): void {
-    this.router.navigateByUrl('/inicio');
+    if (this.empresaActiva) {
+      this.router.navigateByUrl('/inicio');
+    } else {
+      this.router.navigateByUrl('/seleccionar-empresa');
+    }
+  }
+
+  irAEmpresas(): void {
+    this.router.navigateByUrl('/seleccionar-empresa');
   }
 
   onFechaNacimientoChange(): void {

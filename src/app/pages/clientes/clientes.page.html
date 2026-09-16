@@ -386,6 +386,7 @@
             <div class="admin-edit-btns">
               <button
                 type="button"
+                *ngIf="rolId === 1"
                 class="action-btn edit-btn"
                 (click)="abrirModalEdicion(cli, $event)"
                 title="Editar cliente">
@@ -477,7 +478,7 @@
         </div>
       </div>
       <div class="modal-sheet-footer">
-        <ion-button fill="outline" color="primary" (click)="abrirModalEdicion(clienteSeleccionado)">
+        <ion-button *ngIf="rolId === 1" fill="outline" color="primary" (click)="abrirModalEdicion(clienteSeleccionado)">
           ✏️ Editar Datos
         </ion-button>
         <ion-button color="medium" (click)="cerrarModalDetalle()">

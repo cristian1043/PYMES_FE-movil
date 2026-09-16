@@ -66,6 +66,7 @@ export class AuthService {
       localStorage.removeItem('access_token');
       localStorage.removeItem('usuario');
       localStorage.removeItem('empresa_activa');
+      localStorage.removeItem('ultima_empresa_activa');
     }
     this.currentUserSubject.next(null);
     this.empresaActivaSubject.next(null);
@@ -126,12 +127,18 @@ export class AuthService {
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.setItem('empresa_activa', JSON.stringify(empData));
     }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('ultima_empresa_activa', JSON.stringify(empData));
+    }
     this.empresaActivaSubject.next(empData);
   }
 
   clearEmpresaActiva(): void {
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.removeItem('empresa_activa');
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('ultima_empresa_activa');
     }
     this.empresaActivaSubject.next(null);
   }
@@ -184,11 +191,23 @@ export class AuthService {
   }
 
   private getEmpresaActivaDesdeStorage(): any {
-    if (typeof sessionStorage === 'undefined') return null;
-    const empStr = sessionStorage.getItem('empresa_activa');
-    if (!empStr) return null;
     try {
-      return JSON.parse(empStr);
+      if (typeof sessionStorage !== 'undefined') {
+        const empStr = sessionStorage.getItem('empresa_activa');
+        if (empStr) return JSON.parse(empStr);
+      }
+      if (typeof localStorage !== 'undefined' && typeof sessionStorage !== 'undefined') {
+        const token = sessionStorage.getItem('access_token');
+        if (token) {
+          const lastEmpStr = localStorage.getItem('ultima_empresa_activa');
+          if (lastEmpStr) {
+            const parsed = JSON.parse(lastEmpStr);
+            sessionStorage.setItem('empresa_activa', lastEmpStr);
+            return parsed;
+          }
+        }
+      }
+      return null;
     } catch {
       return null;
     }

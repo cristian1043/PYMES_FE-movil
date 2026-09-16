@@ -24,15 +24,26 @@
 
   <ion-content [fullscreen]="true" class="perfil-background ion-padding">
     <!-- Barra Superior de Navegación -->
-    <div class="module-action-bar ion-margin-bottom">
+    <div class="module-action-bar ion-margin-bottom" style="display: flex; gap: 10px; flex-wrap: wrap;">
       <ion-button
+        *ngIf="empresaActiva"
         fill="outline"
         color="secondary"
         size="small"
         (click)="irAIndex()"
         class="back-button">
-        <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
-        Volver al Inicio
+        <ion-icon name="home-outline" slot="start"></ion-icon>
+        Volver al Inicio ({{ empresaActiva.nombre }})
+      </ion-button>
+
+      <ion-button
+        fill="outline"
+        color="primary"
+        size="small"
+        (click)="irAEmpresas()"
+        class="back-button">
+        <ion-icon name="business-outline" slot="start"></ion-icon>
+        {{ empresaActiva ? 'Cambiar Empresa' : 'Ver Empresas / Espacios' }}
       </ion-button>
     </div>
 
@@ -66,19 +77,6 @@
           <h2 class="hero-name">{{ form.nombre }} {{ form.apellido }}</h2>
           <p class="hero-username">@{{ form.username || 'usuario' }}</p>
           <div class="hero-badges">
-            <span class="badge-role" *ngIf="empresaActiva && rolNombre" [ngClass]="{
-              'role-admin': rolId === 1,
-              'role-vendedor': rolId === 2,
-              'role-almacen': rolId === 3
-            }">
-              {{ rolNombre }}
-            </span>
-            <span class="badge-empresa" *ngIf="empresaActiva">
-              🏢 {{ empresaActiva.nombre }}
-            </span>
-            <span class="badge-role" *ngIf="!empresaActiva" style="background: #e2e8f0; color: #475569;">
-              👤 Usuario Independiente
-            </span>
             <span class="badge-status-active">
               ✅ Cuenta Activa
             </span>
@@ -478,6 +476,31 @@
             <ion-icon name="refresh-outline" slot="start"></ion-icon>
             Deshacer Cambios
           </ion-button>
+
+          <!-- Enlaces de navegación rápida de regreso -->
+          <div class="bottom-nav-row ion-margin-top" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <ion-button
+              *ngIf="empresaActiva"
+              expand="block"
+              fill="clear"
+              color="secondary"
+              type="button"
+              style="flex: 1; min-width: 140px;"
+              (click)="irAIndex()">
+              <ion-icon name="home-outline" slot="start"></ion-icon>
+              Volver al Inicio
+            </ion-button>
+            <ion-button
+              expand="block"
+              fill="clear"
+              color="primary"
+              type="button"
+              style="flex: 1; min-width: 140px;"
+              (click)="irAEmpresas()">
+              <ion-icon name="business-outline" slot="start"></ion-icon>
+              {{ empresaActiva ? 'Cambiar Empresa' : 'Ver Empresas' }}
+            </ion-button>
+          </div>
         </div>
       </form>
     </div>
