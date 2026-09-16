@@ -234,13 +234,14 @@ export class SeleccionarEmpresaPage implements OnInit {
     this.guardandoEmpresa = true;
     this.cdr.detectChanges();
 
-    const payload: Empresa = {
+    const payload: any = {
       nombre: nombreTrim,
       nit: nitTrim,
       telefono: this.nuevoTelefono.trim(),
       email: this.nuevoEmail.trim(),
       direccion: this.nuevaDireccion.trim(),
-      estado: 'Activo'
+      estado: 'Activo',
+      usuario_id: this.usuario?.id ? Number(this.usuario.id) : undefined
     };
 
     this.empresasService.createEmpresa(payload)
@@ -251,10 +252,29 @@ export class SeleccionarEmpresaPage implements OnInit {
         })
       )
       .subscribe({
-        next: async (res) => {
+        next: async (res: any) => {
+          const empId = res?.id;
+          if (empId && this.usuario && this.usuario.id) {
+            this.empresasService.actualizarVinculacion({
+              usuario_id: Number(this.usuario.id),
+              empresa_id: Number(empId),
+              rol_id: 1,
+              estado: 'Activo'
+            }).subscribe({
+              next: () => {
+                this.cerrarModalNuevaEmpresa();
+                this.cargarEmpresas();
+              },
+              error: () => {
+                this.cerrarModalNuevaEmpresa();
+                this.cargarEmpresas();
+              }
+            });
+          } else {
+            this.cerrarModalNuevaEmpresa();
+            this.cargarEmpresas();
+          }
           await this.mostrarToast('¡Empresa registrada exitosamente!', 'success');
-          this.cerrarModalNuevaEmpresa();
-          this.cargarEmpresas();
         },
         error: async (err) => {
           console.error('Error al registrar empresa:', err);

@@ -72,8 +72,8 @@
       </div>
     </div>
 
-    <!-- Barra de Acción para Administradores -->
-    <div class="action-bar ion-margin-bottom" *ngIf="rolIdGlobal === 1">
+    <!-- Barra de Acción para Registrar Nueva Empresa -->
+    <div class="action-bar ion-margin-bottom">
       <ion-button
         expand="block"
         color="success"
@@ -171,7 +171,6 @@
       <h3>Sin Espacios de Trabajo</h3>
       <p>No tienes empresas asociadas activamente a tu usuario.</p>
       <ion-button
-        *ngIf="rolIdGlobal === 1"
         color="primary"
         fill="outline"
         (click)="abrirModalNuevaEmpresa()"
