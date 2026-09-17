@@ -100,7 +100,7 @@ export class LoginPage implements OnInit {
       next: async (res: any) => {
         if (res && res.exito) {
           this.pasoRecuperacion = 2;
-          this.recuperarCodigo = res.codigo || '';
+          this.recuperarCodigo = '';
           this.mensajePaso2 = `Se ha generado la solicitud para ${res.email_enmascarado || idTrim}. Revisa el código OTP recibido.`;
           this.cdr.detectChanges();
           const toast = await this.toastController.create({

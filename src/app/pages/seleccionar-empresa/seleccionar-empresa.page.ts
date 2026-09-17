@@ -59,7 +59,7 @@ export class SeleccionarEmpresaPage implements OnInit {
     }
     this.usuario = this.authService.getUsuario();
     this.empresaActivaActual = this.authService.getEmpresaActiva();
-    const esSuperAdmin = Number(this.usuario?.id) === 1 || (this.usuario?.username || '').toLowerCase() === 'admin';
+    const esSuperAdmin = Number(this.usuario?.id_rol) === 1 || (this.usuario?.rol || '').toLowerCase().includes('admin');
     this.rolIdGlobal = esSuperAdmin ? 1 : 2;
   }
 
@@ -111,7 +111,7 @@ export class SeleccionarEmpresaPage implements OnInit {
                 3: 'Almacenista'
               };
 
-              const esSuperAdmin = Number(this.usuario?.id) === 1 || (this.usuario?.username || '').toLowerCase() === 'admin';
+              const esSuperAdmin = Number(this.usuario?.id_rol) === 1 || (this.usuario?.rol || '').toLowerCase().includes('admin');
 
               empresasData.forEach((emp, index) => {
                 const vinc = vinculaciones[index] || {};
