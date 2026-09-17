@@ -476,31 +476,6 @@
             <ion-icon name="refresh-outline" slot="start"></ion-icon>
             Deshacer Cambios
           </ion-button>
-
-          <!-- Enlaces de navegación rápida de regreso -->
-          <div class="bottom-nav-row ion-margin-top" style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <ion-button
-              *ngIf="empresaActiva"
-              expand="block"
-              fill="clear"
-              color="secondary"
-              type="button"
-              style="flex: 1; min-width: 140px;"
-              (click)="irAIndex()">
-              <ion-icon name="home-outline" slot="start"></ion-icon>
-              Volver al Inicio
-            </ion-button>
-            <ion-button
-              expand="block"
-              fill="clear"
-              color="primary"
-              type="button"
-              style="flex: 1; min-width: 140px;"
-              (click)="irAEmpresas()">
-              <ion-icon name="business-outline" slot="start"></ion-icon>
-              {{ empresaActiva ? 'Cambiar Empresa' : 'Ver Empresas' }}
-            </ion-button>
-          </div>
         </div>
       </form>
     </div>

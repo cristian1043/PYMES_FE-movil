@@ -284,7 +284,7 @@
       </div>
 
       <ion-list *ngIf="!loading && compras.length > 0">
-        <ion-item *ngFor="let c of compras" class="compra-item">
+        <ion-item *ngFor="let c of compras" class="compra-item clickable-item" (click)="verDetalleCompra(c)" style="cursor: pointer;">
           <div slot="start" class="compra-icon-badge">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1e3c72" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
@@ -346,7 +346,88 @@
             No, crear otra
           </button>
           <button type="button" class="btn-modal btn-primary" (click)="responderModal(true)">
-            Sí, ver historial
+            Sí, ver compras
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DETALLE DE COMPRA (ADMIN EXCLUSIVE) -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalDetalleCompra && compraSeleccionada">
+      <div class="custom-modal-card fact-detail-card">
+        <div class="modal-card-top-bar">
+          <span class="detail-top-badge">{{ compraSeleccionada.numero || ('COMP-' + compraSeleccionada.id) }}</span>
+          <button type="button" class="close-btn-round" (click)="cerrarModalDetalleCompra()">✕</button>
+        </div>
+
+        <div class="modal-header-icon success">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#166534" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <path d="M16 10a4 4 0 0 1-8 0"></path>
+          </svg>
+        </div>
+
+        <h3 class="detail-title">Orden de Compra</h3>
+        <p class="detail-subtitle">
+          Estado: <strong>{{ compraSeleccionada.estado || 'Completada' }}</strong>
+        </p>
+
+        <div *ngIf="cargandoDetalleCompra" class="ion-text-center ion-padding">
+          <ion-spinner name="crescent" color="primary"></ion-spinner>
+          <p class="small text-muted">Cargando desglose de la orden...</p>
+        </div>
+
+        <div class="detail-grid" *ngIf="!cargandoDetalleCompra">
+          <div class="detail-row">
+            <span class="detail-label">Proveedor</span>
+            <span class="detail-value text-primary font-bold">{{ compraSeleccionada.proveedor_nombre || (compraSeleccionada.proveedor?.nombre) || ('Proveedor #' + compraSeleccionada.id_proveedor) }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="compraSeleccionada.proveedor?.nit || compraSeleccionada.proveedor?.documento">
+            <span class="detail-label">NIT / Documento</span>
+            <span class="detail-value">{{ compraSeleccionada.proveedor?.nit || compraSeleccionada.proveedor?.documento }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="compraSeleccionada.fecha">
+            <span class="detail-label">Fecha de Compra</span>
+            <span class="detail-value">{{ compraSeleccionada.fecha }}</span>
+          </div>
+
+          <!-- Ítems Comprados -->
+          <div class="items-summary-block ion-margin-top ion-margin-bottom" *ngIf="compraSeleccionada.detalles && compraSeleccionada.detalles.length > 0">
+            <span class="detail-label" style="display: block; margin-bottom: 6px;">Productos Comprados ({{ compraSeleccionada.detalles.length }})</span>
+            <div class="item-compra-mini" *ngFor="let det of compraSeleccionada.detalles" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 10px; margin-bottom: 5px; font-size: 13px;">
+              <div style="display: flex; justify-content: space-between; font-weight: 600; color: #1e293b;">
+                <span>{{ det.nombre_producto || ('Producto #' + det.id_producto) }}</span>
+                <span>x{{ det.cantidad }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; color: #64748b; font-size: 12px;">
+                <span>Unit: ${{ (det.costo_unitario || 0) | number:'1.2-2' }}</span>
+                <span style="color: #0f2b5c; font-weight: 700;">Subtotal: ${{ (det.subtotal || 0) | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-row" *ngIf="compraSeleccionada.subtotal">
+            <span class="detail-label">Subtotal</span>
+            <span class="detail-value">${{ compraSeleccionada.subtotal | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="compraSeleccionada.iva">
+            <span class="detail-label">IVA (19%)</span>
+            <span class="detail-value text-iva">+${{ compraSeleccionada.iva | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Total Invertido</span>
+            <span class="detail-value text-success font-bold font-large">${{ compraSeleccionada.total | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div class="modal-buttons ion-margin-top">
+          <button type="button" class="btn-modal btn-primary" (click)="cerrarModalDetalleCompra()">
+            Cerrar Detalle
           </button>
         </div>
       </div>

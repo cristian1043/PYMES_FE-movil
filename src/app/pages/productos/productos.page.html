@@ -211,17 +211,25 @@
                   style="display: none;"
                   (change)="onImageSelected($event)" />
                 
-                <div *ngIf="!nuevaImagen" class="photo-upload-placeholder" (click)="fileInput.click()">
-                  <ion-icon name="camera-outline" class="upload-icon"></ion-icon>
-                  <span class="upload-text">Tomar foto o subir desde la galería</span>
-                  <small class="upload-hint">Formatos JPG, PNG (Máx. 3MB)</small>
+                <div *ngIf="!nuevaImagen" class="photo-options-row" style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <button type="button" class="btn-camera-trigger" style="flex: 1; min-width: 130px; background: #1e3c72; color: #ffffff; border: none; border-radius: 12px; padding: 12px; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;" (click)="tomarFotoConCamara()">
+                    <ion-icon name="camera-outline" style="font-size: 20px;"></ion-icon>
+                    <span>Tomar con Cámara</span>
+                  </button>
+                  <button type="button" class="btn-gallery-trigger" style="flex: 1; min-width: 130px; background: #e0f2fe; color: #0369a1; border: 1.5px solid #bae6fd; border-radius: 12px; padding: 12px; font-weight: 700; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer;" (click)="fileInput.click()">
+                    <ion-icon name="images-outline" style="font-size: 20px;"></ion-icon>
+                    <span>Elegir de Galería</span>
+                  </button>
                 </div>
 
                 <div *ngIf="nuevaImagen" class="photo-preview-box">
                   <img [src]="nuevaImagen" alt="Vista previa del producto" class="photo-preview-img" />
                   <div class="photo-preview-actions">
+                    <button type="button" class="btn-photo-action change" (click)="tomarFotoConCamara()">
+                      <ion-icon name="camera-outline"></ion-icon> Tomar Otra Foto
+                    </button>
                     <button type="button" class="btn-photo-action change" (click)="fileInput.click()">
-                      <ion-icon name="camera-reverse-outline"></ion-icon> Cambiar Foto
+                      <ion-icon name="images-outline"></ion-icon> Desde Galería
                     </button>
                     <button type="button" class="btn-photo-action remove" (click)="quitarImagen()">
                       <ion-icon name="trash-outline"></ion-icon> Quitar Foto
@@ -358,17 +366,21 @@
             <ion-icon name="cube" style="font-size: 34px; color: #1e3c72;"></ion-icon>
           </div>
           <!-- Administrador puede cambiar/subir foto desde aquí -->
-          <div *ngIf="esAdmin" class="detail-photo-upload-container ion-text-center ion-margin-top ion-margin-bottom">
+          <div *ngIf="esAdmin" class="detail-photo-upload-container ion-text-center ion-margin-top ion-margin-bottom" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
             <input
               type="file"
               #detailFileInput
               accept="image/*"
               style="display: none;"
               (change)="onImageSelectedForDetail($event)" />
-            <button type="button" class="btn-detail-photo" (click)="detailFileInput.click()" [disabled]="subiendoFotoDetalle">
+            <button type="button" class="btn-detail-photo" (click)="tomarFotoConCamaraParaDetalle()" [disabled]="subiendoFotoDetalle" style="background: #1e3c72; color: #ffffff; border-radius: 10px; padding: 8px 14px; font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
               <ion-spinner *ngIf="subiendoFotoDetalle" name="crescent"></ion-spinner>
               <ion-icon *ngIf="!subiendoFotoDetalle" name="camera-outline"></ion-icon>
-              <span>{{ productoSeleccionado.imagen ? 'Cambiar Foto [Admin]' : '📷 Subir Foto [Admin]' }}</span>
+              <span>Tomar con Cámara</span>
+            </button>
+            <button type="button" class="btn-detail-photo" (click)="detailFileInput.click()" [disabled]="subiendoFotoDetalle" style="background: #e0f2fe; color: #0369a1; border: 1.5px solid #bae6fd; border-radius: 10px; padding: 8px 14px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+              <ion-icon name="images-outline"></ion-icon>
+              <span>Desde Galería</span>
             </button>
           </div>
         </div>
@@ -389,12 +401,12 @@
         </div>
 
         <!-- Banner destacado de reabastecimiento si stock bajo para Administrador -->
-        <div *ngIf="esAdmin && productoSeleccionado.stock !== undefined && productoSeleccionado.stock !== null && productoSeleccionado.stock <= 5" class="modal-restock-banner" style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; padding: 12px; margin: 12px 0; text-align: center;">
+        <div *ngIf="esAdmin && productoSeleccionado.stock !== undefined && productoSeleccionado.stock !== null && productoSeleccionado.stock <= 10" class="modal-restock-banner" style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; padding: 12px; margin: 12px 0; text-align: center;">
           <p style="margin: 0 0 6px 0; font-size: 13px; font-weight: 700; color: #b45309;">
             ⚠️ Stock Bajo: Solo quedan {{ productoSeleccionado.stock }} unidades disponibles
           </p>
           <button type="button" class="btn-restock-large" style="background: #f59e0b; color: #ffffff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; cursor: pointer;" (click)="reabastecerProducto(productoSeleccionado)">
-            📦 Reabastecer Stock / Contactar Proveedor
+            📦 Reabastecer Stock / Realizar Compra a Proveedor
           </button>
         </div>
 
@@ -433,25 +445,38 @@
           </div>
         </div>
 
-        <div class="modal-buttons ion-margin-top">
+        <div class="modal-buttons ion-margin-top" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <!-- Botón de compra con proveedor al mismo nivel si stock bajo (<= 10) -->
+          <button
+            *ngIf="esAdmin && productoSeleccionado.stock !== undefined && productoSeleccionado.stock !== null && productoSeleccionado.stock <= 10"
+            type="button"
+            class="btn-modal"
+            style="background: #f59e0b; color: #ffffff; font-weight: 700; flex: 1; min-width: 140px; border: none; border-radius: 10px; padding: 10px;"
+            (click)="reabastecerProducto(productoSeleccionado)">
+            📦 Realizar compra con proveedor
+          </button>
+
           <!-- Desactivar o Reactivar con Soft-Delete para administradores -->
           <button
             *ngIf="esAdmin && productoSeleccionado.estado !== 'Inactivo'"
             type="button"
             class="btn-modal btn-warning"
+            style="flex: 1; min-width: 120px;"
             (click)="solicitarCambiarEstado(productoSeleccionado, 'Inactivo')">
-            ⚠️ Desactivar Producto
+            ⚠️ Desactivar
           </button>
           <button
             *ngIf="esAdmin && productoSeleccionado.estado === 'Inactivo'"
             type="button"
             class="btn-modal btn-success-action"
+            style="flex: 1; min-width: 120px;"
             (click)="solicitarCambiarEstado(productoSeleccionado, 'Activo')">
-            ✅ Reactivar Producto
+            ✅ Reactivar
           </button>
           <button
             type="button"
             class="btn-modal btn-secondary"
+            style="flex: 1; min-width: 80px;"
             (click)="cerrarModalDetalle()">
             Cerrar
           </button>

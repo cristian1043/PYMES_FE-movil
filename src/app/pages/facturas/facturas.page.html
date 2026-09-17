@@ -200,11 +200,12 @@
               <label class="form-label">Método de Pago *</label>
               <select
                 class="custom-select"
-                [(ngModel)]="metodoPago"
+                [ngModel]="metodoPagoSeleccionadoId"
+                (ngModelChange)="onMetodoPagoChange($event)"
                 name="metodoPago">
-                <option value="Efectivo">Efectivo</option>
-                <option value="Transferencia">Transferencia Bancaria / Nequi / Daviplata</option>
-                <option value="Tarjeta">Tarjeta de Crédito / Débito</option>
+                <option *ngFor="let m of metodosPagoList" [value]="m.id">
+                  {{ m.nombre }}{{ m.banco ? ' (' + m.banco + (m.numero_cuenta ? ' - ' + m.numero_cuenta : '') + ')' : '' }}{{ m.pasarela && m.pasarela !== 'ninguna' ? ' 💳 ' + m.pasarela.toUpperCase() : '' }}
+                </option>
               </select>
             </div>
 

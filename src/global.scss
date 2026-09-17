@@ -399,7 +399,7 @@ ion-content {
   }
 
   .drawer-footer {
-    padding: 16px;
+    padding: 16px 16px calc(16px + max(env(safe-area-inset-bottom, 0px), 36px)) 16px;
     border-top: 1px solid #e2e8f0;
 
     .btn-logout {

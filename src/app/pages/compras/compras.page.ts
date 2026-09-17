@@ -62,6 +62,11 @@ export class ComprasPage implements OnInit, OnDestroy {
   modalTitulo = '';
   modalMensaje = '';
 
+  // Modal de Detalle de Compra (Admin)
+  compraSeleccionada: any = null;
+  mostrarModalDetalleCompra = false;
+  cargandoDetalleCompra = false;
+
   private queryParamsSub?: Subscription;
 
   constructor(
@@ -467,5 +472,52 @@ export class ComprasPage implements OnInit, OnDestroy {
     this.subtotalNeto = 0;
     this.iva = 0;
     this.totalCompra = 0;
+  }
+
+  async verDetalleCompra(c: Compra): Promise<void> {
+    const rol = this.usuario?.rol || this.usuario?.rol_nombre || (this.authService.getRolId() === 1 ? 'Administrador' : '');
+    const esAdmin = rol === 'Administrador' || this.authService.getRolId() === 1;
+
+    if (!esAdmin) {
+      const toast = await this.toastController.create({
+        message: '🔒 Acceso Restringido: El detalle de órdenes de compra está reservado para el Administrador.',
+        duration: 3500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
+    this.compraSeleccionada = { ...c };
+    this.mostrarModalDetalleCompra = true;
+    this.cargandoDetalleCompra = true;
+    this.cdr.detectChanges();
+
+    if (c.id) {
+      this.comprasService.getCompraById(c.id).subscribe({
+        next: (fullCompra: any) => {
+          this.cargandoDetalleCompra = false;
+          if (fullCompra) {
+            this.compraSeleccionada = fullCompra;
+          }
+          this.cdr.detectChanges();
+        },
+        error: (err: any) => {
+          this.cargandoDetalleCompra = false;
+          console.error('Error al cargar detalle extendido de compra:', err);
+          this.cdr.detectChanges();
+        }
+      });
+    } else {
+      this.cargandoDetalleCompra = false;
+    }
+  }
+
+  cerrarModalDetalleCompra(): void {
+    this.mostrarModalDetalleCompra = false;
+    this.compraSeleccionada = null;
+    this.cargandoDetalleCompra = false;
+    this.cdr.detectChanges();
   }
 }

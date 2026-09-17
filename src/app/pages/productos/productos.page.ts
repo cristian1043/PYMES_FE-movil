@@ -7,6 +7,7 @@ import { ProveedoresService, Proveedor } from '../../services/proveedores.servic
 import { MenuStateService } from '../../services/menu-state.service';
 import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 @Component({
   selector: 'app-productos',
@@ -133,21 +134,23 @@ export class ProductosPage implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  reabastecerProducto(prod: Producto, event?: Event): void {
+  reabastecerProducto(prod: Producto | null, event?: Event): void {
     if (event) {
       event.stopPropagation();
     }
+    if (!prod) return;
     if (this.mostrarModalDetalle) {
       this.cerrarModalDetalle();
     }
     const provId = prod.id_proveedor ? prod.id_proveedor : '';
-    this.router.navigate(['/proveedores'], {
+    const prodId = prod.id ? prod.id : '';
+    const prodNom = prod.nombre ? encodeURIComponent(prod.nombre) : '';
+    this.router.navigate(['/compras'], {
       queryParams: {
-        tab: 'listado',
+        tab: 'nueva',
         proveedor_id: provId,
-        producto_id: prod.id,
-        producto_nombre: prod.nombre,
-        reabastecer: 'true'
+        producto_id: prodId,
+        producto_nombre: prodNom
       }
     });
   }
@@ -234,6 +237,66 @@ export class ProductosPage implements OnInit, OnDestroy {
     this.nuevaImagen = null;
     this.cdr.detectChanges();
   }
+
+  async tomarFotoConCamara(): Promise<void> {
+    try {
+      const image = await Camera.getPhoto({
+        quality: 85,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera
+      });
+      if (image && image.dataUrl) {
+        this.nuevaImagen = image.dataUrl;
+        this.cdr.detectChanges();
+        this.mostrarToastSimple('Foto capturada con la cámara', 'success');
+      }
+    } catch (err) {
+      console.warn('Cámara cancelada o no disponible:', err);
+    }
+  }
+
+  async tomarFotoConCamaraParaDetalle(): Promise<void> {
+    if (!this.productoSeleccionado || !this.productoSeleccionado.id || !this.esAdmin) return;
+    try {
+      const image = await Camera.getPhoto({
+        quality: 85,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera
+      });
+      if (image && image.dataUrl) {
+        const base64Img = image.dataUrl;
+        this.subiendoFotoDetalle = true;
+        this.cdr.detectChanges();
+        this.productosService.updateProducto(this.productoSeleccionado.id, { imagen: base64Img }).pipe(
+          finalize(() => {
+            this.subiendoFotoDetalle = false;
+            this.cdr.detectChanges();
+          })
+        ).subscribe({
+          next: () => {
+            if (this.productoSeleccionado) {
+              this.productoSeleccionado.imagen = base64Img;
+            }
+            const idx = this.productos.findIndex(p => p.id === this.productoSeleccionado?.id);
+            if (idx !== -1) {
+              this.productos[idx].imagen = base64Img;
+              this.filtrarProductos();
+            }
+            this.mostrarToastSimple('Foto del producto actualizada con éxito desde la cámara', 'success');
+          },
+          error: (err) => {
+            console.error('Error al actualizar foto con cámara:', err);
+            this.mostrarToastSimple('No se pudo actualizar la foto', 'danger');
+          }
+        });
+      }
+    } catch (err) {
+      console.warn('Cámara cancelada o no disponible:', err);
+    }
+  }
+
 
   onImageSelectedForDetail(event: any): void {
     if (!this.productoSeleccionado || !this.productoSeleccionado.id || !this.esAdmin) return;

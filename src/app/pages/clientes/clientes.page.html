@@ -169,99 +169,6 @@
                 placeholder="ej: Calle 45 # 12 - 34" />
             </div>
 
-            <!-- SECCIÓN DATOS DE TARJETA BANCARIA -->
-            <div class="card-payment-section ion-margin-top">
-              <div class="section-badge-header">
-                <ion-icon name="card-outline"></ion-icon>
-                <span>Método de Pago / Tarjeta Bancaria</span>
-              </div>
-
-              <div class="form-group ion-margin-top">
-                <label class="form-label">¿Registrar Tarjeta para este Cliente?</label>
-                <select class="custom-select" [(ngModel)]="tieneTarjetaCliente" name="tieneTarjetaCliente">
-                  <option value="No">No - Sin tarjeta bancaria</option>
-                  <option value="Sí">Sí - Registrar tarjeta</option>
-                </select>
-              </div>
-
-              <div *ngIf="tieneTarjetaCliente === 'Sí'" class="card-details-box">
-                <div class="row-two-col">
-                  <div class="form-group">
-                    <label class="form-label">Banco Emisor</label>
-                    <input
-                      type="text"
-                      class="custom-input"
-                      [(ngModel)]="bancoTarjetaCliente"
-                      name="bancoTarjetaCliente"
-                      placeholder="ej: Bancolombia" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">Franquicia</label>
-                    <select class="custom-select" [(ngModel)]="franquiciaTarjetaCliente" name="franquiciaTarjetaCliente">
-                      <option value="VISA">VISA</option>
-                      <option value="Mastercard">Mastercard</option>
-                      <option value="American Express">American Express</option>
-                      <option value="Diners Club">Diners Club</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Número de Tarjeta (16 dígitos)</label>
-                  <input
-                    type="text"
-                    class="custom-input"
-                    [(ngModel)]="numeroTarjetaCliente"
-                    name="numeroTarjetaCliente"
-                    placeholder="4500 0000 0000 1234"
-                    maxlength="19" />
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Titular de la Tarjeta</label>
-                  <input
-                    type="text"
-                    class="custom-input"
-                    [(ngModel)]="titularTarjetaCliente"
-                    name="titularTarjetaCliente"
-                    placeholder="Nombre tal como aparece en el plástico" />
-                </div>
-
-                <div class="row-two-col">
-                  <div class="form-group">
-                    <label class="form-label">Fecha Expiración</label>
-                    <input
-                      type="text"
-                      class="custom-input"
-                      [(ngModel)]="fechaExpiracionCliente"
-                      name="fechaExpiracionCliente"
-                      placeholder="MM/AA (ej: 12/28)"
-                      maxlength="5" />
-                  </div>
-
-                  <div class="form-group">
-                    <label class="form-label">CVC (Seguridad)</label>
-                    <input
-                      type="password"
-                      class="custom-input"
-                      [(ngModel)]="cvcTarjetaCliente"
-                      name="cvcTarjetaCliente"
-                      placeholder="123"
-                      maxlength="4" />
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Tipo de Cuenta / Tarjeta</label>
-                  <select class="custom-select" [(ngModel)]="tipoTarjetaCliente" name="tipoTarjetaCliente">
-                    <option value="Crédito">Tarjeta de Crédito</option>
-                    <option value="Débito">Tarjeta Débito</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
             <div class="form-actions ion-margin-top">
               <ion-button
                 expand="block"
@@ -304,7 +211,7 @@
       <!-- Tarjetas Táctiles Completas de Clientes -->
       <div class="clients-cards-list" *ngIf="!loading && clientesFiltrados.length > 0">
         <div
-          *ngFor="let cli of clientesFiltrados"
+          *ngFor="let cli of clientesFiltrados; let idx = index"
           class="client-card"
           (click)="verDetalleCliente(cli)">
 
@@ -321,7 +228,7 @@
                 </span>
               </div>
             </div>
-            <span class="id-badge">#{{ cli.id }}</span>
+            <span class="id-badge">#{{ (currentPage - 1) * 10 + idx + 1 }}</span>
           </div>
 
           <!-- Información de Contacto -->
@@ -338,28 +245,6 @@
               <ion-icon name="location-outline"></ion-icon>
               <span>{{ cli.direccion }}</span>
             </div>
-          </div>
-
-          <!-- Método de Pago / Tarjeta -->
-          <div class="payment-method-row">
-            <span class="label-method">Método de Pago:</span>
-            <div *ngIf="cli.tiene_tarjeta === 'Sí'" class="card-status-container">
-              <!-- Admin: Botón para ver tarjeta confidencial -->
-              <button
-                type="button"
-                *ngIf="rolId === 1"
-                class="btn-card-confidential"
-                (click)="verTarjetaConfidencial(cli, $event)">
-                💳 {{ cli.franquicia_tarjeta || 'Tarjeta' }} ({{ cli.banco_tarjeta || 'Banco' }}) ➔
-              </button>
-              <!-- Vendedor: Badge informativo protegido -->
-              <span *ngIf="rolId !== 1" class="badge-card-protected">
-                🔒 Tarjeta Registrada (Protegida por Admin)
-              </span>
-            </div>
-            <span *ngIf="cli.tiene_tarjeta !== 'Sí'" class="text-no-card">
-              Sin tarjeta registrada
-            </span>
           </div>
 
           <!-- Botones de Acción Táctil -->
@@ -460,88 +345,12 @@
           <p>{{ clienteSeleccionado.direccion || 'Sin registrar' }}</p>
         </div>
 
-        <div class="detail-group">
-          <label>Método de Pago / Tarjeta</label>
-          <div *ngIf="clienteSeleccionado.tiene_tarjeta === 'Sí'">
-            <button
-              type="button"
-              *ngIf="rolId === 1"
-              class="btn-card-confidential ion-margin-top"
-              (click)="verTarjetaConfidencial(clienteSeleccionado, $event)">
-              💳 Ver Tarjeta Confidencial ({{ clienteSeleccionado.banco_tarjeta }}) ➔
-            </button>
-            <span *ngIf="rolId !== 1" class="badge-card-protected">
-              🔒 Tarjeta Registrada (Protegida por Admin)
-            </span>
-          </div>
-          <p *ngIf="clienteSeleccionado.tiene_tarjeta !== 'Sí'">Sin tarjeta registrada.</p>
-        </div>
       </div>
       <div class="modal-sheet-footer">
         <ion-button *ngIf="rolId === 1" fill="outline" color="primary" (click)="abrirModalEdicion(clienteSeleccionado)">
           ✏️ Editar Datos
         </ion-button>
         <ion-button color="medium" (click)="cerrarModalDetalle()">
-          Cerrar
-        </ion-button>
-      </div>
-    </div>
-
-    <!-- MODAL 2: TARJETA CONFIDENCIAL (ADMIN ONLY) -->
-    <div class="custom-modal-backdrop" *ngIf="mostrarModalTarjeta" (click)="cerrarModalTarjeta()"></div>
-    <div class="custom-modal-sheet" *ngIf="mostrarModalTarjeta && clienteSeleccionado">
-      <div class="modal-sheet-header bg-dark">
-        <h4>🔒 Tarjeta Confidencial del Cliente</h4>
-        <button class="modal-close-btn" (click)="cerrarModalTarjeta()">✕</button>
-      </div>
-      <div class="modal-sheet-body">
-        <div class="confidential-alert">
-          <strong>⚠️ Confidencialidad Administrativa:</strong> Esta información bancaria es accesible exclusivamente por Administradores.
-        </div>
-
-        <!-- Maqueta Visual de Tarjeta de Crédito -->
-        <div class="credit-card-mockup">
-          <div class="card-bank-row">
-            <span class="card-bank-name">{{ clienteSeleccionado.banco_tarjeta || 'Banco Emisor' }}</span>
-            <span class="card-franchise-badge">{{ clienteSeleccionado.franquicia_tarjeta || 'VISA' }}</span>
-          </div>
-
-          <div class="card-number-row">
-            <span class="card-number">
-              {{ clienteSeleccionado.numero_tarjeta || ('**** **** **** ' + (clienteSeleccionado.ultimos_digitos_tarjeta || '4321')) }}
-            </span>
-          </div>
-
-          <div class="card-bottom-row">
-            <div class="card-holder-box">
-              <span class="card-lbl">Titular</span>
-              <span class="card-holder-name">
-                {{ clienteSeleccionado.titular_tarjeta || (clienteSeleccionado.nombre + ' ' + (clienteSeleccionado.apellido || '')) }}
-              </span>
-            </div>
-            <div class="card-expiry-box">
-              <span class="card-lbl">Expira</span>
-              <span class="card-expiry-val">{{ clienteSeleccionado.fecha_expiracion || '12/28' }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card-security-meta ion-margin-top">
-          <div class="meta-row">
-            <span class="meta-label">Código de Seguridad (CVC):</span>
-            <span class="meta-value cvc-code">{{ clienteSeleccionado.cvc_tarjeta || '***' }}</span>
-          </div>
-          <div class="meta-row">
-            <span class="meta-label">Tipo de Tarjeta:</span>
-            <span class="meta-value">{{ clienteSeleccionado.tipo_tarjeta || 'Crédito' }}</span>
-          </div>
-        </div>
-      </div>
-      <div class="modal-sheet-footer">
-        <ion-button fill="outline" color="warning" (click)="cerrarModalTarjeta(); abrirModalEdicion(clienteSeleccionado)">
-          ✏️ Editar Tarjeta
-        </ion-button>
-        <ion-button color="medium" (click)="cerrarModalTarjeta()">
           Cerrar
         </ion-button>
       </div>
@@ -595,56 +404,6 @@
         <div class="form-group">
           <label class="form-label">Dirección</label>
           <input type="text" class="custom-input" [(ngModel)]="clienteEditando.direccion" />
-        </div>
-
-        <!-- Edición de Tarjeta -->
-        <div class="card-payment-section ion-margin-top">
-          <div class="section-badge-header">
-            <ion-icon name="card-outline"></ion-icon>
-            <span>Información Bancaria</span>
-          </div>
-
-          <div class="form-group ion-margin-top">
-            <label class="form-label">¿Tiene Tarjeta Registrada?</label>
-            <select class="custom-select" [(ngModel)]="clienteEditando.tiene_tarjeta">
-              <option value="No">No</option>
-              <option value="Sí">Sí</option>
-            </select>
-          </div>
-
-          <div *ngIf="clienteEditando.tiene_tarjeta === 'Sí'">
-            <div class="row-two-col">
-              <div class="form-group">
-                <label class="form-label">Banco</label>
-                <input type="text" class="custom-input" [(ngModel)]="clienteEditando.banco_tarjeta" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Franquicia</label>
-                <select class="custom-select" [(ngModel)]="clienteEditando.franquicia_tarjeta">
-                  <option value="VISA">VISA</option>
-                  <option value="Mastercard">Mastercard</option>
-                  <option value="American Express">American Express</option>
-                  <option value="Diners Club">Diners Club</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Número de Tarjeta</label>
-              <input type="text" class="custom-input" [(ngModel)]="clienteEditando.numero_tarjeta" />
-            </div>
-
-            <div class="row-two-col">
-              <div class="form-group">
-                <label class="form-label">Expiración (MM/AA)</label>
-                <input type="text" class="custom-input" [(ngModel)]="clienteEditando.fecha_expiracion" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">CVC</label>
-                <input type="password" class="custom-input" [(ngModel)]="clienteEditando.cvc_tarjeta" />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       <div class="modal-sheet-footer">

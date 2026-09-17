@@ -117,7 +117,7 @@
             <ion-icon name="alert-circle-outline"></ion-icon>
           </div>
           <div class="kpi-data">
-            <p class="kpi-title">Stock Bajo (≤ 2.500)</p>
+            <p class="kpi-title">Stock Bajo (≤ 10)</p>
             <h3 class="kpi-value">{{ stockBajoCount }} ítems</h3>
             <span class="kpi-sub">Requiere compra</span>
           </div>
@@ -131,39 +131,6 @@
             <p class="kpi-title">IVA Recaudado (19%)</p>
             <h3 class="kpi-value">${{ ivaTotal | number:'1.2-2' }}</h3>
             <span class="kpi-sub">Prom/Venta: ${{ promedioVenta | number:'1.2-2' }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Accesos Rápidos a Reportes -->
-      <div class="shortcuts-section ion-margin-top">
-        <h4 class="section-title">Explorar Reportes Detallados</h4>
-        <div class="shortcut-cards">
-          <div class="shortcut-card" (click)="cambiarTab('ventas')">
-            <div class="shortcut-icon bg-blue">💰</div>
-            <div class="shortcut-info">
-              <strong>Reporte Financiero de Ventas</strong>
-              <p>Facturas emitidas, subtotales, IVA y estados</p>
-            </div>
-            <ion-icon name="chevron-forward-outline"></ion-icon>
-          </div>
-
-          <div class="shortcut-card" (click)="cambiarTab('inventario')">
-            <div class="shortcut-icon bg-green">📦</div>
-            <div class="shortcut-info">
-              <strong>Reporte Operativo de Inventario</strong>
-              <p>Catálogo de stock, existencias críticas y valoración</p>
-            </div>
-            <ion-icon name="chevron-forward-outline"></ion-icon>
-          </div>
-
-          <div class="shortcut-card" (click)="cambiarTab('clientes')">
-            <div class="shortcut-icon bg-purple">👥</div>
-            <div class="shortcut-info">
-              <strong>Reporte Comercial de Clientes</strong>
-              <p>Ranking de compradores, volumen de compras y contactos</p>
-            </div>
-            <ion-icon name="chevron-forward-outline"></ion-icon>
           </div>
         </div>
       </div>
@@ -204,7 +171,7 @@
       </div>
 
       <div class="report-cards-list" *ngIf="facturasFiltradas.length > 0">
-        <div class="report-item-card" *ngFor="let f of facturasPaginadas">
+        <div class="report-item-card clickable-card" *ngFor="let f of facturasPaginadas" (click)="verFactura(f)" style="cursor: pointer;">
           <div class="item-card-header">
             <span class="badge-code">{{ f.numero || ('FAC-' + f.id) }}</span>
             <span class="badge-status" [ngClass]="f.estado === 'Cancelada' ? 'status-danger' : 'status-success'">
@@ -218,6 +185,9 @@
               <span>IVA: ${{ f.iva | number:'1.2-2' }}</span>
               <span class="highlight-total">Total: ${{ f.total | number:'1.2-2' }}</span>
             </div>
+            <p *ngIf="rolId === 1 || rolId === 2" style="margin: 6px 0 0 0; font-size: 12px; color: #1e3c72; font-weight: 600;">
+              🔍 Toca para ver factura completa ➔
+            </p>
           </div>
         </div>
       </div>
@@ -257,7 +227,7 @@
             <strong>{{ inventarioResumen?.total_productos || totalProductos }}</strong>
           </div>
           <div class="strip-item">
-            <span>Stock Bajo (≤ 2.500):</span>
+            <span>Stock Bajo (≤ 10):</span>
             <strong class="text-danger">{{ inventarioResumen?.productos_bajo_stock ?? stockBajoCount }}</strong>
           </div>
         </div>
@@ -288,10 +258,7 @@
             <strong class="item-name">{{ p.nombre }}</strong>
             <div class="details-row">
               <span>Precio Unit: ${{ p.precio | number:'1.2-2' }}</span>
-              <span class="highlight-total">Valor: ${{ (p.precio * p.stock) | number:'1.2-2' }}</span>
-            </div>
-            <div class="click-hint-row">
-              <small>🔍 Toca para ver ficha completa</small>
+              <span class="highlight-total">Stock: {{ p.stock }} {{ p.unidad_medida || 'UND' }}</span>
             </div>
           </div>
         </div>
@@ -338,7 +305,7 @@
       </div>
 
       <div class="report-cards-list" *ngIf="clientesFiltrados.length > 0">
-        <div class="report-item-card" *ngFor="let c of clientesPaginados; let idx = index">
+        <div class="report-item-card clickable-card" *ngFor="let c of clientesPaginados; let idx = index" (click)="verDetalleClienteRanking(c)" style="cursor: pointer;">
           <div class="item-card-header">
             <span class="badge-rank">#{{ (pageClientes - 1) * perPageClientes + idx + 1 }}</span>
             <strong class="item-name">{{ c.nombre }}</strong>
@@ -350,6 +317,9 @@
               <span>Total Comprado:</span>
               <strong class="highlight-total">${{ c.total_comprado | number:'1.2-2' }}</strong>
             </div>
+            <p style="margin: 6px 0 0 0; font-size: 12px; color: #1e3c72; font-weight: 600;">
+              👤 Toca para ver ficha y contactar ➔
+            </p>
           </div>
         </div>
       </div>
@@ -448,6 +418,136 @@
           </button>
           <button type="button" class="btn-modal btn-primary" (click)="irAListaProductos()">
             📦 Ir a Productos
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DETALLE DE FACTURA DESDE REPORTES (ADMIN Y VENDEDOR) -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalFactura && facturaSeleccionada">
+      <div class="custom-modal-card fact-detail-card">
+        <div class="modal-card-top-bar">
+          <span class="detail-top-badge">{{ facturaSeleccionada.numero || ('FAC-' + facturaSeleccionada.id) }}</span>
+          <button type="button" class="close-btn-round" (click)="cerrarModalFactura()">✕</button>
+        </div>
+
+        <div class="modal-header-icon success">
+          <ion-icon name="receipt-outline" style="font-size: 34px; color: #166534;"></ion-icon>
+        </div>
+
+        <h3 class="detail-title">Factura de Venta</h3>
+        <p class="detail-subtitle">Estado: <strong>{{ facturaSeleccionada.estado || 'Emitida' }}</strong></p>
+
+        <div class="detail-grid">
+          <div class="detail-row">
+            <span class="detail-label">Cliente</span>
+            <span class="detail-value text-primary font-bold">{{ facturaSeleccionada.cliente_nombre || ('Cliente #' + facturaSeleccionada.id_cliente) }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="facturaSeleccionada.cliente_documento || facturaSeleccionada.documento">
+            <span class="detail-label">Identificación Cliente</span>
+            <span class="detail-value">{{ facturaSeleccionada.cliente_tipo_documento || 'CC' }}: {{ facturaSeleccionada.cliente_documento || facturaSeleccionada.documento }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="facturaSeleccionada.fecha">
+            <span class="detail-label">Fecha</span>
+            <span class="detail-value">{{ facturaSeleccionada.fecha }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="facturaSeleccionada.subtotal">
+            <span class="detail-label">Subtotal</span>
+            <span class="detail-value">${{ facturaSeleccionada.subtotal | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="facturaSeleccionada.iva">
+            <span class="detail-label">IVA (19%)</span>
+            <span class="detail-value text-iva">+${{ facturaSeleccionada.iva | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Total Factura</span>
+            <span class="detail-value text-success font-bold font-large">${{ facturaSeleccionada.total | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div class="modal-buttons ion-margin-top">
+          <button type="button" class="btn-modal btn-primary" (click)="cerrarModalFactura()">
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL FICHA Y CONTACTO DE CLIENTE DESDE RANKING DE REPORTES -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalClienteRanking && clienteSeleccionadoRanking">
+      <div class="custom-modal-card prod-detail-card">
+        <div class="modal-card-top-bar">
+          <span class="detail-top-badge">Cliente PYMEsoft</span>
+          <button type="button" class="close-btn-round" (click)="cerrarModalClienteRanking()">✕</button>
+        </div>
+
+        <div class="modal-header-icon primary" style="background: rgba(30, 60, 114, 0.1); width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+          <ion-icon name="person-outline" style="font-size: 34px; color: #1e3c72;"></ion-icon>
+        </div>
+
+        <h3 class="detail-title">{{ clienteSeleccionadoRanking.nombre }}</h3>
+        <p class="detail-subtitle">
+          {{ clienteSeleccionadoRanking.tipo_documento || 'CC' }}: {{ clienteSeleccionadoRanking.documento || 'Sin registrar' }}
+        </p>
+
+        <div class="detail-grid">
+          <div class="detail-row">
+            <span class="detail-label">Total Comprado</span>
+            <span class="detail-value text-success font-bold font-large">${{ clienteSeleccionadoRanking.total_comprado | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Facturas Emitidas</span>
+            <span class="detail-value font-bold">{{ clienteSeleccionadoRanking.num_facturas }} compras</span>
+          </div>
+
+          <div class="detail-row" *ngIf="clienteSeleccionadoRanking.direccion">
+            <span class="detail-label">Sede / Dirección</span>
+            <span class="detail-value">{{ clienteSeleccionadoRanking.direccion }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="clienteSeleccionadoRanking.telefono">
+            <span class="detail-label">Teléfono</span>
+            <span class="detail-value">{{ clienteSeleccionadoRanking.telefono }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="clienteSeleccionadoRanking.email">
+            <span class="detail-label">Correo Electrónico</span>
+            <span class="detail-value">{{ clienteSeleccionadoRanking.email }}</span>
+          </div>
+        </div>
+
+        <!-- Botones de Contacto Directo -->
+        <div class="client-contact-actions ion-margin-top" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <a
+            *ngIf="clienteSeleccionadoRanking.telefono && clienteSeleccionadoRanking.telefono !== 'Sin teléfono'"
+            [href]="'tel:' + clienteSeleccionadoRanking.telefono"
+            style="flex: 1; min-width: 90px; text-decoration: none; background: #16a34a; color: white; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+            📞 Llamar
+          </a>
+          <a
+            *ngIf="clienteSeleccionadoRanking.telefono && clienteSeleccionadoRanking.telefono !== 'Sin teléfono'"
+            [href]="'https://wa.me/57' + clienteSeleccionadoRanking.telefono"
+            target="_blank"
+            style="flex: 1; min-width: 100px; text-decoration: none; background: #25d366; color: white; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+            💬 WhatsApp
+          </a>
+          <a
+            *ngIf="clienteSeleccionadoRanking.email && clienteSeleccionadoRanking.email !== 'Sin correo'"
+            [href]="'mailto:' + clienteSeleccionadoRanking.email"
+            style="flex: 1; min-width: 90px; text-decoration: none; background: #2563eb; color: white; padding: 10px; border-radius: 10px; font-weight: 700; font-size: 13px; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">
+            ✉️ Correo
+          </a>
+        </div>
+
+        <div class="modal-buttons ion-margin-top">
+          <button type="button" class="btn-modal btn-secondary" (click)="cerrarModalClienteRanking()">
+            Cerrar
           </button>
         </div>
       </div>

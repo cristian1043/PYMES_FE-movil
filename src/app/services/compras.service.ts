@@ -61,4 +61,9 @@ export class ComprasService {
     }
     return this.http.post<Compra>(`${this.apiUrl}/`, data, { headers });
   }
+
+  getCompraById(id: number): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<any>(`${this.apiUrl}/${id}`, { headers });
+  }
 }

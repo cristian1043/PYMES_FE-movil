@@ -36,20 +36,11 @@ export class ClientesPage implements OnInit, OnDestroy {
   telefonoCliente = '';
   emailCliente = '';
   direccionCliente = '';
-  tieneTarjetaCliente = 'No';
-  bancoTarjetaCliente = '';
-  franquiciaTarjetaCliente = 'VISA';
-  numeroTarjetaCliente = '';
-  titularTarjetaCliente = '';
-  fechaExpiracionCliente = '';
-  cvcTarjetaCliente = '';
-  tipoTarjetaCliente = 'Crédito';
   guardando = false;
 
   // Modales
   clienteSeleccionado: Cliente | null = null;
   mostrarModalDetalle = false;
-  mostrarModalTarjeta = false;
 
   // Edición
   mostrarModalEdicion = false;
@@ -251,30 +242,6 @@ export class ClientesPage implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
-  async verTarjetaConfidencial(cliente: Cliente, event?: Event): Promise<void> {
-    if (event) event.stopPropagation();
-
-    if (this.rolId !== 1) {
-      const toast = await this.toastController.create({
-        message: '🔒 Acceso Restringido: Los datos bancarios confidenciales son exclusivos del Administrador.',
-        duration: 3500,
-        color: 'warning',
-        position: 'top'
-      });
-      await toast.present();
-      return;
-    }
-
-    this.clienteSeleccionado = cliente;
-    this.mostrarModalTarjeta = true;
-    this.cdr.detectChanges();
-  }
-
-  cerrarModalTarjeta(): void {
-    this.mostrarModalTarjeta = false;
-    this.cdr.detectChanges();
-  }
-
   abrirModalEdicion(cliente: Cliente, event?: Event): void {
     if (event) event.stopPropagation();
     if (this.rolId !== 1) {
@@ -289,15 +256,7 @@ export class ClientesPage implements OnInit, OnDestroy {
       documento: cliente.documento || '',
       telefono: cliente.telefono || '',
       email: cliente.email || '',
-      direccion: cliente.direccion || '',
-      tiene_tarjeta: cliente.tiene_tarjeta || 'No',
-      tipo_tarjeta: cliente.tipo_tarjeta || 'Crédito',
-      banco_tarjeta: cliente.banco_tarjeta || '',
-      franquicia_tarjeta: cliente.franquicia_tarjeta || 'VISA',
-      numero_tarjeta: cliente.numero_tarjeta || '',
-      titular_tarjeta: cliente.titular_tarjeta || '',
-      fecha_expiracion: cliente.fecha_expiracion || '',
-      cvc_tarjeta: cliente.cvc_tarjeta || ''
+      direccion: cliente.direccion || ''
     };
     this.mostrarModalEdicion = true;
     this.cdr.detectChanges();
@@ -424,15 +383,7 @@ export class ClientesPage implements OnInit, OnDestroy {
       documento: this.documentoCliente.trim(),
       telefono: this.telefonoCliente.trim(),
       email: this.emailCliente.trim(),
-      direccion: this.direccionCliente.trim(),
-      tiene_tarjeta: this.tieneTarjetaCliente,
-      tipo_tarjeta: this.tieneTarjetaCliente === 'Sí' ? this.tipoTarjetaCliente : undefined,
-      banco_tarjeta: this.tieneTarjetaCliente === 'Sí' ? this.bancoTarjetaCliente.trim() : undefined,
-      franquicia_tarjeta: this.tieneTarjetaCliente === 'Sí' ? this.franquiciaTarjetaCliente : undefined,
-      numero_tarjeta: this.tieneTarjetaCliente === 'Sí' ? this.numeroTarjetaCliente.trim() : undefined,
-      titular_tarjeta: this.tieneTarjetaCliente === 'Sí' ? (this.titularTarjetaCliente.trim() || `${this.nombreCliente} ${this.apellidoCliente}`.trim()) : undefined,
-      fecha_expiracion: this.tieneTarjetaCliente === 'Sí' ? this.fechaExpiracionCliente.trim() : undefined,
-      cvc_tarjeta: this.tieneTarjetaCliente === 'Sí' ? this.cvcTarjetaCliente.trim() : undefined
+      direccion: this.direccionCliente.trim()
     };
 
     this.clientesService.createCliente(nuevoPayload)
@@ -477,14 +428,6 @@ export class ClientesPage implements OnInit, OnDestroy {
     this.telefonoCliente = '';
     this.emailCliente = '';
     this.direccionCliente = '';
-    this.tieneTarjetaCliente = 'No';
-    this.bancoTarjetaCliente = '';
-    this.franquiciaTarjetaCliente = 'VISA';
-    this.numeroTarjetaCliente = '';
-    this.titularTarjetaCliente = '';
-    this.fechaExpiracionCliente = '';
-    this.cvcTarjetaCliente = '';
-    this.tipoTarjetaCliente = 'Crédito';
   }
 
   private async mostrarToast(mensaje: string, color: string): Promise<void> {

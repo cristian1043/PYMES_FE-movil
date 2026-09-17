@@ -4,6 +4,7 @@ import { Location } from '@angular/common';
 import { Platform } from '@ionic/angular';
 import { AuthService } from './services/auth.service';
 import { MenuStateService } from './services/menu-state.service';
+import { CapacitorUpdater } from '@capgo/capacitor-updater';
 
 interface MenuItem {
   title: string;
@@ -73,6 +74,12 @@ export class AppComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    if (this.platform.is('capacitor')) {
+      CapacitorUpdater.notifyAppReady().catch(err => {
+        console.warn('CapacitorUpdater notifyAppReady error:', err);
+      });
+    }
+
     this.authService.currentUser$.subscribe(user => {
       this.usuario = user || this.authService.getUsuario();
       this.actualizarMenu();

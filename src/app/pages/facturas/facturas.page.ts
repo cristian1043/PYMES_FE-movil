@@ -4,6 +4,7 @@ import { ToastController } from '@ionic/angular/lazy';
 import { AuthService } from '../../services/auth.service';
 import { FacturasService, Factura } from '../../services/facturas.service';
 import { ClientesService, Cliente } from '../../services/clientes.service';
+import { MetodosPagoService, MetodoPago } from '../../services/metodos-pago.service';
 import { MenuStateService } from '../../services/menu-state.service';
 import { Subscription } from 'rxjs';
 
@@ -36,6 +37,8 @@ export class FacturasPage implements OnInit, OnDestroy {
 
   montoTotal: number | null = null;
   metodoPago = 'Efectivo';
+  metodoPagoSeleccionadoId: number = 1;
+  metodosPagoList: MetodoPago[] = [];
   guardando = false;
 
   // Modal detalle de factura
@@ -53,6 +56,7 @@ export class FacturasPage implements OnInit, OnDestroy {
     private authService: AuthService,
     private facturasService: FacturasService,
     private clientesService: ClientesService,
+    private metodosPagoService: MetodosPagoService,
     private router: Router,
     private route: ActivatedRoute,
     private menuStateService: MenuStateService,
@@ -62,6 +66,7 @@ export class FacturasPage implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.verificarAutenticacion();
+    this.cargarMetodosPago();
     this.queryParamsSub = this.route.queryParamMap.subscribe((params) => {
       const tabParam = params.get('tab');
       const newTab = (tabParam === 'listado' || tabParam === 'nueva') ? tabParam : 'hub';
@@ -85,6 +90,7 @@ export class FacturasPage implements OnInit, OnDestroy {
 
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
+    this.cargarMetodosPago();
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
     const targetTab = (tabParam === 'listado' || tabParam === 'nueva') ? tabParam : 'hub';
     if (this.activeTab !== targetTab) {
@@ -95,6 +101,32 @@ export class FacturasPage implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     } else if (this.activeTab === 'listado' && this.facturas.length === 0 && !this.loading) {
       this.cargarFacturas(1, true);
+    }
+  }
+
+  cargarMetodosPago(): void {
+    const emp = this.authService.getEmpresaActiva();
+    this.metodosPagoService.getMetodosPago(emp?.id).subscribe({
+      next: (res) => {
+        if (Array.isArray(res) && res.length > 0) {
+          this.metodosPagoList = res;
+          if (!this.metodoPagoSeleccionadoId || !this.metodosPagoList.some(m => m.id === this.metodoPagoSeleccionadoId)) {
+            this.metodoPagoSeleccionadoId = this.metodosPagoList[0].id || 1;
+            this.metodoPago = this.metodosPagoList[0].nombre;
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error cargando métodos de pago:', err)
+    });
+  }
+
+  onMetodoPagoChange(idVal: any): void {
+    const idNum = Number(idVal);
+    this.metodoPagoSeleccionadoId = idNum;
+    const found = this.metodosPagoList.find(m => m.id === idNum);
+    if (found) {
+      this.metodoPago = found.nombre;
     }
   }
 
@@ -269,6 +301,7 @@ export class FacturasPage implements OnInit, OnDestroy {
       cliente_id: this.clienteId || undefined,
       id_cliente: this.clienteId || undefined,
       total: Number(this.montoTotal),
+      id_metodo_pago: this.metodoPagoSeleccionadoId,
       metodo_pago: this.metodoPago,
       estado: 'Emitida'
     };
@@ -314,7 +347,13 @@ export class FacturasPage implements OnInit, OnDestroy {
     this.clienteEncontrado = false;
     this.buscandoCliente = false;
     this.montoTotal = null;
-    this.metodoPago = 'Efectivo';
+    if (this.metodosPagoList.length > 0) {
+      this.metodoPagoSeleccionadoId = this.metodosPagoList[0].id || 1;
+      this.metodoPago = this.metodosPagoList[0].nombre;
+    } else {
+      this.metodoPagoSeleccionadoId = 1;
+      this.metodoPago = 'Efectivo';
+    }
   }
 
   private async mostrarToastSimple(mensaje: string, color: string = 'primary'): Promise<void> {

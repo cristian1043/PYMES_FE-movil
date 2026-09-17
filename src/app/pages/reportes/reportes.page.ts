@@ -60,6 +60,14 @@ export class ReportesPage implements OnInit, OnDestroy {
   productoSeleccionado: any = null;
   mostrarModalPerfilProducto = false;
 
+  // Modal interactivo de factura en Ventas (Admin y Vendedor)
+  facturaSeleccionada: any = null;
+  mostrarModalFactura = false;
+
+  // Modal interactivo de cliente en Ranking
+  clienteSeleccionadoRanking: any = null;
+  mostrarModalClienteRanking = false;
+
   private queryParamsSub?: Subscription;
 
   constructor(
@@ -216,7 +224,7 @@ export class ReportesPage implements OnInit, OnDestroy {
         next: (res: any) => {
           this.inventarioResumen = res;
           this.productos = res?.productos || [];
-          this.stockBajoCount = res?.productos_bajo_stock ?? this.productos.filter(p => Number(p.stock || 0) <= 2500).length;
+          this.stockBajoCount = res?.productos_bajo_stock ?? this.productos.filter(p => Number(p.stock || 0) <= 10).length;
           this.filtrarProductos();
           this.cdr.detectChanges();
         },
@@ -319,10 +327,12 @@ export class ReportesPage implements OnInit, OnDestroy {
 
   getEstadoStock(stock?: number): { texto: string; cssClass: string } {
     const s = Number(stock || 0);
-    if (s <= 2500) {
+    if (s <= 0) {
+      return { texto: `🔴 Agotado: 0`, cssClass: 'stock-critical' };
+    } else if (s <= 10) {
       return { texto: `⚠️ Stock Bajo: ${s}`, cssClass: 'stock-critical' };
-    } else if (s > 10000) {
-      return { texto: `📦 Sobre-stock: ${s}`, cssClass: 'stock-over' };
+    } else if (s > 100) {
+      return { texto: `📦 Stock Alto: ${s}`, cssClass: 'stock-over' };
     }
     return { texto: `✅ Óptimo: ${s}`, cssClass: '' };
   }
@@ -386,6 +396,38 @@ export class ReportesPage implements OnInit, OnDestroy {
     this.mostrarModalPerfilProducto = false;
     this.productoSeleccionado = null;
     this.router.navigate(['/productos'], { queryParams: { tab: 'listado' } });
+  }
+
+  // ==========================================
+  // MODAL DETALLE DE FACTURA (VENTAS)
+  // ==========================================
+  verFactura(f: any): void {
+    if (this.rolId === 1 || this.rolId === 2) {
+      this.facturaSeleccionada = f;
+      this.mostrarModalFactura = true;
+      this.cdr.detectChanges();
+    }
+  }
+
+  cerrarModalFactura(): void {
+    this.mostrarModalFactura = false;
+    this.facturaSeleccionada = null;
+    this.cdr.detectChanges();
+  }
+
+  // ==========================================
+  // MODAL DETALLE Y CONTACTO CLIENTE RANKING
+  // ==========================================
+  verDetalleClienteRanking(c: any): void {
+    this.clienteSeleccionadoRanking = c;
+    this.mostrarModalClienteRanking = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarModalClienteRanking(): void {
+    this.mostrarModalClienteRanking = false;
+    this.clienteSeleccionadoRanking = null;
+    this.cdr.detectChanges();
   }
 }
 
