@@ -166,7 +166,8 @@ export class ProductosPage implements OnInit, OnDestroy {
       error: (err) => console.error('Error cargando categorías de productos:', err)
     });
 
-    this.proveedoresService.getProveedores(1, 100).subscribe({
+    const empId = this.empresaActiva?.id ? Number(this.empresaActiva.id) : undefined;
+    this.proveedoresService.getProveedores(1, 100, empId).subscribe({
       next: (res) => {
         if (Array.isArray(res)) {
           this.proveedores = res;
@@ -365,7 +366,8 @@ export class ProductosPage implements OnInit, OnDestroy {
   }
 
   cargarSiguienteCodigo(): void {
-    this.productosService.getSiguienteCodigo().subscribe({
+    const empId = this.empresaActiva?.id ? Number(this.empresaActiva.id) : undefined;
+    this.productosService.getSiguienteCodigo(empId).subscribe({
       next: (res) => {
         if (res && res.siguiente_codigo) {
           this.nuevoCodigo = res.siguiente_codigo;
@@ -385,7 +387,8 @@ export class ProductosPage implements OnInit, OnDestroy {
       this.cdr.detectChanges();
     }
 
-    this.productosService.getProductos(page, 10).pipe(
+    const empId = this.empresaActiva?.id ? Number(this.empresaActiva.id) : undefined;
+    this.productosService.getProductos(page, 10, empId).pipe(
       finalize(() => {
         this.loading = false;
         if (event) event.target.complete();
@@ -457,6 +460,18 @@ export class ProductosPage implements OnInit, OnDestroy {
   }
 
   async onRegistrarProducto(): Promise<void> {
+    if (!this.empresaActiva?.id) {
+      const toast = await this.toastController.create({
+        message: 'Debes seleccionar un espacio de trabajo/empresa activa antes de registrar productos.',
+        duration: 3500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      this.router.navigateByUrl('/seleccionar-empresa');
+      return;
+    }
+
     if (!this.nuevoNombre || !this.nuevoPrecio || this.nuevoPrecio <= 0) {
       const toast = await this.toastController.create({
         message: 'Por favor ingresa un nombre y precio válidos.',

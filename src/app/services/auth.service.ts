@@ -23,20 +23,18 @@ export class AuthService {
   private empresaActivaSubject = new BehaviorSubject<any>(this.getEmpresaActivaDesdeStorage());
   public empresaActiva$ = this.empresaActivaSubject.asObservable();
 
-  constructor(private http: HttpClient) {
-    // Limpiar residuos de localStorage persistente antiguo para forzar la validación de credenciales al iniciar
-    if (typeof localStorage !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('usuario');
-      localStorage.removeItem('empresa_activa');
-    }
-  }
+  constructor(private http: HttpClient) {}
 
   login(credentials: { email?: string; username?: string; password: string }): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, credentials).pipe(
       tap(response => {
         if (response.exito && response.access_token) {
-          sessionStorage.setItem('access_token', response.access_token);
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('access_token', response.access_token);
+          }
+          if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('access_token', response.access_token);
+          }
           if (response.usuario) {
             const u = response.usuario;
             const tieneEmpresas = Array.isArray(u.empresas) && u.empresas.length > 0;
@@ -44,7 +42,12 @@ export class AuthService {
             if (!tieneEmpresas && !esAdminGlobal) {
               u.rol = 'Usuario Independiente';
             }
-            sessionStorage.setItem('usuario', JSON.stringify(u));
+            if (typeof sessionStorage !== 'undefined') {
+              sessionStorage.setItem('usuario', JSON.stringify(u));
+            }
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem('usuario', JSON.stringify(u));
+            }
             this.currentUserSubject.next(u);
           }
         }
@@ -87,7 +90,12 @@ export class AuthService {
 
   getToken(): string | null {
     if (typeof sessionStorage !== 'undefined') {
-      return sessionStorage.getItem('access_token');
+      const token = sessionStorage.getItem('access_token');
+      if (token) return token;
+    }
+    if (typeof localStorage !== 'undefined') {
+      const token = localStorage.getItem('access_token');
+      if (token) return token;
     }
     return null;
   }
@@ -105,6 +113,9 @@ export class AuthService {
     const merged = { ...current, ...usuarioActualizado };
     if (typeof sessionStorage !== 'undefined') {
       sessionStorage.setItem('usuario', JSON.stringify(merged));
+    }
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('usuario', JSON.stringify(merged));
     }
     this.currentUserSubject.next(merged);
   }
@@ -128,6 +139,7 @@ export class AuthService {
       sessionStorage.setItem('empresa_activa', JSON.stringify(empData));
     }
     if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('empresa_activa', JSON.stringify(empData));
       localStorage.setItem('ultima_empresa_activa', JSON.stringify(empData));
     }
     this.empresaActivaSubject.next(empData);
@@ -138,6 +150,7 @@ export class AuthService {
       sessionStorage.removeItem('empresa_activa');
     }
     if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem('empresa_activa');
       localStorage.removeItem('ultima_empresa_activa');
     }
     this.empresaActivaSubject.next(null);
@@ -171,8 +184,13 @@ export class AuthService {
   }
 
   private getUsuarioDesdeStorage(): any {
-    if (typeof sessionStorage === 'undefined') return null;
-    const userStr = sessionStorage.getItem('usuario');
+    let userStr: string | null = null;
+    if (typeof sessionStorage !== 'undefined') {
+      userStr = sessionStorage.getItem('usuario');
+    }
+    if (!userStr && typeof localStorage !== 'undefined') {
+      userStr = localStorage.getItem('usuario');
+    }
     if (!userStr) return null;
     try {
       const u = JSON.parse(userStr);
@@ -196,15 +214,14 @@ export class AuthService {
         const empStr = sessionStorage.getItem('empresa_activa');
         if (empStr) return JSON.parse(empStr);
       }
-      if (typeof localStorage !== 'undefined' && typeof sessionStorage !== 'undefined') {
-        const token = sessionStorage.getItem('access_token');
-        if (token) {
-          const lastEmpStr = localStorage.getItem('ultima_empresa_activa');
-          if (lastEmpStr) {
-            const parsed = JSON.parse(lastEmpStr);
-            sessionStorage.setItem('empresa_activa', lastEmpStr);
-            return parsed;
+      if (typeof localStorage !== 'undefined') {
+        const empStr = localStorage.getItem('empresa_activa') || localStorage.getItem('ultima_empresa_activa');
+        if (empStr) {
+          const parsed = JSON.parse(empStr);
+          if (typeof sessionStorage !== 'undefined') {
+            sessionStorage.setItem('empresa_activa', empStr);
           }
+          return parsed;
         }
       }
       return null;
@@ -220,6 +237,10 @@ export class AuthService {
     });
     if (token && token.trim() !== '') {
       headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    const emp = this.getEmpresaActiva();
+    if (emp && emp.id) {
+      headers = headers.set('X-Empresa-ID', String(emp.id));
     }
     return headers;
   }
