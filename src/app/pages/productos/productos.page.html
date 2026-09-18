@@ -445,7 +445,7 @@
           </div>
         </div>
 
-        <div class="modal-buttons ion-margin-top" style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <div class="modal-buttons ion-margin-top" style="display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; padding-bottom: 16px; margin-top: 16px;">
           <!-- Botón de compra con proveedor al mismo nivel si stock bajo (<= 10) -->
           <button
             *ngIf="esAdmin && productoSeleccionado.stock !== undefined && productoSeleccionado.stock !== null && productoSeleccionado.stock <= 10"

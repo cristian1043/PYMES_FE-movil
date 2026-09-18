@@ -37,21 +37,6 @@
         <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
         <span>{{ activeTab === 'hub' ? 'Volver al Inicio' : 'Volver a Facturación' }}</span>
       </ion-button>
-
-      <div class="module-tab-pills" *ngIf="activeTab !== 'hub'">
-        <button
-          class="pill-btn"
-          [class.active]="activeTab === 'nueva'"
-          (click)="seleccionarAccion('nueva')">
-          ➕ Nueva Factura
-        </button>
-        <button
-          class="pill-btn"
-          [class.active]="activeTab === 'listado'"
-          (click)="seleccionarAccion('listado')">
-          📋 Historial
-        </button>
-      </div>
     </div>
 
     <!-- VISTA 1: HUB PRINCIPAL DEL MÓDULO -->
@@ -565,6 +550,16 @@
 
         <!-- FORMULARIO 1: TARJETA DE CRÉDITO O DÉBITO -->
         <div class="gateway-form-content" *ngIf="tabPasarela === 'tarjeta'">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #f0f9ff; padding: 6px 10px; border-radius: 8px; border: 1px dashed #7dd3fc;">
+            <span style="font-size: 11px; color: #0369a1; font-weight: 700;">Modo Sandbox / Pruebas</span>
+            <button
+              type="button"
+              (click)="autocompletarTarjetaPrueba()"
+              style="background: #0284c7; color: #ffffff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              ⚡ Llenar Tarjeta de Prueba
+            </button>
+          </div>
+
           <div class="form-group">
             <label class="form-label">Número de Tarjeta *</label>
             <input
@@ -621,6 +616,16 @@
 
         <!-- FORMULARIO 2: PSE Y BILLETERAS DIGITALES -->
         <div class="gateway-form-content" *ngIf="tabPasarela === 'pse'">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #f0f9ff; padding: 6px 10px; border-radius: 8px; border: 1px dashed #7dd3fc;">
+            <span style="font-size: 11px; color: #0369a1; font-weight: 700;">Modo Sandbox / Pruebas</span>
+            <button
+              type="button"
+              (click)="autocompletarPsePrueba()"
+              style="background: #0284c7; color: #ffffff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
+              ⚡ Llenar Datos PSE
+            </button>
+          </div>
+
           <div class="form-group">
             <label class="form-label">Banco / Billetera Digital *</label>
             <select class="custom-select" [(ngModel)]="bancoPse">

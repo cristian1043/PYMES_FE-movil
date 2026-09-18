@@ -74,6 +74,7 @@ ion-content::part(scroll) {
   box-shadow: 0 4px 16px rgba(15, 43, 92, 0.25) !important;
   z-index: 100;
   position: relative;
+  padding-top: calc(8px + max(env(safe-area-inset-top, 0px), 38px)) !important;
 
   .header-content {
     display: flex;
@@ -144,7 +145,7 @@ ion-content::part(scroll) {
   box-shadow: 0 4px 16px rgba(15, 43, 92, 0.25) !important;
   z-index: 100;
   position: relative;
-  padding: 8px 16px 10px;
+  padding: calc(8px + max(env(safe-area-inset-top, 0px), 38px)) 16px 10px !important;
 
   .header-top-brand {
     display: flex;
@@ -445,8 +446,9 @@ ion-content::part(scroll) {
   align-items: center;
   justify-content: center;
   z-index: 99999;
-  padding: 16px;
+  padding: calc(16px + max(env(safe-area-inset-top, 0px), 24px)) 16px calc(16px + max(env(safe-area-inset-bottom, 0px), 24px));
   animation: fadeIn 0.2s ease-out;
+  box-sizing: border-box;
 }
 
 .custom-modal-card {
@@ -454,11 +456,15 @@ ion-content::part(scroll) {
   border-radius: 20px;
   width: 100%;
   max-width: 440px;
+  max-height: calc(100vh - 48px - max(env(safe-area-inset-top, 0px), 38px) - max(env(safe-area-inset-bottom, 0px), 48px));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 24px;
   text-align: center;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
   border: 1px solid rgba(226, 232, 240, 0.8);
   animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 
   .modal-header-icon {
     width: 64px;

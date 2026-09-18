@@ -196,14 +196,20 @@
             </div>
             <p>NIT/Doc: {{ prov.nit_documento || 'N/A' }}</p>
             <ion-note color="medium" *ngIf="prov.contacto">Contacto: {{ prov.contacto }}</ion-note>
-            <!-- Botón de acción para Administrador para emitir orden de compra con este proveedor -->
-            <div *ngIf="esAdmin" style="margin-top: 8px;">
-              <button type="button" style="background: #1e3c72; color: #ffffff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(30, 60, 114, 0.2);" (click)="irAComprarConProveedor(prov)">
-                🛒 Registrar Compra con este Proveedor
+            <!-- Botón de acción para Administrador para emitir orden de compra y editar proveedor -->
+            <div *ngIf="esAdmin" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" style="background: #1e3c72; color: #ffffff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(30, 60, 114, 0.2);" (click)="irAComprarConProveedor(prov)">
+                🛒 Comprar
+              </button>
+              <button type="button" style="background: #0284c7; color: #ffffff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.2);" (click)="abrirModalEditar(prov)">
+                ✏️ Editar
               </button>
             </div>
           </ion-label>
-          <div slot="end" class="action-buttons">
+          <div slot="end" class="action-buttons" style="display: flex; align-items: center;">
+            <ion-button *ngIf="esAdmin" fill="clear" color="secondary" (click)="abrirModalEditar(prov)" title="Editar información">
+              <ion-icon slot="icon-only" name="create-outline"></ion-icon>
+            </ion-button>
             <ion-button *ngIf="prov.telefono" fill="clear" color="success" [href]="'tel:' + prov.telefono">
               <ion-icon slot="icon-only" name="call-outline"></ion-icon>
             </ion-button>
@@ -236,6 +242,60 @@
       <ion-infinite-scroll (ionInfinite)="loadMoreData($event)" [disabled]="!hasMorePages">
         <ion-infinite-scroll-content loadingSpinner="bubbles" loadingText="Cargando más proveedores..."></ion-infinite-scroll-content>
       </ion-infinite-scroll>
+    </div>
+
+    <!-- MODAL DE EDICIÓN DE PROVEEDOR (ADMIN) -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalEditar && proveedorEditando">
+      <div class="custom-modal-card" style="text-align: left; max-width: 480px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            ✏️ Editar Proveedor
+          </h3>
+          <button type="button" (click)="cerrarModalEditar()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: 800; color: #64748b; cursor: pointer;">✕</button>
+        </div>
+
+        <form (ngSubmit)="onGuardarEdicionProveedor()">
+          <ion-item class="form-item" lines="none" style="margin-bottom: 10px;">
+            <ion-label position="stacked">Razón Social / Nombre Proveedor *</ion-label>
+            <ion-input [(ngModel)]="editNombre" name="editNombre" type="text" required></ion-input>
+          </ion-item>
+
+          <ion-item class="form-item" lines="none" style="margin-bottom: 10px;">
+            <ion-label position="stacked">NIT o Documento</ion-label>
+            <ion-input [(ngModel)]="editNit" name="editNit" type="text"></ion-input>
+          </ion-item>
+
+          <ion-item class="form-item" lines="none" style="margin-bottom: 10px;">
+            <ion-label position="stacked">Persona de Contacto</ion-label>
+            <ion-input [(ngModel)]="editContacto" name="editContacto" type="text"></ion-input>
+          </ion-item>
+
+          <ion-item class="form-item" lines="none" style="margin-bottom: 10px;">
+            <ion-label position="stacked">Teléfono / WhatsApp</ion-label>
+            <ion-input [(ngModel)]="editTelefono" name="editTelefono" type="tel"></ion-input>
+          </ion-item>
+
+          <ion-item class="form-item" lines="none" style="margin-bottom: 10px;">
+            <ion-label position="stacked">Correo Electrónico</ion-label>
+            <ion-input [(ngModel)]="editEmail" name="editEmail" type="email"></ion-input>
+          </ion-item>
+
+          <ion-item class="form-item" lines="none" style="margin-bottom: 16px;">
+            <ion-label position="stacked">Dirección Comercial</ion-label>
+            <ion-input [(ngModel)]="editDireccion" name="editDireccion" type="text"></ion-input>
+          </ion-item>
+
+          <div class="modal-buttons" style="display: flex; gap: 10px; margin-top: 14px;">
+            <button type="button" class="btn-modal btn-secondary" (click)="cerrarModalEditar()" [disabled]="guardandoEdicion">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-modal btn-primary" [disabled]="guardandoEdicion || !editNombre">
+              <ion-spinner *ngIf="guardandoEdicion" name="crescent"></ion-spinner>
+              <span *ngIf="!guardandoEdicion">Guardar Cambios</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
 
     <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO -->

@@ -560,6 +560,22 @@ export class FacturasPage implements OnInit, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  autocompletarTarjetaPrueba(): void {
+    this.numeroTarjeta = '4242 4242 4242 4242';
+    this.expiracionTarjeta = '12/28';
+    this.cvvTarjeta = '123';
+    this.titularTarjeta = this.clienteNombre || 'CLIENTE PRUEBA';
+    this.cuotasTarjeta = 1;
+    this.cdr.detectChanges();
+  }
+
+  autocompletarPsePrueba(): void {
+    this.bancoPse = 'Bancolombia';
+    this.tipoPersonaPse = 'Natural';
+    this.telefonoPse = '3001234567';
+    this.cdr.detectChanges();
+  }
+
   cerrarModalPasarela(): void {
     if (this.procesandoPagoPasarela) return;
     this.mostrarModalPasarela = false;

@@ -36,6 +36,17 @@ export class ProveedoresPage implements OnInit, OnDestroy {
   emailProveedor = '';
   guardando = false;
 
+  // Modal de edición para administrador
+  mostrarModalEditar = false;
+  proveedorEditando: Proveedor | null = null;
+  editNombre = '';
+  editNit = '';
+  editContacto = '';
+  editTelefono = '';
+  editEmail = '';
+  editDireccion = '';
+  guardandoEdicion = false;
+
   // Modal de confirmación personalizado
   mostrarModalConfirmacion = false;
   modalTitulo = '';
@@ -267,6 +278,74 @@ export class ProveedoresPage implements OnInit, OnDestroy {
       this.activeTab = 'nuevo';
     }
     this.cdr.detectChanges();
+  }
+
+  abrirModalEditar(prov: Proveedor): void {
+    if (!this.esAdmin) return;
+    this.proveedorEditando = prov;
+    this.editNombre = prov.nombre || '';
+    this.editNit = prov.nit_documento || prov.nit || '';
+    this.editContacto = prov.contacto || '';
+    this.editTelefono = prov.telefono || '';
+    this.editEmail = prov.email || '';
+    this.editDireccion = prov.direccion || '';
+    this.mostrarModalEditar = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarModalEditar(): void {
+    this.mostrarModalEditar = false;
+    this.proveedorEditando = null;
+    this.cdr.detectChanges();
+  }
+
+  async onGuardarEdicionProveedor(): Promise<void> {
+    if (!this.proveedorEditando) return;
+    if (!this.editNombre.trim()) {
+      const toast = await this.toastController.create({
+        message: 'Por favor ingresa el nombre de la empresa o proveedor.',
+        duration: 2500,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+      return;
+    }
+
+    this.guardandoEdicion = true;
+    this.proveedoresService.updateProveedor(this.proveedorEditando.id, {
+      nombre: this.editNombre.trim(),
+      nit_documento: this.editNit.trim(),
+      contacto: this.editContacto.trim(),
+      telefono: this.editTelefono.trim(),
+      email: this.editEmail.trim(),
+      direccion: this.editDireccion.trim()
+    }).subscribe({
+      next: async (res) => {
+        this.guardandoEdicion = false;
+        this.cerrarModalEditar();
+        const toast = await this.toastController.create({
+          message: 'Proveedor actualizado correctamente.',
+          duration: 2500,
+          color: 'success',
+          position: 'top'
+        });
+        await toast.present();
+        this.cargarProveedores(this.currentPage, true);
+      },
+      error: async (err) => {
+        this.guardandoEdicion = false;
+        console.error('Error al actualizar proveedor:', err);
+        const toast = await this.toastController.create({
+          message: err?.error?.mensaje || 'No se pudo actualizar el proveedor.',
+          duration: 3000,
+          color: 'danger',
+          position: 'top'
+        });
+        await toast.present();
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   private limpiarFormulario(): void {

@@ -48,9 +48,11 @@ export class ComprasService {
     return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}${empParam}`, { headers });
   }
 
-  getSiguienteNumero(): Observable<{ siguiente_numero: string }> {
+  getSiguienteNumero(empresaId?: number): Observable<{ siguiente_numero: string }> {
     const headers = this.authService.getAuthHeaders();
-    return this.http.get<{ siguiente_numero: string }>(`${this.apiUrl}/siguiente_numero`, { headers });
+    const empId = empresaId || this.authService.getEmpresaActiva()?.id;
+    const empParam = empId ? `?empresa_id=${empId}` : '';
+    return this.http.get<{ siguiente_numero: string }>(`${this.apiUrl}/siguiente_numero${empParam}`, { headers });
   }
 
   createCompra(data: Partial<Compra>): Observable<Compra> {

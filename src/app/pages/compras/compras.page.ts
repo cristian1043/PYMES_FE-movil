@@ -171,9 +171,10 @@ export class ComprasPage implements OnInit, OnDestroy {
 
   cargarCatalogos(): void {
     this.cargandoCatalogos = true;
+    const emp = this.authService.getEmpresaActiva();
 
-    // Obtener siguiente consecutivo
-    this.comprasService.getSiguienteNumero().subscribe({
+    // Obtener siguiente consecutivo por empresa
+    this.comprasService.getSiguienteNumero(emp?.id).subscribe({
       next: (res) => {
         if (res && res.siguiente_numero) {
           this.siguienteNumero = res.siguiente_numero;
@@ -234,6 +235,9 @@ export class ComprasPage implements OnInit, OnDestroy {
     if (prod) {
       const costoVal = prod.costo ? Number(prod.costo) : (Number(prod.precio || 0) * 0.70);
       this.costoUnitario = Math.round(costoVal * 100) / 100;
+      if (prod.id_proveedor) {
+        this.idProveedor = Number(prod.id_proveedor);
+      }
     }
   }
 

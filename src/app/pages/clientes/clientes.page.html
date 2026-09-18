@@ -223,9 +223,14 @@
               </div>
               <div class="name-box">
                 <h3 class="client-title">{{ cli.nombre }} {{ cli.apellido || '' }}</h3>
-                <span class="doc-badge">
-                  {{ cli.tipo_documento || 'CC' }}: {{ cli.documento || 'Sin doc' }}
-                </span>
+                <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                  <span class="doc-badge" *ngIf="cli.codigo" style="background: #e0f2fe; color: #0369a1; font-weight: 700;">
+                    {{ cli.codigo }}
+                  </span>
+                  <span class="doc-badge">
+                    {{ cli.tipo_documento || 'CC' }}: {{ cli.documento || 'Sin doc' }}
+                  </span>
+                </div>
               </div>
             </div>
             <span class="id-badge">#{{ (currentPage - 1) * 10 + idx + 1 }}</span>
@@ -319,7 +324,7 @@
     <div class="custom-modal-backdrop" *ngIf="mostrarModalDetalle" (click)="cerrarModalDetalle()"></div>
     <div class="custom-modal-sheet" *ngIf="mostrarModalDetalle && clienteSeleccionado">
       <div class="modal-sheet-header">
-        <h4>👤 Ficha del Cliente #{{ clienteSeleccionado.id }}</h4>
+        <h4>👤 Ficha del Cliente {{ clienteSeleccionado.codigo || ('#' + clienteSeleccionado.id) }}</h4>
         <button class="modal-close-btn" (click)="cerrarModalDetalle()">✕</button>
       </div>
       <div class="modal-sheet-body">

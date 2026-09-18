@@ -44,6 +44,11 @@ export class ProveedoresService {
     return this.http.post<Proveedor>(`${this.apiUrl}/`, data, { headers });
   }
 
+  updateProveedor(id: number, data: Partial<Proveedor>): Observable<Proveedor> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.put<Proveedor>(`${this.apiUrl}/${id}`, data, { headers });
+  }
+
   deleteProveedor(id: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
     return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers });
