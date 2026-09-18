@@ -33,6 +33,7 @@ export class FacturasPage implements OnInit, OnDestroy {
   loading = false;
   usuario: any = null;
   empresaActiva: any = null;
+  esAdmin = false;
   currentPage = 1;
   totalPages = 1;
   hasMorePages = true;
@@ -72,6 +73,11 @@ export class FacturasPage implements OnInit, OnDestroy {
   facturaSeleccionada: Factura | null = null;
   cargandoDetalle = false;
   mostrarModalDetalle = false;
+
+  // Anulación / Cancelación de Factura (Admin)
+  cancelandoFactura = false;
+  mostrarModalConfirmacionCancelar = false;
+  facturaParaCancelar: Factura | null = null;
 
   // Modal de confirmación personalizado tras crear
   mostrarModalConfirmacion = false;
@@ -219,6 +225,9 @@ export class FacturasPage implements OnInit, OnDestroy {
     }
     this.usuario = this.authService.getUsuario();
     this.empresaActiva = this.authService.getEmpresaActiva();
+    this.esAdmin = this.authService.hasRole([1]) ||
+      (this.usuario?.rol === 'Administrador') ||
+      (Number(this.usuario?.id_rol) === 1);
   }
 
   toggleMenu(): void {
@@ -486,7 +495,13 @@ export class FacturasPage implements OnInit, OnDestroy {
     }
 
     const metodo = this.metodosPagoList.find(m => m.id === this.metodoPagoSeleccionadoId);
-    const esPasarela = metodo && (metodo.tipo === 'Pasarela' || (metodo.pasarela && metodo.pasarela !== 'ninguna') || metodo.tipo === 'Tarjeta');
+    const nombreMetodoLower = (metodo?.nombre || this.metodoPago || '').toLowerCase();
+    const esPasarela = Boolean(
+      (metodo && (metodo.tipo === 'Pasarela' || (metodo.pasarela && metodo.pasarela !== 'ninguna') || metodo.tipo === 'Tarjeta')) ||
+      nombreMetodoLower.includes('tarjet') ||
+      nombreMetodoLower.includes('pasarela') ||
+      nombreMetodoLower.includes('wompi')
+    );
 
     if (esPasarela) {
       // Abrir checkout de Pasarela de Pagos
@@ -497,8 +512,9 @@ export class FacturasPage implements OnInit, OnDestroy {
       return;
     }
 
-    // Emisión directa para Efectivo / Transferencia
-    this.guardarFacturaEnBackend('Emitida');
+    // Emisión directa para Efectivo / Transferencia: Se liquida como 'Pagada'
+    const refDirecta = nombreMetodoLower.includes('efectivo') ? 'PAGO-EFECTIVO' : 'TRANSF-DIRECTA';
+    this.guardarFacturaEnBackend('Pagada', undefined, refDirecta);
   }
 
   private guardarFacturaEnBackend(estado: string, pasarela?: string, referencia?: string): void {
@@ -510,6 +526,9 @@ export class FacturasPage implements OnInit, OnDestroy {
       cliente_nombre: this.clienteNombre.trim(),
       documento_cliente: (this.documentoCliente || '').trim(),
       tipo_documento: this.tipoDocumento || 'CC',
+      telefono_cliente: this.clienteTelefono ? this.clienteTelefono.trim() : undefined,
+      email_cliente: this.clienteEmail ? this.clienteEmail.trim() : undefined,
+      direccion_cliente: this.clienteDireccion ? this.clienteDireccion.trim() : undefined,
       cliente_id: this.clienteId || undefined,
       id_cliente: this.clienteId || undefined,
       id_empresa: emp?.id,
@@ -536,7 +555,9 @@ export class FacturasPage implements OnInit, OnDestroy {
         this.limpiarFormulario();
         this.modalTitulo = estado === 'Pagada' ? '¡Factura Pagada y Emitida!' : '¡Factura Emitida!';
         this.modalMensaje = estado === 'Pagada'
-          ? `Factura liquidada exitosamente mediante pasarela (${pasarela?.toUpperCase() || 'Digital'}). Referencia: ${referencia}. El inventario ha sido actualizado en tiempo real.`
+          ? (pasarela
+              ? `Factura liquidada exitosamente mediante pasarela (${pasarela?.toUpperCase() || 'Digital'}). Referencia: ${referencia}. El inventario ha sido actualizado en tiempo real.`
+              : `Factura emitida y pagada con éxito (${this.metodoPago || 'Efectivo'}). Referencia: ${referencia}. El inventario ha sido descontado en tiempo real.`)
           : 'La factura ha sido registrada en el sistema y el inventario descontado. ¿Quieres ver el historial de facturas?';
         this.mostrarModalConfirmacion = true;
         this.cdr.detectChanges();
@@ -545,6 +566,49 @@ export class FacturasPage implements OnInit, OnDestroy {
         this.guardando = false;
         console.error('Error al emitir factura:', err);
         const msg = err?.error?.mensaje || 'No se pudo emitir la factura. Verifica los datos.';
+        await this.mostrarToastSimple(msg, 'danger');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  // ANULACIÓN / CANCELACIÓN DE FACTURA (ADMIN)
+  solicitarCancelarFactura(factura: Factura): void {
+    if (!this.esAdmin) return;
+    this.facturaParaCancelar = factura;
+    this.mostrarModalConfirmacionCancelar = true;
+    this.cdr.detectChanges();
+  }
+
+  cerrarModalConfirmacionCancelar(): void {
+    this.mostrarModalConfirmacionCancelar = false;
+    this.facturaParaCancelar = null;
+    this.cdr.detectChanges();
+  }
+
+  confirmarCancelarFactura(): void {
+    if (!this.facturaParaCancelar || !this.facturaParaCancelar.id) return;
+    this.cancelandoFactura = true;
+    this.cdr.detectChanges();
+
+    this.facturasService.cancelarFactura(this.facturaParaCancelar.id).subscribe({
+      next: async () => {
+        this.cancelandoFactura = false;
+        this.mostrarModalConfirmacionCancelar = false;
+        if (this.facturaSeleccionada) {
+          this.facturaSeleccionada.estado = 'Cancelada';
+        }
+        const itemEnLista = this.facturas.find(f => f.id === this.facturaParaCancelar?.id);
+        if (itemEnLista) {
+          itemEnLista.estado = 'Cancelada';
+        }
+        await this.mostrarToastSimple('Factura anulada correctamente y stock devuelto a inventario.', 'success');
+        this.cdr.detectChanges();
+      },
+      error: async (err) => {
+        this.cancelandoFactura = false;
+        this.mostrarModalConfirmacionCancelar = false;
+        const msg = err?.error?.mensaje || 'No se pudo anular la factura.';
         await this.mostrarToastSimple(msg, 'danger');
         this.cdr.detectChanges();
       }

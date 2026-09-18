@@ -66,4 +66,9 @@ export class FacturasService {
     const headers = this.authService.getAuthHeaders();
     return this.http.post<any>(`${this.apiUrl}/${id}/pagar`, data, { headers });
   }
+
+  cancelarFactura(id: number): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post<any>(`${this.apiUrl}/${id}/cancelar`, {}, { headers });
+  }
 }

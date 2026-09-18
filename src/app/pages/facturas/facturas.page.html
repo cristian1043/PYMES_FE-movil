@@ -42,32 +42,32 @@
     <!-- VISTA 1: HUB PRINCIPAL DEL MÓDULO -->
     <div *ngIf="activeTab === 'hub'" class="hub-container">
       <div class="hub-header ion-text-center ion-margin-bottom">
-        <div class="hub-icon-circle">
+        <div class="hub-icon-badge">
           <ion-icon name="receipt-outline"></ion-icon>
         </div>
         <h2>Gestión de Facturación</h2>
-        <p class="hub-subtitle">
+        <p>
           Emite facturas de venta con productos reales, control de inventario y cobro digital seguro
         </p>
       </div>
 
       <div class="hub-actions-grid">
-        <div class="hub-action-card primary-card" (click)="seleccionarAccion('nueva')">
-          <div class="action-card-icon">
+        <div class="action-card" (click)="seleccionarAccion('nueva')">
+          <div class="action-icon bg-primary">
             <ion-icon name="add-circle-outline"></ion-icon>
           </div>
-          <div class="action-card-text">
+          <div class="action-info">
             <h3>Crear Nueva Factura</h3>
             <p>Selecciona cliente, añade productos de bodega, calcula IVA y cobra con pasarela</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
         </div>
 
-        <div class="hub-action-card secondary-card" (click)="seleccionarAccion('listado')">
-          <div class="action-card-icon">
+        <div class="action-card" (click)="seleccionarAccion('listado')">
+          <div class="action-icon bg-success">
             <ion-icon name="list-outline"></ion-icon>
           </div>
-          <div class="action-card-text">
+          <div class="action-info">
             <h3>Ver Historial de Facturas</h3>
             <p>Consulta facturas emitidas, desglose de ítems, recaudos y cobra facturas pendientes</p>
           </div>
@@ -378,7 +378,7 @@
           <div slot="end" class="ion-text-right">
             <ion-badge color="success" class="badge-total">${{ fact.total | number:'1.2-2' }}</ion-badge>
             <p
-              [style.color]="fact.estado === 'Pagada' ? '#16a34a' : '#2563eb'"
+              [style.color]="fact.estado === 'Pagada' ? '#16a34a' : (fact.estado === 'Cancelada' ? '#ef4444' : '#2563eb')"
               style="font-size: 11px; margin: 4px 0 0; font-weight: 700;">
               {{ fact.estado || 'Emitida' }}
             </p>
@@ -495,13 +495,26 @@
           </div>
         </div>
 
-        <!-- Botón de Cobro con Pasarela si está Pendiente / Emitida -->
-        <div class="modal-buttons ion-margin-top" *ngIf="facturaSeleccionada.estado !== 'Pagada'">
+        <!-- Botón de Cobro con Pasarela SOLO si está Pendiente y es pago digital/tarjeta -->
+        <div class="modal-buttons ion-margin-top" *ngIf="facturaSeleccionada.estado !== 'Pagada' && facturaSeleccionada.estado !== 'Cancelada' && (facturaSeleccionada.metodo_pago?.toLowerCase()?.includes('tarjet') || facturaSeleccionada.metodo_pago?.toLowerCase()?.includes('pasarela') || facturaSeleccionada.metodo_pago?.toLowerCase()?.includes('wompi'))">
           <button
             type="button"
             class="btn-modal btn-gateway-action"
             (click)="abrirPasarelaCobro(facturaSeleccionada)">
             💳 Cobrar con Pasarela de Pago
+          </button>
+        </div>
+
+        <!-- Botón de Anulación / Cancelación Exclusivo para Administrador -->
+        <div class="modal-buttons ion-margin-top" *ngIf="esAdmin && facturaSeleccionada.estado !== 'Cancelada'">
+          <button
+            type="button"
+            class="btn-modal"
+            style="background: #ef4444; color: #ffffff; font-weight: 700; border: none; border-radius: 12px; padding: 12px; width: 100%;"
+            [disabled]="cancelandoFactura"
+            (click)="solicitarCancelarFactura(facturaSeleccionada)">
+            <ion-spinner *ngIf="cancelandoFactura" name="crescent"></ion-spinner>
+            <span *ngIf="!cancelandoFactura">❌ Anular / Cancelar Factura</span>
           </button>
         </div>
 
@@ -698,6 +711,35 @@
           </button>
           <button type="button" class="btn-modal btn-primary" (click)="responderModal(true)">
             Sí, ver historial
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN DE ANULACIÓN DE FACTURA (ADMIN) -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalConfirmacionCancelar && facturaParaCancelar">
+      <div class="custom-modal-card">
+        <div class="modal-header-icon" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+          <ion-icon name="alert-circle-outline" style="font-size: 38px; color: #ef4444;"></ion-icon>
+        </div>
+        <h3 style="font-size: 20px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">¿Anular Factura?</h3>
+        <p style="font-size: 14px; color: #475569; margin-bottom: 20px; line-height: 1.5;">
+          ¿Estás seguro de que deseas anular la factura <strong>{{ facturaParaCancelar.numero_factura || facturaParaCancelar.numero || ('#' + facturaParaCancelar.id) }}</strong>?
+          <br><br>
+          <span style="color: #16a34a; font-weight: 700;">📦 El inventario de los productos será devuelto automáticamente a la bodega.</span>
+        </p>
+        <div class="modal-buttons">
+          <button type="button" class="btn-modal btn-secondary" (click)="cerrarModalConfirmacionCancelar()" [disabled]="cancelandoFactura">
+            No, volver
+          </button>
+          <button
+            type="button"
+            class="btn-modal"
+            style="background: #ef4444; color: #ffffff; font-weight: 700;"
+            [disabled]="cancelandoFactura"
+            (click)="confirmarCancelarFactura()">
+            <ion-spinner *ngIf="cancelandoFactura" name="crescent"></ion-spinner>
+            <span *ngIf="!cancelandoFactura">Sí, anular factura</span>
           </button>
         </div>
       </div>
