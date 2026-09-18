@@ -96,15 +96,11 @@ export class ClientesPage implements OnInit, OnDestroy {
     this.verificarAutenticacion();
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
     const targetTab = (tabParam === 'listado' || tabParam === 'nuevo') ? tabParam : 'hub';
-    if (this.activeTab !== targetTab) {
-      this.activeTab = targetTab;
-      if (this.activeTab === 'listado') {
-        this.cargarClientes(1, true);
-      }
-      this.cdr.detectChanges();
-    } else if (this.activeTab === 'listado' && this.clientes.length === 0 && !this.loading) {
+    this.activeTab = targetTab;
+    if (this.activeTab === 'listado') {
       this.cargarClientes(1, true);
     }
+    this.cdr.detectChanges();
   }
 
   private verificarAutenticacion(): void {

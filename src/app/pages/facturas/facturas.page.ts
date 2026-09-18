@@ -531,7 +531,7 @@ export class FacturasPage implements OnInit, OnDestroy {
       direccion_cliente: this.clienteDireccion ? this.clienteDireccion.trim() : undefined,
       cliente_id: this.clienteId || undefined,
       id_cliente: this.clienteId || undefined,
-      id_empresa: emp?.id,
+      id_empresa: emp?.id || 1,
       subtotal: this.subtotalVenta,
       iva: this.ivaVenta,
       descuento: 0,
