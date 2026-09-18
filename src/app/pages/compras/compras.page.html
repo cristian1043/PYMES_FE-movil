@@ -135,7 +135,7 @@
               name="idProveedor">
               <option [ngValue]="null">-- Seleccionar Proveedor del Catálogo --</option>
               <option *ngFor="let prov of proveedores" [ngValue]="prov.id">
-                🏢 {{ prov.codigo ? ('[' + prov.codigo + '] ') : '' }}{{ prov.nombre }} (NIT: {{ prov.nit || prov.nit_documento }})
+                🏢 [{{ prov.codigo || ('PROV-E' + (prov.id_empresa || 1) + '-' + prov.id) }}] {{ prov.nombre }} (NIT: {{ prov.nit || prov.nit_documento }})
               </option>
             </select>
           </div>

@@ -193,12 +193,14 @@
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 8px;">
               <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                 <h2 style="font-weight: 700; font-size: 15px; margin: 0; color: #1e293b;">{{ prov.nombre }}</h2>
-                <span *ngIf="prov.codigo" style="font-size: 11px; background: #e0f2fe; color: #0369a1; padding: 2px 7px; border-radius: 6px; font-weight: 700; border: 1px solid #bae6fd;">{{ prov.codigo }}</span>
+                <span class="doc-badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; letter-spacing: 0.3px;">
+                  {{ prov.codigo || ('PROV-E' + (prov.id_empresa || 1) + '-' + prov.id) }}
+                </span>
                 <span *ngIf="prov.id === proveedorDestacadoId" style="font-size: 10px; background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Distribuidor Directo</span>
               </div>
               <span style="font-size: 11px; font-weight: 800; color: #64748b; background: #f1f5f9; padding: 2px 7px; border-radius: 6px; border: 1px solid #e2e8f0; white-space: nowrap;">#{{ (currentPage - 1) * 10 + idx + 1 }}</span>
             </div>
-            <p>NIT/Doc: {{ prov.nit_documento || 'N/A' }}</p>
+            <p>NIT/Doc: {{ prov.nit_documento || prov.nit || 'N/A' }}</p>
             <ion-note color="medium" *ngIf="prov.contacto">Contacto: {{ prov.contacto }}</ion-note>
             <!-- Botón de acción para Administrador para emitir orden de compra y editar proveedor -->
             <div *ngIf="esAdmin" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
@@ -253,7 +255,7 @@
       <div class="custom-modal-card" style="text-align: left; max-width: 480px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
           <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-            ✏️ Editar Proveedor <span *ngIf="proveedorEditando?.codigo" style="font-size: 12px; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 6px; font-weight: 700; border: 1px solid #bae6fd;">{{ proveedorEditando?.codigo }}</span>
+            ✏️ Editar Proveedor <span style="font-size: 12px; color: #0369a1; background: #e0f2fe; padding: 2px 8px; border-radius: 6px; font-family: monospace;">{{ proveedorEditando.codigo || ('PROV-E' + (proveedorEditando.id_empresa || 1) + '-' + proveedorEditando.id) }}</span>
           </h3>
           <button type="button" (click)="cerrarModalEditar()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: 800; color: #64748b; cursor: pointer;">✕</button>
         </div>
