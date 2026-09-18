@@ -6,6 +6,7 @@ import { AuthService } from './auth.service';
 
 export interface Proveedor {
   id: number;
+  codigo?: string;
   nombre: string;
   nit_documento?: string;
   nit?: string;
