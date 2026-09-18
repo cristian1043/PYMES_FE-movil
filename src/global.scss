@@ -59,6 +59,11 @@ ion-content {
   height: 100% !important;
   --height: 100% !important;
   --background: #f4f6f9;
+  --padding-bottom: calc(24px + max(env(safe-area-inset-bottom, 0px), 36px)) !important;
+}
+
+ion-content::part(scroll) {
+  padding-bottom: calc(32px + max(env(safe-area-inset-bottom, 0px), 48px)) !important;
 }
 
 /* ----------------------------------------------------------------------------
@@ -273,7 +278,7 @@ ion-content {
   .drawer-header {
     background: linear-gradient(135deg, #0f2b5c 0%, #1e3c72 100%);
     color: #ffffff;
-    padding: 20px 16px;
+    padding: calc(20px + env(safe-area-inset-top, 0px)) 16px 20px 16px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -399,7 +404,7 @@ ion-content {
   }
 
   .drawer-footer {
-    padding: 16px 16px calc(16px + max(env(safe-area-inset-bottom, 0px), 36px)) 16px;
+    padding: 16px 16px calc(24px + max(env(safe-area-inset-bottom, 0px), 48px)) 16px;
     border-top: 1px solid #e2e8f0;
 
     .btn-logout {

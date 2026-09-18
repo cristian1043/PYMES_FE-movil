@@ -23,29 +23,7 @@
   </ion-header>
 
   <ion-content [fullscreen]="true" class="perfil-background ion-padding">
-    <!-- Barra Superior de Navegación -->
-    <div class="module-action-bar ion-margin-bottom" style="display: flex; gap: 10px; flex-wrap: wrap;">
-      <ion-button
-        *ngIf="empresaActiva"
-        fill="outline"
-        color="secondary"
-        size="small"
-        (click)="irAIndex()"
-        class="back-button">
-        <ion-icon name="home-outline" slot="start"></ion-icon>
-        Volver al Inicio ({{ empresaActiva.nombre }})
-      </ion-button>
 
-      <ion-button
-        fill="outline"
-        color="primary"
-        size="small"
-        (click)="irAEmpresas()"
-        class="back-button">
-        <ion-icon name="business-outline" slot="start"></ion-icon>
-        {{ empresaActiva ? 'Cambiar Empresa' : 'Ver Empresas / Espacios' }}
-      </ion-button>
-    </div>
 
     <!-- Spinner de Carga Inicial -->
     <div *ngIf="loading" class="spinner-container ion-text-center ion-padding">

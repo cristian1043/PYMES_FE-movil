@@ -5,6 +5,7 @@ import { Platform } from '@ionic/angular';
 import { AuthService } from './services/auth.service';
 import { MenuStateService } from './services/menu-state.service';
 import { CapacitorUpdater } from '@capgo/capacitor-updater';
+import { StatusBar, Style } from '@capacitor/status-bar';
 
 interface MenuItem {
   title: string;
@@ -77,6 +78,15 @@ export class AppComponent implements OnInit {
     if (this.platform.is('capacitor')) {
       CapacitorUpdater.notifyAppReady().catch(err => {
         console.warn('CapacitorUpdater notifyAppReady error:', err);
+      });
+
+      // Configurar Status Bar para que la app empiece DEBAJO de la cámara/notch
+      StatusBar.setOverlaysWebView({ overlay: false }).then(() => {
+        return StatusBar.setStyle({ style: Style.Dark });
+      }).then(() => {
+        return StatusBar.setBackgroundColor({ color: '#0f2b5c' });
+      }).catch(err => {
+        console.warn('StatusBar config error:', err);
       });
     }
 
