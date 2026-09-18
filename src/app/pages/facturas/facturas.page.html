@@ -17,7 +17,7 @@
       </button>
 
       <div class="header-module-title">
-        Módulo de Facturas y Ventas
+        Módulo de Facturación y Ventas
       </div>
     </div>
   </ion-header>
@@ -28,74 +28,86 @@
     </ion-refresher>
 
     <!-- Barra Superior de Navegación del Módulo -->
-    <div class="module-action-bar ion-margin-bottom">
+    <div class="module-nav-bar ion-margin-bottom">
       <ion-button
-        fill="outline"
-        color="secondary"
+        fill="clear"
         size="small"
-        (click)="cancelarOVolver()"
-        class="cancel-button">
+        class="nav-back-btn"
+        (click)="cancelarOVolver()">
         <ion-icon name="arrow-back-outline" slot="start"></ion-icon>
-        Cancelar / Volver
+        <span>{{ activeTab === 'hub' ? 'Volver al Inicio' : 'Volver a Facturación' }}</span>
       </ion-button>
+
+      <div class="module-tab-pills" *ngIf="activeTab !== 'hub'">
+        <button
+          class="pill-btn"
+          [class.active]="activeTab === 'nueva'"
+          (click)="seleccionarAccion('nueva')">
+          ➕ Nueva Factura
+        </button>
+        <button
+          class="pill-btn"
+          [class.active]="activeTab === 'listado'"
+          (click)="seleccionarAccion('listado')">
+          📋 Historial
+        </button>
+      </div>
     </div>
 
     <!-- VISTA 1: HUB PRINCIPAL DEL MÓDULO -->
     <div *ngIf="activeTab === 'hub'" class="hub-container">
       <div class="hub-header ion-text-center ion-margin-bottom">
-        <div class="hub-icon-badge">
-          <ion-icon name="document-text-outline"></ion-icon>
+        <div class="hub-icon-circle">
+          <ion-icon name="receipt-outline"></ion-icon>
         </div>
-        <h2>Módulo de Facturas y Ventas</h2>
-        <p>Selecciona la acción que deseas realizar en este módulo</p>
+        <h2>Gestión de Facturación</h2>
+        <p class="hub-subtitle">
+          Emite facturas de venta con productos reales, control de inventario y cobro digital seguro
+        </p>
       </div>
 
       <div class="hub-actions-grid">
-        <div class="action-card" (click)="seleccionarAccion('nueva')">
-          <div class="action-icon bg-success">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="4" width="20" height="16" rx="2"></rect>
-              <line x1="12" y1="8" x2="12" y2="16"></line>
-              <line x1="8" y1="12" x2="16" y2="12"></line>
-            </svg>
+        <div class="hub-action-card primary-card" (click)="seleccionarAccion('nueva')">
+          <div class="action-card-icon">
+            <ion-icon name="add-circle-outline"></ion-icon>
           </div>
-          <div class="action-info">
+          <div class="action-card-text">
             <h3>Crear Nueva Factura</h3>
-            <p>Registra una venta o nueva factura de cobro a un cliente</p>
+            <p>Selecciona cliente, añade productos de bodega, calcula IVA y cobra con pasarela</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
         </div>
 
-        <div class="action-card" (click)="seleccionarAccion('listado')">
-          <div class="action-icon bg-primary">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#1e3c72" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-              <line x1="10" y1="9" x2="8" y2="9"></line>
-            </svg>
+        <div class="hub-action-card secondary-card" (click)="seleccionarAccion('listado')">
+          <div class="action-card-icon">
+            <ion-icon name="list-outline"></ion-icon>
           </div>
-          <div class="action-info">
+          <div class="action-card-text">
             <h3>Ver Historial de Facturas</h3>
-            <p>Consulta las facturas emitidas, su estado de pago y montos totales</p>
+            <p>Consulta facturas emitidas, desglose de ítems, recaudos y cobra facturas pendientes</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
         </div>
       </div>
     </div>
 
-    <!-- VISTA 2: FORMULARIO NUEVA FACTURA INTELIGENTE -->
+    <!-- VISTA 2: FORMULARIO NUEVA FACTURA CON CANASTA DE PRODUCTOS -->
     <div *ngIf="activeTab === 'nueva'" class="form-container">
       <ion-card class="form-card">
         <ion-card-header>
-          <ion-card-title>🧾 Crear Nueva Factura Inteligente</ion-card-title>
-          <ion-card-subtitle>Extracción instantánea por documento del cliente</ion-card-subtitle>
+          <ion-card-title>🧾 Nueva Factura de Venta</ion-card-title>
+          <ion-card-subtitle>Desglose de productos, existencias en bodega y cobro integrado</ion-card-subtitle>
         </ion-card-header>
 
         <ion-card-content>
           <form (ngSubmit)="onCrearFactura()">
-            <!-- Tipo de Documento (Predeterminado CC) -->
+            <!-- PASO 1: DATOS DEL CLIENTE -->
+            <div class="section-divider">
+              <span class="step-badge">Paso 1</span>
+              <h4>Información del Cliente</h4>
+            </div>
+
+            <!-- Tipo de Documento -->
             <div class="form-group">
               <label class="form-label">Tipo de Documento *</label>
               <select
@@ -111,7 +123,7 @@
               </select>
             </div>
 
-            <!-- Número de Documento con Botón de Lupa 🔍 -->
+            <!-- Número de Documento con Lupa -->
             <div class="form-group">
               <label class="form-label">
                 N° Documento Cliente *
@@ -123,7 +135,7 @@
                   class="custom-input search-group-input"
                   [(ngModel)]="documentoCliente"
                   name="documentoCliente"
-                  placeholder="ej: 1098765432"
+                  placeholder="ej: 1043302995"
                   [readonly]="clienteEncontrado"
                   (keyup.enter)="buscarClientePorDocumento()"
                   required />
@@ -147,11 +159,11 @@
                 </button>
               </div>
               <small class="field-hint" *ngIf="!clienteEncontrado">
-                Toca la <strong>lupa 🔍</strong> para extraer automáticamente los datos personales del cliente.
+                Toca la <strong>lupa 🔍</strong> para extraer automáticamente los datos del cliente.
               </small>
             </div>
 
-            <!-- Tarjeta de Información Verificada del Cliente (Solo Lectura) -->
+            <!-- Tarjeta de Información Verificada del Cliente -->
             <div class="verified-client-card ion-margin-bottom" *ngIf="clienteEncontrado">
               <div class="verified-header">
                 <ion-icon name="shield-checkmark" class="verified-icon"></ion-icon>
@@ -165,12 +177,9 @@
                 <span *ngIf="clienteEmail">✉️ {{ clienteEmail }}</span>
                 <span *ngIf="clienteDireccion">📍 {{ clienteDireccion }}</span>
               </div>
-              <small class="verified-lock-note">
-                🔒 <em>Datos personales extraídos de la base de datos (protegidos y bloqueados para garantizar consistencia contable).</em>
-              </small>
             </div>
 
-            <!-- Campo Nombre (Solo si no fue encontrado previamente) -->
+            <!-- Campo Nombre (si el cliente no está en base de datos) -->
             <div class="form-group" *ngIf="!clienteEncontrado">
               <label class="form-label">Nombre del Cliente *</label>
               <input
@@ -178,25 +187,139 @@
                 class="custom-input"
                 [(ngModel)]="clienteNombre"
                 name="clienteNombre"
-                placeholder="ej: María Rodríguez"
+                placeholder="ej: Cristian Garavito Jiménez"
                 required />
               <small class="field-hint">Si el cliente no existe, se registrará automáticamente en el sistema.</small>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Monto Total a Facturar ($) *</label>
-              <input
-                type="number"
-                class="custom-input"
-                [(ngModel)]="montoTotal"
-                name="montoTotal"
-                placeholder="ej: 150000"
-                step="0.01"
-                min="0.01"
-                required />
+            <!-- PASO 2: CANASTA Y SELECCIÓN DE PRODUCTOS -->
+            <div class="section-divider ion-margin-top">
+              <span class="step-badge">Paso 2</span>
+              <h4>Productos a Vender</h4>
             </div>
 
-            <div class="form-group">
+            <div class="product-picker-box">
+              <div class="form-group">
+                <label class="form-label">Seleccionar Producto del Catálogo</label>
+                <select
+                  class="custom-select"
+                  [(ngModel)]="idProductoSeleccionado"
+                  (ngModelChange)="onProductoSeleccionadoChange()"
+                  name="idProductoSeleccionado">
+                  <option [ngValue]="null">-- Selecciona un producto --</option>
+                  <option
+                    *ngFor="let prod of productosDisponibles"
+                    [value]="prod.id"
+                    [disabled]="(prod.stock || 0) <= 0">
+                    {{ prod.nombre }} - ${{ prod.precio | number:'1.2-2' }} (Stock: {{ prod.stock || 0 }}{{ (prod.stock || 0) <= 0 ? ' 🔴 Agotado' : '' }})
+                  </option>
+                </select>
+              </div>
+
+              <!-- Fila interactiva de precio y cantidad cuando se selecciona un producto -->
+              <div class="selected-prod-controls" *ngIf="productoSeleccionadoObj">
+                <div class="stock-live-badge" [class.badge-agotado]="(productoSeleccionadoObj.stock || 0) <= 0">
+                  <ion-icon [name]="(productoSeleccionadoObj.stock || 0) > 0 ? 'checkmark-circle-outline' : 'alert-circle-outline'"></ion-icon>
+                  <span>En inventario: <strong>{{ productoSeleccionadoObj.stock || 0 }} unds</strong></span>
+                </div>
+
+                <div class="row-two-col ion-margin-top">
+                  <div class="form-group">
+                    <label class="form-label">Precio Venta Unitario ($)</label>
+                    <input
+                      type="number"
+                      class="custom-input"
+                      [(ngModel)]="precioSeleccionado"
+                      name="precioSeleccionado"
+                      step="0.01"
+                      min="0.01" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Cantidad a Vender</label>
+                    <input
+                      type="number"
+                      class="custom-input"
+                      [(ngModel)]="cantidadSeleccionada"
+                      name="cantidadSeleccionada"
+                      min="1"
+                      [max]="productoSeleccionadoObj.stock || 9999" />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  class="btn-add-cart"
+                  (click)="agregarItemAFactura()"
+                  [disabled]="(productoSeleccionadoObj.stock || 0) <= 0 || cantidadSeleccionada <= 0">
+                  <ion-icon name="cart-outline"></ion-icon>
+                  <span>Agregar a la Canasta de Venta</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- TABLA / LISTA DE ÍTEMS EN LA CANASTA -->
+            <div class="cart-items-block ion-margin-top">
+              <div class="cart-items-header">
+                <h5>🛒 Canasta de Productos ({{ itemsFactura.length }})</h5>
+              </div>
+
+              <div *ngIf="itemsFactura.length === 0" class="empty-cart-alert">
+                <ion-icon name="cart-outline"></ion-icon>
+                <p>No has agregado productos a la venta. Selecciona productos arriba para continuar.</p>
+              </div>
+
+              <div class="cart-item-card" *ngFor="let item of itemsFactura; let i = index">
+                <div class="item-main-info">
+                  <h6 class="item-name">{{ item.nombre }}</h6>
+                  <span class="item-unit-price">${{ item.precio_unitario | number:'1.2-2' }} c/u</span>
+                </div>
+
+                <div class="item-controls-row">
+                  <div class="qty-stepper">
+                    <button type="button" class="btn-step" (click)="decrementarItem(i)" title="Reducir">
+                      <ion-icon name="remove-outline"></ion-icon>
+                    </button>
+                    <span class="qty-display">{{ item.cantidad }}</span>
+                    <button type="button" class="btn-step" (click)="incrementarItem(i)" title="Aumentar">
+                      <ion-icon name="add-outline"></ion-icon>
+                    </button>
+                  </div>
+
+                  <div class="item-subtotal-box">
+                    <span class="subtotal-label">Subtotal:</span>
+                    <span class="subtotal-val">${{ item.subtotal | number:'1.2-2' }}</span>
+                  </div>
+
+                  <button type="button" class="btn-remove-item" (click)="eliminarItem(i)" title="Eliminar ítem">
+                    <ion-icon name="trash-outline"></ion-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- PASO 3: RESUMEN FINANCIERO Y MÉTODO DE PAGO -->
+            <div class="section-divider ion-margin-top">
+              <span class="step-badge">Paso 3</span>
+              <h4>Liquidación y Método de Pago</h4>
+            </div>
+
+            <div class="financial-summary-card">
+              <div class="summary-line">
+                <span>Subtotal Bruto:</span>
+                <strong>${{ subtotalVenta | number:'1.2-2' }}</strong>
+              </div>
+              <div class="summary-line">
+                <span>IVA (19%):</span>
+                <span class="iva-amount">+${{ ivaVenta | number:'1.2-2' }}</span>
+              </div>
+              <div class="summary-line total-line">
+                <span>Total a Pagar:</span>
+                <strong class="grand-total">${{ totalVenta | number:'1.2-2' }}</strong>
+              </div>
+            </div>
+
+            <!-- Método de Pago / Pasarela -->
+            <div class="form-group ion-margin-top">
               <label class="form-label">Método de Pago *</label>
               <select
                 class="custom-select"
@@ -209,14 +332,25 @@
               </select>
             </div>
 
+            <!-- AVISO DE PASARELA SI ESTÁ SELECCIONADA -->
+            <div class="gateway-hint-box" *ngIf="metodoPago.toLowerCase().includes('tarjet') || metodoPago.toLowerCase().includes('pasarela') || metodoPago.toLowerCase().includes('wompi')">
+              <div class="gateway-hint-header">
+                <ion-icon name="card-outline"></ion-icon>
+                <span>Cobro Digital Automatizado</span>
+              </div>
+              <p>Al presionar el botón se abrirá la pasarela segura de pago para procesar la tarjeta o PSE del cliente.</p>
+            </div>
+
             <div class="form-actions ion-margin-top">
               <ion-button
                 expand="block"
                 type="submit"
                 color="primary"
-                [disabled]="guardando || !clienteNombre || !montoTotal || montoTotal <= 0">
+                [disabled]="guardando || !clienteNombre.trim() || itemsFactura.length === 0">
                 <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
-                <span *ngIf="!guardando">Emitir Factura</span>
+                <span *ngIf="!guardando">
+                  {{ (metodoPago.toLowerCase().includes('tarjet') || metodoPago.toLowerCase().includes('pasarela') || metodoPago.toLowerCase().includes('wompi')) ? '💳 Pagar con Pasarela ($' + (totalVenta | number:'1.2-2') + ')' : '🧾 Emitir Factura ($' + (totalVenta | number:'1.2-2') + ')' }}
+                </span>
               </ion-button>
             </div>
           </form>
@@ -258,12 +392,16 @@
           </ion-label>
           <div slot="end" class="ion-text-right">
             <ion-badge color="success" class="badge-total">${{ fact.total | number:'1.2-2' }}</ion-badge>
-            <p style="font-size: 11px; margin: 4px 0 0; color: #3880ff; font-weight: 700;">{{ fact.estado || 'Emitida' }}</p>
+            <p
+              [style.color]="fact.estado === 'Pagada' ? '#16a34a' : '#2563eb'"
+              style="font-size: 11px; margin: 4px 0 0; font-weight: 700;">
+              {{ fact.estado || 'Emitida' }}
+            </p>
           </div>
         </ion-item>
       </ion-list>
 
-      <!-- Barra de Paginación Visible -->
+      <!-- Paginación -->
       <div *ngIf="!loading && totalPages >= 1 && facturas.length > 0" class="pagination-bar">
         <ion-button
           size="small"
@@ -287,7 +425,7 @@
       </ion-infinite-scroll>
     </div>
 
-    <!-- MODAL DETALLE DE FACTURA (Al tocar una factura) -->
+    <!-- MODAL DETALLE DE FACTURA (CON DESGLOSE DE PRODUCTOS Y BOTÓN DE COBRO POR PASARELA) -->
     <div class="custom-modal-backdrop" *ngIf="mostrarModalDetalle && facturaSeleccionada">
       <div class="custom-modal-card fact-detail-card">
         <div class="modal-card-top-bar">
@@ -300,16 +438,26 @@
         </div>
 
         <h3 class="detail-title">Factura de Venta</h3>
-        <p class="detail-subtitle">Estado: <strong>{{ facturaSeleccionada.estado || 'Emitida' }}</strong></p>
+        <p class="detail-subtitle">
+          Estado:
+          <span [class.badge-pagada]="facturaSeleccionada.estado === 'Pagada'" [class.badge-emitida]="facturaSeleccionada.estado !== 'Pagada'">
+            {{ facturaSeleccionada.estado || 'Emitida' }}
+          </span>
+        </p>
 
-        <div class="detail-grid">
+        <div *ngIf="cargandoDetalle" class="ion-text-center ion-padding">
+          <ion-spinner name="crescent" color="primary"></ion-spinner>
+          <p class="small text-muted">Cargando desglose de la factura...</p>
+        </div>
+
+        <div class="detail-grid" *ngIf="!cargandoDetalle">
           <div class="detail-row">
             <span class="detail-label">Cliente</span>
             <span class="detail-value text-primary font-bold">{{ facturaSeleccionada.cliente_nombre || 'Cliente General' }}</span>
           </div>
 
           <div class="detail-row" *ngIf="facturaSeleccionada.cliente_documento || facturaSeleccionada.documento_cliente">
-            <span class="detail-label">Identificación del Cliente</span>
+            <span class="detail-label">Identificación Tributaria</span>
             <span class="detail-value">
               <strong>{{ facturaSeleccionada.cliente_tipo_documento || facturaSeleccionada.tipo_documento || 'CC' }}:</strong>
               {{ facturaSeleccionada.cliente_documento || facturaSeleccionada.documento_cliente }}
@@ -326,21 +474,209 @@
             <span class="detail-value">{{ facturaSeleccionada.metodo_pago || 'Efectivo' }}</span>
           </div>
 
+          <div class="detail-row" *ngIf="facturaSeleccionada.referencia_pago">
+            <span class="detail-label">Ref. Pasarela ({{ facturaSeleccionada.pasarela?.toUpperCase() || 'WOMPI' }})</span>
+            <span class="detail-value font-mono font-bold" style="color: #0f2b5c;">{{ facturaSeleccionada.referencia_pago }}</span>
+          </div>
+
+          <!-- Ítems Comprados en la Factura -->
+          <div class="items-summary-block ion-margin-top ion-margin-bottom" *ngIf="facturaSeleccionada.detalles && facturaSeleccionada.detalles.length > 0">
+            <span class="detail-label" style="display: block; margin-bottom: 6px;">Productos Comprados ({{ facturaSeleccionada.detalles.length }})</span>
+            <div class="item-compra-mini" *ngFor="let det of facturaSeleccionada.detalles" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 10px; margin-bottom: 5px; font-size: 13px;">
+              <div style="display: flex; justify-content: space-between; font-weight: 600; color: #1e293b;">
+                <span>{{ det.nombre_producto || ('Producto #' + det.id_producto) }}</span>
+                <span>x{{ det.cantidad }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; color: #64748b; font-size: 12px;">
+                <span>Unit: ${{ (det.precio_unitario || 0) | number:'1.2-2' }}</span>
+                <span style="color: #0f2b5c; font-weight: 700;">Subtotal: ${{ (det.subtotal || 0) | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-row" *ngIf="facturaSeleccionada.subtotal">
+            <span class="detail-label">Subtotal</span>
+            <span class="detail-value">${{ facturaSeleccionada.subtotal | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="facturaSeleccionada.iva">
+            <span class="detail-label">IVA (19%)</span>
+            <span class="detail-value text-iva">+${{ facturaSeleccionada.iva | number:'1.2-2' }}</span>
+          </div>
+
           <div class="detail-row">
-            <span class="detail-label">Total Facturado</span>
+            <span class="detail-label">Total Liquidado</span>
             <span class="detail-value text-success font-bold font-large">${{ facturaSeleccionada.total | number:'1.2-2' }}</span>
           </div>
         </div>
 
+        <!-- Botón de Cobro con Pasarela si está Pendiente / Emitida -->
+        <div class="modal-buttons ion-margin-top" *ngIf="facturaSeleccionada.estado !== 'Pagada'">
+          <button
+            type="button"
+            class="btn-modal btn-gateway-action"
+            (click)="abrirPasarelaCobro(facturaSeleccionada)">
+            💳 Cobrar con Pasarela de Pago
+          </button>
+        </div>
+
         <div class="modal-buttons ion-margin-top">
           <button type="button" class="btn-modal btn-primary" (click)="cerrarModalDetalle()">
-            Cerrar
+            Cerrar Detalle
           </button>
         </div>
       </div>
     </div>
 
-    <!-- MODAL DE CONFIRMACIÓN PERSONALIZADO -->
+    <!-- MODAL DE CHECKOUT: PASARELA DE PAGOS SEGURA (WOMPI / PSE / TARJETA) -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalPasarela">
+      <div class="custom-modal-card gateway-modal-card">
+        <div class="modal-card-top-bar">
+          <span class="gateway-brand-badge">🔒 Pasarela de Pago Segura</span>
+          <button type="button" class="close-btn-round" [disabled]="procesandoPagoPasarela" (click)="cerrarModalPasarela()">✕</button>
+        </div>
+
+        <div class="gateway-modal-header">
+          <div class="gateway-logos-row">
+            <span class="gateway-brand-text">WOMPI / PSE</span>
+            <span class="gateway-security-tag">PCI-DSS 256-Bit</span>
+          </div>
+          <p class="gateway-charge-label">Total a Cobrar:</p>
+          <h2 class="gateway-charge-amount">${{ montoAPagarPasarela | number:'1.2-2' }}</h2>
+        </div>
+
+        <!-- Pestañas de Medio de Pago -->
+        <div class="gateway-tabs-row">
+          <button
+            type="button"
+            class="gateway-tab-btn"
+            [class.active]="tabPasarela === 'tarjeta'"
+            (click)="tabPasarela = 'tarjeta'">
+            💳 Tarjeta de Crédito / Débito
+          </button>
+          <button
+            type="button"
+            class="gateway-tab-btn"
+            [class.active]="tabPasarela === 'pse'"
+            (click)="tabPasarela = 'pse'">
+            📱 PSE / Billeteras Digitales
+          </button>
+        </div>
+
+        <!-- FORMULARIO 1: TARJETA DE CRÉDITO O DÉBITO -->
+        <div class="gateway-form-content" *ngIf="tabPasarela === 'tarjeta'">
+          <div class="form-group">
+            <label class="form-label">Número de Tarjeta *</label>
+            <input
+              type="text"
+              class="custom-input"
+              [(ngModel)]="numeroTarjeta"
+              placeholder="4532 •••• •••• 8910"
+              maxlength="19" />
+          </div>
+
+          <div class="row-two-col">
+            <div class="form-group">
+              <label class="form-label">Vencimiento (MM/AA) *</label>
+              <input
+                type="text"
+                class="custom-input"
+                [(ngModel)]="expiracionTarjeta"
+                placeholder="12/28"
+                maxlength="5" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">CVV / CVC *</label>
+              <input
+                type="password"
+                class="custom-input"
+                [(ngModel)]="cvvTarjeta"
+                placeholder="123"
+                maxlength="4" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nombre del Titular *</label>
+            <input
+              type="text"
+              class="custom-input"
+              [(ngModel)]="titularTarjeta"
+              placeholder="Como aparece en la tarjeta" />
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Número de Cuotas</label>
+            <select class="custom-select" [(ngModel)]="cuotasTarjeta">
+              <option [value]="1">1 Cuota (Sin intereses)</option>
+              <option [value]="2">2 Cuotas</option>
+              <option [value]="3">3 Cuotas</option>
+              <option [value]="6">6 Cuotas</option>
+              <option [value]="12">12 Cuotas</option>
+              <option [value]="24">24 Cuotas</option>
+              <option [value]="36">36 Cuotas</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- FORMULARIO 2: PSE Y BILLETERAS DIGITALES -->
+        <div class="gateway-form-content" *ngIf="tabPasarela === 'pse'">
+          <div class="form-group">
+            <label class="form-label">Banco / Billetera Digital *</label>
+            <select class="custom-select" [(ngModel)]="bancoPse">
+              <option value="Bancolombia">Bancolombia</option>
+              <option value="Nequi">Nequi</option>
+              <option value="Daviplata">Daviplata</option>
+              <option value="Davivienda">Davivienda</option>
+              <option value="Banco de Bogotá">Banco de Bogotá</option>
+              <option value="BBVA Colombia">BBVA Colombia</option>
+              <option value="Nu Colombia">Nu Bank</option>
+            </select>
+          </div>
+
+          <div class="row-two-col">
+            <div class="form-group">
+              <label class="form-label">Tipo de Persona</label>
+              <select class="custom-select" [(ngModel)]="tipoPersonaPse">
+                <option value="Natural">Persona Natural</option>
+                <option value="Juridica">Persona Jurídica</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Celular / Teléfono *</label>
+              <input
+                type="tel"
+                class="custom-input"
+                [(ngModel)]="telefonoPse"
+                placeholder="3001234567" />
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTÓN DE CONFIRMACIÓN DE PAGO -->
+        <div class="gateway-actions-footer ion-margin-top">
+          <button
+            type="button"
+            class="btn-gateway-confirm"
+            (click)="procesarPagoPasarela()"
+            [disabled]="procesandoPagoPasarela">
+            <ion-spinner *ngIf="procesandoPagoPasarela" name="crescent"></ion-spinner>
+            <span *ngIf="!procesandoPagoPasarela">
+              🔒 Confirmar Pago (${{ montoAPagarPasarela | number:'1.2-2' }})
+            </span>
+          </button>
+          <button
+            type="button"
+            class="btn-gateway-cancel"
+            [disabled]="procesandoPagoPasarela"
+            (click)="cerrarModalPasarela()">
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN TRAS EMITIR FACTURA -->
     <div class="custom-modal-backdrop" *ngIf="mostrarModalConfirmacion">
       <div class="custom-modal-card">
         <div class="modal-header-icon success">

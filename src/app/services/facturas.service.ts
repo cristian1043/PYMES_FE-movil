@@ -26,6 +26,8 @@ export interface Factura {
   cliente?: any;
   detalles?: any[];
   id_empresa?: number;
+  pasarela?: string;
+  referencia_pago?: string;
 }
 
 @Injectable({
@@ -58,5 +60,10 @@ export class FacturasService {
       if (emp?.id) data.id_empresa = emp.id;
     }
     return this.http.post<Factura>(`${this.apiUrl}/`, data, { headers });
+  }
+
+  pagarFacturaPasarela(id: number, data: { pasarela: string; referencia_pago: string; id_metodo_pago?: number }): Observable<any> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.post<any>(`${this.apiUrl}/${id}/pagar`, data, { headers });
   }
 }

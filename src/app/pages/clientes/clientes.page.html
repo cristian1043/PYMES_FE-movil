@@ -376,19 +376,23 @@
 
         <div class="row-two-col">
           <div class="form-group">
-            <label class="form-label">Tipo Documento</label>
-            <select class="custom-select" [(ngModel)]="clienteEditando.tipo_documento">
-              <option value="CC">CC</option>
-              <option value="NIT">NIT</option>
-              <option value="CE">CE</option>
-              <option value="PAS">PAS</option>
-            </select>
+            <label class="form-label">
+              Tipo Documento
+              <span class="badge-locked">🔒 Fijo</span>
+            </label>
+            <input type="text" class="custom-input disabled-input" [value]="clienteEditando.tipo_documento || 'CC'" readonly disabled />
           </div>
           <div class="form-group">
-            <label class="form-label">N° Documento</label>
-            <input type="text" class="custom-input" [(ngModel)]="clienteEditando.documento" />
+            <label class="form-label">
+              N° Documento
+              <span class="badge-locked">🔒 Fijo</span>
+            </label>
+            <input type="text" class="custom-input disabled-input" [value]="clienteEditando.documento" readonly disabled />
           </div>
         </div>
+        <small class="locked-note ion-margin-bottom" style="display: block; color: #64748b; font-size: 11px; margin-top: -8px; margin-bottom: 12px;">
+          🔒 <em>La identificación tributaria está protegida para mantener la validez legal del historial de facturas.</em>
+        </small>
 
         <div class="row-two-col">
           <div class="form-group">
