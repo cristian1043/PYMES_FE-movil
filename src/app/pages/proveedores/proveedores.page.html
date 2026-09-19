@@ -99,6 +99,19 @@
         <ion-card-content>
           <form (ngSubmit)="onRegistrarProveedor()">
             <div class="form-group">
+              <label class="form-label">Código de Proveedor (Consecutivo) *</label>
+              <input
+                type="text"
+                class="custom-input readonly-input"
+                [value]="siguienteCodigo"
+                readonly
+                style="background-color: #f1f5f9 !important; font-weight: 800; color: #0284c7 !important; border: 1.5px solid #bae6fd; font-family: monospace; font-size: 15px;" />
+              <small class="field-hint" style="color: #64748b; font-size: 12px; margin-top: 4px; display: block;">
+                🏷️ Identificador único empresarial asignado automáticamente por el sistema.
+              </small>
+            </div>
+
+            <div class="form-group">
               <label class="form-label">Nombre o Razon Social *</label>
               <input
                 type="text"
@@ -189,21 +202,27 @@
       <ion-list *ngIf="!loading && proveedores.length > 0">
         <ion-item *ngFor="let prov of proveedores; let idx = index" class="proveedor-item" [style.border]="prov.id === proveedorDestacadoId ? '2px solid #3b82f6' : 'none'" [style.border-radius]="prov.id === proveedorDestacadoId ? '10px' : '0'">
           <ion-icon name="business-outline" slot="start" color="tertiary" style="font-size: 28px;"></ion-icon>
-          <ion-label>
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; gap: 8px;">
+          <ion-label style="white-space: normal; overflow: visible; width: 100%;">
+            <!-- Fila Superior: Código Empresarial + Consecutivo -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 8px;">
               <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                <h2 style="font-weight: 700; font-size: 15px; margin: 0; color: #1e293b;">{{ prov.nombre }}</h2>
-                <span class="doc-badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 11px; padding: 2px 7px; border-radius: 6px; letter-spacing: 0.3px;">
-                  {{ prov.codigo || ('PROV-E' + (prov.id_empresa || 1) + '-' + prov.id) }}
+                <span style="display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; color: #0284c7; font-weight: 800; font-size: 12px; padding: 3px 8px; border-radius: 6px; border: 1.5px solid #bae6fd; font-family: monospace; letter-spacing: 0.5px;">
+                  🏷️ {{ prov.codigo || ('PROV-E' + (prov.id_empresa || 1) + '-' + prov.id) }}
                 </span>
-                <span *ngIf="prov.id === proveedorDestacadoId" style="font-size: 10px; background: #10b981; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 700;">Distribuidor Directo</span>
+                <span *ngIf="prov.id === proveedorDestacadoId" style="font-size: 10px; background: #10b981; color: white; padding: 3px 6px; border-radius: 4px; font-weight: 700;">Distribuidor Directo</span>
               </div>
-              <span style="font-size: 11px; font-weight: 800; color: #64748b; background: #f1f5f9; padding: 2px 7px; border-radius: 6px; border: 1px solid #e2e8f0; white-space: nowrap;">#{{ (currentPage - 1) * 10 + idx + 1 }}</span>
+              <span style="font-size: 11px; font-weight: 800; color: #64748b; background: #f1f5f9; padding: 2px 8px; border-radius: 6px; border: 1px solid #e2e8f0; white-space: nowrap;">#{{ (currentPage - 1) * 10 + idx + 1 }}</span>
             </div>
-            <p>NIT/Doc: {{ prov.nit_documento || prov.nit || 'N/A' }}</p>
-            <ion-note color="medium" *ngIf="prov.contacto">Contacto: {{ prov.contacto }}</ion-note>
+
+            <!-- Nombre del Proveedor -->
+            <h2 style="font-weight: 700; font-size: 15px; margin: 0 0 4px 0; color: #0f172a; white-space: normal; line-height: 1.3;">{{ prov.nombre }}</h2>
+            <p style="margin: 0 0 2px 0; font-size: 13px; color: #475569;">
+              <strong>NIT:</strong> {{ prov.nit_documento || prov.nit || 'N/A' }}
+            </p>
+            <ion-note color="medium" *ngIf="prov.contacto" style="font-size: 12px;">👤 Contacto: {{ prov.contacto }}</ion-note>
+
             <!-- Botón de acción para Administrador para emitir orden de compra y editar proveedor -->
-            <div *ngIf="esAdmin" style="margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;">
+            <div *ngIf="esAdmin" style="margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap;">
               <button type="button" style="background: #1e3c72; color: #ffffff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(30, 60, 114, 0.2);" (click)="irAComprarConProveedor(prov)">
                 🛒 Comprar
               </button>
@@ -251,16 +270,32 @@
     </div>
 
     <!-- MODAL DE EDICIÓN DE PROVEEDOR (ADMIN) -->
-    <div class="custom-modal-backdrop" *ngIf="mostrarModalEditar && proveedorEditando">
-      <div class="custom-modal-card" style="text-align: left; max-width: 480px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
-          <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-            ✏️ Editar Proveedor <span style="font-size: 12px; color: #0369a1; background: #e0f2fe; padding: 2px 8px; border-radius: 6px; font-family: monospace;">{{ proveedorEditando.codigo || ('PROV-E' + (proveedorEditando.id_empresa || 1) + '-' + proveedorEditando.id) }}</span>
-          </h3>
-          <button type="button" (click)="cerrarModalEditar()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-weight: 800; color: #64748b; cursor: pointer;">✕</button>
+    <div class="custom-modal-backdrop modal-proveedor-backdrop" *ngIf="mostrarModalEditar && proveedorEditando">
+      <div class="custom-modal-card modal-edicion-card" style="text-align: left; max-width: 480px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 12px;">
+          <div>
+            <div style="margin-bottom: 4px;">
+              <span style="display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #0284c7; background: #e0f2fe; padding: 3px 8px; border-radius: 6px; font-family: monospace; font-weight: 800; border: 1px solid #bae6fd;">
+                🏷️ {{ proveedorEditando.codigo || ('PROV-E' + (proveedorEditando.id_empresa || 1) + '-' + proveedorEditando.id) }}
+              </span>
+            </div>
+            <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a;">
+              ✏️ Editar Proveedor
+            </h3>
+          </div>
+          <button type="button" (click)="cerrarModalEditar()" style="background: #f1f5f9; border: none; width: 34px; height: 34px; border-radius: 50%; font-weight: 800; color: #64748b; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px;">✕</button>
         </div>
 
         <form (ngSubmit)="onGuardarEdicionProveedor()">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label class="form-label" style="font-size: 13px; margin-bottom: 4px; display: block; font-weight: 700; color: #1e3c72;">Código Empresarial (Fijo)</label>
+            <input
+              type="text"
+              class="custom-input readonly-input"
+              [value]="proveedorEditando.codigo || ('PROV-E' + (proveedorEditando.id_empresa || 1) + '-' + proveedorEditando.id)"
+              readonly
+              style="background-color: #f1f5f9 !important; font-weight: 800; color: #0284c7 !important; border: 1.5px solid #bae6fd; font-family: monospace;" />
+          </div>
           <ion-item class="form-item" lines="none" style="margin-bottom: 10px;">
             <ion-label position="stacked">Razón Social / Nombre Proveedor *</ion-label>
             <ion-input [(ngModel)]="editNombre" name="editNombre" type="text" required></ion-input>

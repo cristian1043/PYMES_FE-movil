@@ -29,6 +29,8 @@ export class ProveedoresPage implements OnInit, OnDestroy {
   esAdmin = false;
 
   // Formulario nuevo proveedor
+  siguienteCodigo = 'PROV-E1-001';
+  cargandoCodigo = false;
   nombreProveedor = '';
   nitProveedor = '';
   contactoProveedor = '';
@@ -84,6 +86,8 @@ export class ProveedoresPage implements OnInit, OnDestroy {
         if (tabChanged || this.proveedores.length === 0) {
           this.cargarProveedores(1, true);
         }
+      } else if (this.activeTab === 'nuevo') {
+        this.cargarSiguienteCodigo();
       }
       this.cdr.detectChanges();
     });
@@ -99,15 +103,13 @@ export class ProveedoresPage implements OnInit, OnDestroy {
     this.verificarAutenticacion();
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
     const targetTab = (tabParam === 'listado' || tabParam === 'nuevo') ? tabParam : 'hub';
-    if (this.activeTab !== targetTab) {
-      this.activeTab = targetTab;
-      if (this.activeTab === 'listado') {
-        this.cargarProveedores(1, true);
-      }
-      this.cdr.detectChanges();
-    } else if (this.activeTab === 'listado' && this.proveedores.length === 0 && !this.loading) {
+    this.activeTab = targetTab;
+    if (this.activeTab === 'listado') {
       this.cargarProveedores(1, true);
+    } else if (this.activeTab === 'nuevo') {
+      this.cargarSiguienteCodigo();
     }
+    this.cdr.detectChanges();
   }
 
   private verificarAutenticacion(): void {
@@ -152,10 +154,33 @@ export class ProveedoresPage implements OnInit, OnDestroy {
     }
   }
 
+  cargarSiguienteCodigo(): void {
+    const emp = this.authService.getEmpresaActiva();
+    this.cargandoCodigo = true;
+    this.cdr.detectChanges();
+    this.proveedoresService.getSiguienteCodigo(emp?.id).subscribe({
+      next: (res) => {
+        this.cargandoCodigo = false;
+        if (res && res.siguiente_codigo) {
+          this.siguienteCodigo = res.siguiente_codigo;
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.cargandoCodigo = false;
+        const eid = emp?.id || 1;
+        this.siguienteCodigo = `PROV-E${eid}-${(this.proveedores.length + 1).toString().padStart(3, '0')}`;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   seleccionarAccion(accion: 'nuevo' | 'listado'): void {
     this.activeTab = accion;
     this.router.navigate([], { relativeTo: this.route, queryParams: { tab: accion } });
-    if (accion === 'listado') {
+    if (accion === 'nuevo') {
+      this.cargarSiguienteCodigo();
+    } else if (accion === 'listado') {
       this.cargarProveedores(1, true);
     }
     this.cdr.detectChanges();
@@ -240,6 +265,7 @@ export class ProveedoresPage implements OnInit, OnDestroy {
     this.guardando = true;
 
     this.proveedoresService.createProveedor({
+      codigo: this.siguienteCodigo,
       nombre: this.nombreProveedor.trim(),
       nit_documento: (this.nitProveedor || '').trim(),
       contacto: (this.contactoProveedor || '').trim(),
@@ -354,5 +380,6 @@ export class ProveedoresPage implements OnInit, OnDestroy {
     this.contactoProveedor = '';
     this.telefonoProveedor = '';
     this.emailProveedor = '';
+    this.cargarSiguienteCodigo();
   }
 }

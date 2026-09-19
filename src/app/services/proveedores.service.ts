@@ -59,4 +59,11 @@ export class ProveedoresService {
     const headers = this.authService.getAuthHeaders();
     return this.http.patch<any>(`${this.apiUrl}/${id}/estado`, { estado }, { headers });
   }
+
+  getSiguienteCodigo(empresaId?: number): Observable<{ siguiente_codigo: string }> {
+    const headers = this.authService.getAuthHeaders();
+    const empId = empresaId || this.authService.getEmpresaActiva()?.id;
+    const empParam = empId ? `?empresa_id=${empId}` : '';
+    return this.http.get<{ siguiente_codigo: string }>(`${this.apiUrl}/siguiente-codigo${empParam}`, { headers });
+  }
 }
