@@ -25,20 +25,12 @@ export class InicioPage implements OnInit {
 
   private readonly todosModulos: ModuleCard[] = [
     {
-      titulo: 'Productos e Inventario',
-      descripcion: 'Gestión del catálogo, stock y precios de productos',
-      url: '/productos',
-      icon: 'cube-outline',
-      color: 'primary',
-      roles: [1, 3]
-    },
-    {
-      titulo: 'Facturas y Ventas',
-      descripcion: 'Emisión de facturas, clientes y registro de ventas',
+      titulo: 'Ventas y Facturación',
+      descripcion: 'Registrar nueva venta, emitir facturas y cobrar con datáfono o link',
       url: '/facturas',
       icon: 'document-text-outline',
       color: 'success',
-      roles: [1, 2]
+      roles: [1, 2, 3]
     },
     {
       titulo: 'Gestión de Compras',
@@ -46,7 +38,15 @@ export class InicioPage implements OnInit {
       url: '/compras',
       icon: 'cart-outline',
       color: 'warning',
-      roles: [1, 3]
+      roles: [1, 2, 3]
+    },
+    {
+      titulo: 'Productos e Inventario',
+      descripcion: 'Gestión del catálogo, stock y precios de productos',
+      url: '/productos',
+      icon: 'cube-outline',
+      color: 'primary',
+      roles: [1, 2, 3]
     },
     {
       titulo: 'Directorio de Clientes',
@@ -54,7 +54,7 @@ export class InicioPage implements OnInit {
       url: '/clientes',
       icon: 'people-outline',
       color: 'tertiary',
-      roles: [1, 2]
+      roles: [1, 2, 3]
     },
     {
       titulo: 'Directorio de Proveedores',
@@ -62,7 +62,7 @@ export class InicioPage implements OnInit {
       url: '/proveedores',
       icon: 'bus-outline',
       color: 'medium',
-      roles: [1, 3]
+      roles: [1, 2, 3]
     },
     {
       titulo: 'Reportes y Métricas',
@@ -70,7 +70,7 @@ export class InicioPage implements OnInit {
       url: '/reportes',
       icon: 'bar-chart-outline',
       color: 'danger',
-      roles: [1, 3]
+      roles: [1, 2, 3]
     },
     {
       titulo: 'Gestión de Usuarios',
@@ -79,6 +79,14 @@ export class InicioPage implements OnInit {
       icon: 'shield-checkmark-outline',
       color: 'dark',
       roles: [1]
+    },
+    {
+      titulo: 'Terminales y Pasarelas',
+      descripcion: 'Datáfonos Bold, links de pago Wompi y modo pruebas',
+      url: '/terminales',
+      icon: 'card-outline',
+      color: 'success',
+      roles: [1, 2, 3]
     },
     {
       titulo: 'Configuración de Empresa',

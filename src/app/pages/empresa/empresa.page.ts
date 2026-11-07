@@ -68,6 +68,10 @@ export class EmpresaPage implements OnInit {
     this.router.navigateByUrl('/inicio');
   }
 
+  irATerminales(): void {
+    this.router.navigateByUrl('/terminales');
+  }
+
   cargarDatosEmpresa(event?: any): void {
     this.loading = true;
     this.cdr.detectChanges();

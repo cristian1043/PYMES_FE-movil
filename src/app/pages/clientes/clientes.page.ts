@@ -195,8 +195,7 @@ export class ClientesPage implements OnInit, OnDestroy {
       (c.apellido && c.apellido.toLowerCase().includes(term)) ||
       (c.documento && c.documento.toLowerCase().includes(term)) ||
       (c.email && c.email.toLowerCase().includes(term)) ||
-      (c.telefono && c.telefono.toLowerCase().includes(term)) ||
-      (c.banco_tarjeta && c.banco_tarjeta.toLowerCase().includes(term))
+      (c.telefono && c.telefono.toLowerCase().includes(term))
     );
   }
 

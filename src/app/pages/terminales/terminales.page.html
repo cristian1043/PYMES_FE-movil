@@ -1,0 +1,450 @@
+<ion-page>
+  <ion-header class="custom-app-header">
+    <div class="header-content">
+      <button class="header-menu-btn" (click)="toggleMenu()" title="Abrir Menú Lateral">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <div class="header-title-container">
+        <ion-icon name="card-outline" class="header-logo-icon"></ion-icon>
+        <span class="header-title-text">Terminales y Pasarelas</span>
+      </div>
+
+      <button class="header-back-home-btn" (click)="irAIndex()" title="Volver al Inicio">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          <polyline points="9 22 9 12 15 12 15 22"></polyline>
+        </svg>
+      </button>
+    </div>
+  </ion-header>
+
+  <ion-content class="terminales-content ion-padding">
+    <ion-refresher slot="fixed" (ionRefresh)="cargarTodo($event)">
+      <ion-refresher-content pullingText="Desliza para actualizar..." refreshingSpinner="crescent"></ion-refresher-content>
+    </ion-refresher>
+
+    <div class="terminales-container">
+      <!-- Pestañas superiores -->
+      <div class="top-tabs-bar">
+        <button
+          type="button"
+          class="tab-pill-btn"
+          [class.active]="activeTab === 'terminales'"
+          (click)="cambiarTab('terminales')">
+          📠 Terminales (Datáfonos)
+        </button>
+        <button
+          type="button"
+          class="tab-pill-btn"
+          [class.active]="activeTab === 'pasarelas'"
+          (click)="cambiarTab('pasarelas')">
+          🔐 Pasarelas (Bold / Wompi)
+        </button>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- PESTAÑA 1: TERMINALES DE PAGO (DATÁFONOS)                 -->
+      <!-- ========================================================= -->
+      <div *ngIf="activeTab === 'terminales'">
+        <div class="section-banner">
+          <div>
+            <h3>Datáfonos Vinculados</h3>
+            <p>Envía el monto de cada factura directo al datáfono sin doble digitación</p>
+          </div>
+          <button type="button" class="btn-primary-small" (click)="abrirModalNuevaTerminal()">
+            + Agregar Terminal
+          </button>
+        </div>
+
+        <div *ngIf="loading" class="ion-text-center ion-padding">
+          <ion-spinner name="crescent" color="primary"></ion-spinner>
+          <p class="muted-text">Cargando terminales de pago...</p>
+        </div>
+
+        <!-- Estado vacío si no hay terminales -->
+        <div *ngIf="!loading && terminales.length === 0" class="empty-card">
+          <ion-icon name="calculator-outline" class="empty-icon"></ion-icon>
+          <h4>Aún no tienes terminales de pago</h4>
+          <p>
+            Registra un datáfono en modo <strong>Simulado (pruebas sin llaves)</strong> o vincula tu datáfono físico <strong>Bold Smart / Smart Pro</strong>.
+          </p>
+          <button type="button" class="btn-submit-touch" (click)="abrirModalNuevaTerminal()">
+            + Agregar Primera Terminal
+          </button>
+        </div>
+
+        <!-- Lista de terminales -->
+        <div class="cards-stack" *ngIf="!loading && terminales.length > 0">
+          <div class="item-card" *ngFor="let t of terminales">
+            <div class="item-card-header">
+              <div class="item-title-group">
+                <span class="device-icon">📠</span>
+                <div>
+                  <h4>{{ t.nombre }}</h4>
+                  <span class="sub-label">{{ t.terminal_model || 'Bold Smart Pro' }} • Serial: <code>{{ t.terminal_serial || 'N/A' }}</code></span>
+                </div>
+              </div>
+              <span class="badge-status" [class.active]="t.estado === 'Activo'" [class.inactive]="t.estado !== 'Activo'">
+                {{ t.estado === 'Activo' ? '🟢 Activa' : '🔴 Inactiva' }}
+              </span>
+            </div>
+
+            <div class="item-meta-row">
+              <span class="chip-tag" [class.chip-sim]="t.proveedor === 'simulado'" [class.chip-bold]="t.proveedor === 'bold'">
+                {{ t.proveedor === 'bold' ? '⚡ BOLD API REAL' : '🧪 MODO PRUEBAS (SIMULADO)' }}
+              </span>
+              <span class="meta-text" *ngIf="t.metodo_pago_nombre">Método: <strong>{{ t.metodo_pago_nombre }}</strong></span>
+              <span class="meta-text" *ngIf="t.email_usuario">Operador: {{ t.email_usuario }}</span>
+            </div>
+
+            <div class="item-actions-row">
+              <button type="button" class="btn-action-outline" (click)="abrirModalEditarTerminal(t)">
+                ✏️ Configurar
+              </button>
+              <button
+                type="button"
+                class="btn-action-toggle"
+                [class.danger]="t.estado === 'Activo'"
+                [class.success]="t.estado !== 'Activo'"
+                (click)="cambiarEstadoTerminal(t)">
+                {{ t.estado === 'Activo' ? 'Desactivar' : 'Activar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta de Conciliación Rápida -->
+        <div class="reconcile-card">
+          <div class="reconcile-info">
+            <h4>🔄 Conciliación y Seguimiento de Pagos</h4>
+            <p>Consulta en Bold y Wompi los cobros pendientes, expira los vencidos y detecta facturas sin pago confirmado.</p>
+          </div>
+          <button type="button" class="btn-outline-dark" [disabled]="conciliando" (click)="ejecutarConciliacion()">
+            <ion-spinner *ngIf="conciliando" name="crescent"></ion-spinner>
+            <span *ngIf="!conciliando">Ejecutar Conciliación Ahora</span>
+          </button>
+
+          <div class="reconcile-result" *ngIf="resumenConciliacion">
+            <div class="reconcile-grid">
+              <div><strong>Revisadas:</strong> {{ resumenConciliacion.revisadas || 0 }}</div>
+              <div><strong>Aprobadas:</strong> {{ resumenConciliacion.aprobadas?.length || 0 }}</div>
+              <div><strong>Expiradas:</strong> {{ resumenConciliacion.expiradas?.length || 0 }}</div>
+              <div><strong>Facturas sin pago (+24h):</strong> {{ resumenConciliacion.facturas_emitidas_sin_pago?.length || 0 }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================= -->
+      <!-- PESTAÑA 2: PASARELAS Y MÉTODOS DE PAGO INTEGRADOS          -->
+      <!-- ========================================================= -->
+      <div *ngIf="activeTab === 'pasarelas'">
+        <div class="section-banner">
+          <div>
+            <h3>Pasarelas y Métodos de Pago</h3>
+            <p>Configura Bold (datáfono), Wompi (link PSE/Nequi/Tarjeta) o el modo Simulado sin llaves</p>
+          </div>
+          <button type="button" class="btn-primary-small" (click)="abrirModalNuevoMetodo('simulado')">
+            + Nuevo Método
+          </button>
+        </div>
+
+        <div class="quick-presets-row">
+          <button type="button" class="preset-btn" (click)="abrirModalNuevoMetodo('bold')">
+            + Configurar Bold (Datáfono)
+          </button>
+          <button type="button" class="preset-btn" (click)="abrirModalNuevoMetodo('wompi')">
+            + Configurar Wompi (PSE / Nequi / Link)
+          </button>
+        </div>
+
+        <div class="cards-stack" *ngIf="metodosPago.length > 0">
+          <div class="item-card" *ngFor="let m of metodosPago">
+            <div class="item-card-header">
+              <div>
+                <h4>{{ m.nombre }}</h4>
+                <span class="sub-label">Tipo: {{ m.tipo }} {{ m.banco ? '• ' + m.banco : '' }}</span>
+              </div>
+              <span class="chip-tag" [class.chip-sim]="m.pasarela === 'simulado'" [class.chip-bold]="m.pasarela === 'bold' || m.pasarela === 'wompi'">
+                {{ (!m.pasarela || m.pasarela === 'ninguna') ? 'MANUAL' : (m.pasarela | uppercase) + ' (' + (m.modo || 'sandbox') + ')' }}
+              </span>
+            </div>
+
+            <div class="item-meta-row" *ngIf="m.integrado">
+              <span class="key-pill" [class.ok]="m.api_key_publica" *ngIf="m.pasarela === 'wompi'">
+                Llave Pública: {{ m.api_key_publica ? 'Configurada ✓' : 'Pendiente' }}
+              </span>
+              <span class="key-pill" [class.ok]="m.tiene_llave_privada" *ngIf="m.pasarela === 'wompi' || m.pasarela === 'bold'">
+                {{ m.pasarela === 'bold' ? 'Llave Identidad:' : 'Llave Privada:' }} {{ m.tiene_llave_privada ? 'Guardada 🔒' : 'Sin configurar' }}
+              </span>
+              <span class="key-pill" [class.ok]="m.tiene_integrity_secret" *ngIf="m.pasarela === 'wompi'">
+                Firma Integridad: {{ m.tiene_integrity_secret ? 'Guardada 🔒' : 'Sin configurar' }}
+              </span>
+              <span class="key-pill" [class.ok]="m.tiene_webhook_secret" *ngIf="m.pasarela === 'wompi' || m.pasarela === 'bold'">
+                Secreto Webhook: {{ m.tiene_webhook_secret ? 'Guardado 🔒' : 'Sin configurar' }}
+              </span>
+            </div>
+
+            <div class="item-actions-row">
+              <button type="button" class="btn-action-outline" (click)="abrirModalEditarMetodo(m)">
+                ✏️ Editar / Llaves
+              </button>
+              <button
+                type="button"
+                *ngIf="!m.es_global"
+                class="btn-action-toggle danger"
+                (click)="eliminarMetodo(m)">
+                Desactivar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL CREAR / EDITAR TERMINAL DE PAGO                     -->
+    <!-- ========================================================= -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalTerminal">
+      <div class="custom-modal-card">
+        <div class="modal-top-row">
+          <h3>{{ editandoTerminalId ? 'Configurar Terminal' : 'Nueva Terminal (Datáfono)' }}</h3>
+          <button type="button" class="close-btn" (click)="cerrarModalTerminal()">✕</button>
+        </div>
+
+        <form (ngSubmit)="guardarTerminal()">
+          <div class="form-group-touch">
+            <label class="form-label-touch">Nombre de la Terminal / Caja *</label>
+            <input
+              type="text"
+              class="input-touch"
+              [(ngModel)]="formTerminal.nombre"
+              name="termNombre"
+              placeholder="ej: Caja Principal - Datáfono 1"
+              required />
+          </div>
+
+          <div class="form-group-touch">
+            <label class="form-label-touch">Pasarela Vinculada (Bold o Simulado) *</label>
+            <select
+              class="input-touch"
+              [(ngModel)]="formTerminal.id_metodo_pago"
+              name="termMetodo">
+              <option *ngFor="let m of metodosParaDatafono" [ngValue]="m.id">
+                {{ m.nombre }} ({{ (m.pasarela || 'simulado') | uppercase }})
+              </option>
+            </select>
+            <small class="hint-text" *ngIf="metodosParaDatafono.length === 0">
+              Primero crea un método con pasarela Bold o Simulado en la pestaña "Pasarelas".
+            </small>
+          </div>
+
+          <div class="discover-box">
+            <button
+              type="button"
+              class="btn-discover"
+              [disabled]="consultandoDisponibles || !formTerminal.id_metodo_pago"
+              (click)="consultarDispositivosDisponibles()">
+              <ion-spinner *ngIf="consultandoDisponibles" name="crescent"></ion-spinner>
+              <span *ngIf="!consultandoDisponibles">🔍 Buscar datáfonos vinculados en la cuenta</span>
+            </button>
+
+            <div class="discovered-list" *ngIf="terminalesDisponibles.length > 0">
+              <button
+                type="button"
+                class="discovered-item"
+                *ngFor="let d of terminalesDisponibles"
+                (click)="seleccionarDispositivoDisponible(d)">
+                📠 <strong>{{ d.name || d.terminal_model }}</strong> — Serial: <code>{{ d.terminal_serial }}</code>
+              </button>
+            </div>
+          </div>
+
+          <div class="two-cols">
+            <div class="form-group-touch">
+              <label class="form-label-touch">Serial del Datáfono *</label>
+              <input
+                type="text"
+                class="input-touch"
+                [(ngModel)]="formTerminal.terminal_serial"
+                name="termSerial"
+                placeholder="ej: N860W000000 o SIM-0001" />
+            </div>
+            <div class="form-group-touch">
+              <label class="form-label-touch">Modelo *</label>
+              <input
+                type="text"
+                class="input-touch"
+                [(ngModel)]="formTerminal.terminal_model"
+                name="termModel"
+                placeholder="ej: N86 / Bold Smart Pro" />
+            </div>
+          </div>
+
+          <div class="form-group-touch">
+            <label class="form-label-touch">Correo del Usuario Operador (Bold)</label>
+            <input
+              type="email"
+              class="input-touch"
+              [(ngModel)]="formTerminal.email_usuario"
+              name="termEmail"
+              placeholder="usuario@comercio.co" />
+          </div>
+
+          <div class="modal-buttons">
+            <button type="button" class="btn-modal btn-secondary" (click)="cerrarModalTerminal()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-modal btn-primary" [disabled]="guardandoTerminal">
+              <ion-spinner *ngIf="guardandoTerminal" name="crescent"></ion-spinner>
+              <span *ngIf="!guardandoTerminal">Guardar Terminal</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- MODAL CREAR / EDITAR MÉTODO DE PAGO / PASARELA            -->
+    <!-- ========================================================= -->
+    <div class="custom-modal-backdrop" *ngIf="mostrarModalMetodo">
+      <div class="custom-modal-card">
+        <div class="modal-top-row">
+          <h3>{{ editandoMetodoId ? 'Configurar Método / Pasarela' : 'Nuevo Método / Pasarela' }}</h3>
+          <button type="button" class="close-btn" (click)="cerrarModalMetodo()">✕</button>
+        </div>
+
+        <form (ngSubmit)="guardarMetodo()">
+          <div class="form-group-touch">
+            <label class="form-label-touch">Pasarela Integrada *</label>
+            <select
+              class="input-touch"
+              [(ngModel)]="formMetodo.pasarela"
+              (ngModelChange)="onPasarelaFormChange($event)"
+              name="metPasarela">
+              <option value="simulado">🧪 Simulado (Modo Pruebas sin llaves reales)</option>
+              <option value="bold">📠 Bold (Datáfono Smart / Smart Pro)</option>
+              <option value="wompi">🌐 Wompi Bancolombia (Link PSE / Nequi / Tarjeta)</option>
+              <option value="ninguna">💵 Ninguna (Efectivo / Transferencia manual)</option>
+            </select>
+          </div>
+
+          <div class="form-group-touch">
+            <label class="form-label-touch">Nombre Visible en Caja *</label>
+            <input
+              type="text"
+              class="input-touch"
+              [(ngModel)]="formMetodo.nombre"
+              name="metNombre"
+              placeholder="ej: Datáfono Bold / Wompi PSE"
+              required />
+          </div>
+
+          <div class="two-cols">
+            <div class="form-group-touch">
+              <label class="form-label-touch">Tipo</label>
+              <select class="input-touch" [(ngModel)]="formMetodo.tipo" name="metTipo">
+                <option value="Tarjeta">Tarjeta / Datáfono</option>
+                <option value="Pasarela">Pasarela / Link Online</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+                <option value="Billetera Digital">Billetera Digital</option>
+              </select>
+            </div>
+
+            <div class="form-group-touch" *ngIf="formMetodo.pasarela !== 'ninguna'">
+              <label class="form-label-touch">Ambiente</label>
+              <select
+                class="input-touch"
+                [(ngModel)]="formMetodo.modo"
+                [disabled]="formMetodo.pasarela === 'simulado'"
+                name="metModo">
+                <option value="sandbox">Pruebas (Sandbox)</option>
+                <option value="produccion">Producción (Real)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Credenciales Wompi -->
+          <div class="credentials-box" *ngIf="formMetodo.pasarela === 'wompi'">
+            <h5>🔑 Llaves de Wompi ( Se cifran en el servidor )</h5>
+            <div class="form-group-touch">
+              <label class="form-label-touch">Llave Pública (pub_test_... / pub_prod_...)</label>
+              <input
+                type="text"
+                class="input-touch"
+                [(ngModel)]="formMetodo.api_key_publica"
+                name="wompiPub"
+                placeholder="pub_test_..." />
+            </div>
+            <div class="form-group-touch">
+              <label class="form-label-touch">Llave Privada (prv_test_... / prv_prod_...)</label>
+              <input
+                type="password"
+                class="input-touch"
+                [(ngModel)]="formMetodo.api_key_privada"
+                name="wompiPrv"
+                [placeholder]="metodoEditandoActual?.tiene_llave_privada ? '•••••••• (Guardada - escribe para cambiar)' : 'prv_test_...'" />
+            </div>
+            <div class="form-group-touch">
+              <label class="form-label-touch">Secreto de Integridad (Firma Checkout)</label>
+              <input
+                type="password"
+                class="input-touch"
+                [(ngModel)]="formMetodo.integrity_secret"
+                name="wompiInt"
+                [placeholder]="metodoEditandoActual?.tiene_integrity_secret ? '•••••••• (Guardado - escribe para cambiar)' : 'test_integrity_...'" />
+            </div>
+            <div class="form-group-touch">
+              <label class="form-label-touch">Secreto de Eventos (Webhook)</label>
+              <input
+                type="password"
+                class="input-touch"
+                [(ngModel)]="formMetodo.webhook_secret"
+                name="wompiEvt"
+                [placeholder]="metodoEditandoActual?.tiene_webhook_secret ? '•••••••• (Guardado - escribe para cambiar)' : 'test_events_...'" />
+            </div>
+          </div>
+
+          <!-- Credenciales Bold -->
+          <div class="credentials-box" *ngIf="formMetodo.pasarela === 'bold'">
+            <h5>🔑 Llaves de Bold Integrations ( Se cifran en el servidor )</h5>
+            <div class="form-group-touch">
+              <label class="form-label-touch">Llave de Identidad (x-api-key)</label>
+              <input
+                type="password"
+                class="input-touch"
+                [(ngModel)]="formMetodo.api_key_privada"
+                name="boldApiKey"
+                [placeholder]="metodoEditandoActual?.tiene_llave_privada ? '•••••••• (Guardada - escribe para cambiar)' : 'Llave de identidad Bold'" />
+            </div>
+            <div class="form-group-touch">
+              <label class="form-label-touch">Llave Secreta (Firma Webhook x-bold-signature)</label>
+              <input
+                type="password"
+                class="input-touch"
+                [(ngModel)]="formMetodo.webhook_secret"
+                name="boldSecret"
+                [placeholder]="metodoEditandoActual?.tiene_webhook_secret ? '•••••••• (Guardada - escribe para cambiar)' : 'Llave secreta Bold'" />
+            </div>
+          </div>
+
+          <div class="modal-buttons">
+            <button type="button" class="btn-modal btn-secondary" (click)="cerrarModalMetodo()">
+              Cancelar
+            </button>
+            <button type="submit" class="btn-modal btn-primary" [disabled]="guardandoMetodo">
+              <ion-spinner *ngIf="guardandoMetodo" name="crescent"></ion-spinner>
+              <span *ngIf="!guardandoMetodo">Guardar</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </ion-content>
+</ion-page>

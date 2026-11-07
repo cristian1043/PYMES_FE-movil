@@ -14,15 +14,6 @@ export interface Cliente {
   telefono?: string;
   email?: string;
   direccion?: string;
-  tiene_tarjeta?: string; // 'Sí' | 'No'
-  tipo_tarjeta?: string; // 'Crédito' | 'Débito'
-  banco_tarjeta?: string;
-  franquicia_tarjeta?: string; // 'VISA' | 'Mastercard' | 'American Express'
-  ultimos_digitos_tarjeta?: string;
-  numero_tarjeta?: string;
-  titular_tarjeta?: string;
-  fecha_expiracion?: string;
-  cvc_tarjeta?: string;
   estado?: string;
   created_at?: string;
   id_empresa?: number;

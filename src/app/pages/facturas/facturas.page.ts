@@ -6,6 +6,8 @@ import { FacturasService, Factura } from '../../services/facturas.service';
 import { ClientesService, Cliente } from '../../services/clientes.service';
 import { MetodosPagoService, MetodoPago } from '../../services/metodos-pago.service';
 import { ProductosService, Producto } from '../../services/productos.service';
+import { TerminalesService, TerminalPago } from '../../services/terminales.service';
+import { CobrosService, CobroTransaccion } from '../../services/cobros.service';
 import { MenuStateService } from '../../services/menu-state.service';
 import { Subscription } from 'rxjs';
 import { finalize } from 'rxjs/operators';
@@ -66,13 +68,19 @@ export class FacturasPage implements OnInit, OnDestroy {
   // Métodos de Pago
   metodoPago = 'Efectivo';
   metodoPagoSeleccionadoId: number = 1;
-  metodosPagoList: MetodoPago[] = [];
+  metodosPagoList: MetodoPago[] = [
+    { id: 1, nombre: 'Efectivo', tipo: 'Efectivo', pasarela: 'ninguna', integrado: false },
+    { id: 2, nombre: 'Transferencia Bancaria / Nequi', tipo: 'Transferencia', banco: 'Bancolombia / Nequi', pasarela: 'ninguna', integrado: false },
+    { id: 3, nombre: 'Datáfono Bold (Simulado)', tipo: 'Tarjeta', banco: 'Bold POS', pasarela: 'simulado', integrado: true },
+    { id: 4, nombre: 'Pasarela Wompi / PSE / Nequi (Simulado)', tipo: 'Pasarela', banco: 'Wompi Bancolombia', pasarela: 'simulado', integrado: true }
+  ];
   guardando = false;
 
   // Modal detalle de factura
   facturaSeleccionada: Factura | null = null;
   cargandoDetalle = false;
   mostrarModalDetalle = false;
+  cobrosFacturaSeleccionada: CobroTransaccion[] = [];
 
   // Anulación / Cancelación de Factura (Admin)
   cancelandoFactura = false;
@@ -84,28 +92,23 @@ export class FacturasPage implements OnInit, OnDestroy {
   modalTitulo = '';
   modalMensaje = '';
 
-  // PASARELA DE PAGOS (WOMPI, MERCADOPAGO, PSE, TARJETAS)
+  // COBRO AUTOMATIZADO EN TERMINAL (DATÁFONO BOLD) Y PASARELA (WOMPI / SIMULADO)
   mostrarModalPasarela = false;
   procesandoPagoPasarela = false;
   pasarelaModo: 'emision' | 'cobro_existente' = 'emision';
   facturaACobrar: Factura | null = null;
   montoAPagarPasarela: number = 0;
-  tabPasarela: 'tarjeta' | 'pse' = 'tarjeta';
-  pasarelaProveedor: string = 'wompi';
+  canalCobro: 'datafono' | 'link' = 'datafono';
+  terminalesActivas: TerminalPago[] = [
+    { id: 1, nombre: 'Caja Principal - Datáfono 1', proveedor: 'simulado', id_metodo_pago: 3, terminal_serial: 'SIM-0001', terminal_model: 'Bold Smart Pro', estado: 'Activo' },
+    { id: 2, nombre: 'Caja Auxiliar - Datáfono 2', proveedor: 'simulado', id_metodo_pago: 3, terminal_serial: 'SIM-0002', terminal_model: 'Bold Smart', estado: 'Activo' }
+  ];
+  idTerminalSeleccionada: number | null = 1;
+  idMetodoLinkSeleccionado: number | null = 4;
+  cobroActual: CobroTransaccion | null = null;
 
-  // Datos Tarjeta
-  numeroTarjeta: string = '';
-  expiracionTarjeta: string = '';
-  cvvTarjeta: string = '';
-  titularTarjeta: string = '';
-  cuotasTarjeta: number = 1;
-
-  // Datos PSE
-  bancoPse: string = 'Bancolombia';
-  tipoPersonaPse: string = 'Natural';
-  telefonoPse: string = '';
-  emailPse: string = '';
-
+  private pollingTimer: any = null;
+  private pollingStartedAt = 0;
   private queryParamsSub?: Subscription;
 
   constructor(
@@ -114,6 +117,8 @@ export class FacturasPage implements OnInit, OnDestroy {
     private clientesService: ClientesService,
     private metodosPagoService: MetodosPagoService,
     private productosService: ProductosService,
+    private terminalesService: TerminalesService,
+    private cobrosService: CobrosService,
     private router: Router,
     private route: ActivatedRoute,
     private menuStateService: MenuStateService,
@@ -124,6 +129,7 @@ export class FacturasPage implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.verificarAutenticacion();
     this.cargarMetodosPago();
+    this.cargarTerminalesActivas();
     this.cargarProductos();
 
     this.queryParamsSub = this.route.queryParamMap.subscribe((params) => {
@@ -146,6 +152,7 @@ export class FacturasPage implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.detenerPollingCobro();
     if (this.queryParamsSub) {
       this.queryParamsSub.unsubscribe();
     }
@@ -154,6 +161,7 @@ export class FacturasPage implements OnInit, OnDestroy {
   ionViewWillEnter(): void {
     this.verificarAutenticacion();
     this.cargarMetodosPago();
+    this.cargarTerminalesActivas();
     this.cargarProductos();
 
     const tabParam = this.route.snapshot.queryParamMap.get('tab');
@@ -167,6 +175,24 @@ export class FacturasPage implements OnInit, OnDestroy {
     } else if (this.activeTab === 'listado' && this.facturas.length === 0 && !this.loading) {
       this.cargarFacturas(1, true);
     }
+  }
+
+  get metodoSeleccionadoObj(): MetodoPago | undefined {
+    return this.metodosPagoList.find(m => m.id === Number(this.metodoPagoSeleccionadoId));
+  }
+
+  get esMetodoSeleccionadoIntegrado(): boolean {
+    const m = this.metodoSeleccionadoObj;
+    if (!m) return false;
+    const p = (m.pasarela || 'ninguna').toLowerCase();
+    return Boolean(m.integrado || p === 'bold' || p === 'wompi' || p === 'simulado');
+  }
+
+  get metodosLinkDisponibles(): MetodoPago[] {
+    return this.metodosPagoList.filter(m => {
+      const p = (m.pasarela || '').toLowerCase();
+      return p === 'wompi' || p === 'simulado';
+    });
   }
 
   cargarProductos(): void {
@@ -202,10 +228,30 @@ export class FacturasPage implements OnInit, OnDestroy {
             this.metodoPagoSeleccionadoId = this.metodosPagoList[0].id || 1;
             this.metodoPago = this.metodosPagoList[0].nombre;
           }
+          const links = this.metodosLinkDisponibles;
+          if (links.length > 0 && !this.idMetodoLinkSeleccionado) {
+            this.idMetodoLinkSeleccionado = links[0].id || null;
+          }
         }
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Error cargando métodos de pago:', err)
+    });
+  }
+
+  cargarTerminalesActivas(): void {
+    const emp = this.authService.getEmpresaActiva();
+    this.terminalesService.getTerminales(emp?.id, true).subscribe({
+      next: (lista) => {
+        if (Array.isArray(lista) && lista.length > 0) {
+          this.terminalesActivas = lista;
+          if (!this.idTerminalSeleccionada || !this.terminalesActivas.some(t => t.id === this.idTerminalSeleccionada)) {
+            this.idTerminalSeleccionada = this.terminalesActivas[0].id || 1;
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => console.error('Error cargando terminales de pago:', err)
     });
   }
 
@@ -236,6 +282,11 @@ export class FacturasPage implements OnInit, OnDestroy {
 
   irAIndex(): void {
     this.router.navigateByUrl('/inicio');
+  }
+
+  irAConfigurarTerminales(): void {
+    this.cerrarModalPasarela();
+    this.router.navigateByUrl('/terminales');
   }
 
   cancelarOVolver(): void {
@@ -329,6 +380,7 @@ export class FacturasPage implements OnInit, OnDestroy {
   handleRefresh(event: any): void {
     this.cargarFacturas(1, true, event);
     this.cargarProductos();
+    this.cargarTerminalesActivas();
   }
 
   async buscarClientePorDocumento(): Promise<void> {
@@ -484,40 +536,43 @@ export class FacturasPage implements OnInit, OnDestroy {
 
   // EMISIÓN DE FACTURA
   async onCrearFactura(): Promise<void> {
-    if (!this.clienteNombre.trim()) {
-      await this.mostrarToastSimple('Por favor ingresa o busca los datos del cliente.', 'warning');
-      return;
+    // Si el usuario seleccionó un producto en el selector pero olvidó tocar "Agregar a la Canasta", agregarlo automáticamente
+    if (this.itemsFactura.length === 0 && this.productoSeleccionadoObj && this.idProductoSeleccionado) {
+      await this.agregarItemAFactura();
     }
 
     if (this.itemsFactura.length === 0) {
-      await this.mostrarToastSimple('Debes agregar al menos un producto a la factura.', 'warning');
+      await this.mostrarToastSimple('Debes seleccionar y agregar al menos un producto a la factura.', 'warning');
       return;
     }
 
-    const metodo = this.metodosPagoList.find(m => m.id === this.metodoPagoSeleccionadoId);
-    const nombreMetodoLower = (metodo?.nombre || this.metodoPago || '').toLowerCase();
-    const esPasarela = Boolean(
-      (metodo && (metodo.tipo === 'Pasarela' || (metodo.pasarela && metodo.pasarela !== 'ninguna') || metodo.tipo === 'Tarjeta')) ||
-      nombreMetodoLower.includes('tarjet') ||
-      nombreMetodoLower.includes('pasarela') ||
-      nombreMetodoLower.includes('wompi')
-    );
+    if (!this.clienteNombre.trim()) {
+      this.clienteNombre = 'Consumidor Final';
+    }
+    if (!this.documentoCliente.trim()) {
+      this.documentoCliente = '222222222222';
+    }
 
-    if (esPasarela) {
-      // Abrir checkout de Pasarela de Pagos
-      this.pasarelaModo = 'emision';
-      this.montoAPagarPasarela = this.totalVenta;
-      this.mostrarModalPasarela = true;
-      this.cdr.detectChanges();
+    const metodo = this.metodoSeleccionadoObj;
+    const nombreMetodoLower = (metodo?.nombre || this.metodoPago || '').toLowerCase();
+
+    if (this.esMetodoSeleccionadoIntegrado) {
+      // Con pasarela / terminal integrada: primero emitir la factura como 'Emitida' y luego lanzar el cobro real
+      this.guardarFacturaEnBackend('Emitida', undefined, undefined, true);
       return;
     }
 
     // Emisión directa para Efectivo / Transferencia: Se liquida como 'Pagada'
     const refDirecta = nombreMetodoLower.includes('efectivo') ? 'PAGO-EFECTIVO' : 'TRANSF-DIRECTA';
-    this.guardarFacturaEnBackend('Pagada', undefined, refDirecta);
+    this.guardarFacturaEnBackend('Pagada', undefined, refDirecta, false);
   }
 
-  private guardarFacturaEnBackend(estado: string, pasarela?: string, referencia?: string): void {
+  private guardarFacturaEnBackend(
+    estado: string,
+    pasarela?: string,
+    referencia?: string,
+    abrirCobroAlEmitir: boolean = false
+  ): void {
     this.guardando = true;
     this.cdr.detectChanges();
 
@@ -550,8 +605,15 @@ export class FacturasPage implements OnInit, OnDestroy {
     };
 
     this.facturasService.createFactura(payload).subscribe({
-      next: () => {
+      next: (facturaCreada) => {
         this.guardando = false;
+        if (abrirCobroAlEmitir && facturaCreada && facturaCreada.id) {
+          const metodoSel = this.metodoSeleccionadoObj;
+          this.limpiarFormulario();
+          this.abrirPasarelaCobro(facturaCreada, 'emision', metodoSel);
+          return;
+        }
+
         this.limpiarFormulario();
         this.modalTitulo = estado === 'Pagada' ? '¡Factura Pagada y Emitida!' : '¡Factura Emitida!';
         this.modalMensaje = estado === 'Pagada'
@@ -615,107 +677,286 @@ export class FacturasPage implements OnInit, OnDestroy {
     });
   }
 
-  // PASARELA DE PAGOS CHECKOUT
-  abrirPasarelaCobro(factura: Factura): void {
+  // =========================================================
+  // COBRO AUTOMATIZADO (DATÁFONO BOLD / LINK WOMPI / SIMULADO)
+  // =========================================================
+  abrirPasarelaCobro(
+    factura: Factura,
+    modo: 'emision' | 'cobro_existente' = 'cobro_existente',
+    metodoPreferido?: MetodoPago
+  ): void {
+    this.detenerPollingCobro();
     this.facturaACobrar = factura;
-    this.pasarelaModo = 'cobro_existente';
-    this.montoAPagarPasarela = factura.total;
+    this.pasarelaModo = modo;
+    this.montoAPagarPasarela = Number(factura.total || 0);
+    this.cobroActual = null;
+    this.procesandoPagoPasarela = false;
+
+    this.cargarTerminalesActivas();
+
+    // Elegir pestaña inicial según el método de pago de la factura
+    const met = metodoPreferido || this.metodosPagoList.find(m => m.id === factura.id_metodo_pago);
+    const pas = (met?.pasarela || '').toLowerCase();
+    if (pas === 'wompi' || (met?.tipo === 'Pasarela' && this.metodosLinkDisponibles.length > 0)) {
+      this.canalCobro = 'link';
+      this.idMetodoLinkSeleccionado = met?.id || this.metodosLinkDisponibles[0]?.id || null;
+    } else {
+      this.canalCobro = 'datafono';
+      if (this.terminalesActivas.length > 0 && !this.idTerminalSeleccionada) {
+        this.idTerminalSeleccionada = this.terminalesActivas[0].id || null;
+      }
+    }
+
     this.mostrarModalPasarela = true;
     this.cdr.detectChanges();
+
+    // Si viene directamente de emitir la factura, iniciar el cobro automáticamente para ahorrar pasos
+    if (modo === 'emision') {
+      this.iniciarCobroPasarela();
+    }
   }
 
-  autocompletarTarjetaPrueba(): void {
-    this.numeroTarjeta = '4242 4242 4242 4242';
-    this.expiracionTarjeta = '12/28';
-    this.cvvTarjeta = '123';
-    this.titularTarjeta = this.clienteNombre || 'CLIENTE PRUEBA';
-    this.cuotasTarjeta = 1;
+  confirmarPagoManualDirecto(): void {
+    if (!this.facturaACobrar || !this.facturaACobrar.id) return;
+    this.procesandoPagoPasarela = true;
     this.cdr.detectChanges();
-  }
 
-  autocompletarPsePrueba(): void {
-    this.bancoPse = 'Bancolombia';
-    this.tipoPersonaPse = 'Natural';
-    this.telefonoPse = '3001234567';
-    this.cdr.detectChanges();
+    this.facturasService.pagarFacturaPasarela(this.facturaACobrar.id, {
+      pasarela: 'caja',
+      referencia_pago: `CAJA-${Date.now()}`,
+      id_metodo_pago: this.facturaACobrar.id_metodo_pago || 1
+    }).subscribe({
+      next: async (res) => {
+        this.procesandoPagoPasarela = false;
+        this.detenerPollingCobro();
+        if (res?.factura) {
+          this.actualizarFacturaEnMemoria(res.factura);
+        }
+        const eraEmision = this.pasarelaModo === 'emision';
+        this.mostrarModalPasarela = false;
+        this.facturaACobrar = null;
+        this.cobroActual = null;
+        if (eraEmision) {
+          this.modalTitulo = '¡Factura Pagada y Emitida!';
+          this.modalMensaje = 'Pago confirmado directamente en caja. La factura quedó en estado Pagada y el inventario fue actualizado.';
+          this.mostrarModalConfirmacion = true;
+        } else {
+          await this.mostrarToastSimple('✅ ¡Factura marcada como Pagada en caja!', 'success');
+        }
+        this.cdr.detectChanges();
+      },
+      error: async (err) => {
+        this.procesandoPagoPasarela = false;
+        const msg = err?.error?.mensaje || 'No se pudo registrar el pago en caja.';
+        await this.mostrarToastSimple(msg, 'danger');
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   cerrarModalPasarela(): void {
-    if (this.procesandoPagoPasarela) return;
+    this.detenerPollingCobro();
+    this.procesandoPagoPasarela = false;
+    const eraEmision = this.pasarelaModo === 'emision';
+    const cobroFueAprobado = this.cobroActual?.estado === 'APROBADA';
     this.mostrarModalPasarela = false;
     this.facturaACobrar = null;
+    this.cobroActual = null;
+
+    if (eraEmision && !cobroFueAprobado) {
+      this.modalTitulo = 'Factura Emitida (Pago Pendiente)';
+      this.modalMensaje = 'La factura quedó registrada como Emitida. Puedes cobrarla en cualquier momento desde el Historial de Facturas.';
+      this.mostrarModalConfirmacion = true;
+    }
     this.cdr.detectChanges();
   }
 
-  async procesarPagoPasarela(): Promise<void> {
-    if (this.tabPasarela === 'tarjeta') {
-      const numClean = this.numeroTarjeta.replace(/\s+/g, '');
-      if (numClean.length < 13) {
-        await this.mostrarToastSimple('Ingresa un número de tarjeta de crédito/débito válido.', 'warning');
-        return;
-      }
-      if (!this.expiracionTarjeta.trim() || !this.cvvTarjeta.trim() || !this.titularTarjeta.trim()) {
-        await this.mostrarToastSimple('Completa los datos de vencimiento, CVV y titular de la tarjeta.', 'warning');
-        return;
-      }
+  async iniciarCobroPasarela(): Promise<void> {
+    if (!this.facturaACobrar || !this.facturaACobrar.id) return;
+
+    const payload: { canal: 'datafono' | 'link'; id_terminal?: number; id_metodo_pago?: number } = {
+      canal: this.canalCobro
+    };
+
+    if (this.canalCobro === 'datafono') {
+      const termId = this.idTerminalSeleccionada || this.terminalesActivas[0]?.id || 1;
+      payload.id_terminal = Number(termId);
     } else {
-      if (!this.telefonoPse.trim()) {
-        await this.mostrarToastSimple('Ingresa el número celular asociado a tu cuenta bancaria / PSE.', 'warning');
-        return;
-      }
+      const linkId = this.idMetodoLinkSeleccionado || this.metodosLinkDisponibles[0]?.id || this.facturaACobrar.id_metodo_pago || 4;
+      payload.id_metodo_pago = Number(linkId);
     }
 
     this.procesandoPagoPasarela = true;
     this.cdr.detectChanges();
 
-    // Simulación en tiempo real de pasarela de pagos segura (Wompi / MercadoPago)
-    setTimeout(() => {
-      const refGenerada = `WOMPI-TXN-${Date.now().toString().slice(-7)}`;
-      this.procesandoPagoPasarela = false;
-      this.mostrarModalPasarela = false;
+    this.cobrosService.crearCobro(this.facturaACobrar.id, payload).subscribe({
+      next: async (res) => {
+        this.procesandoPagoPasarela = false;
+        this.cobroActual = res.cobro;
+        if (res.factura) {
+          this.actualizarFacturaEnMemoria(res.factura);
+        }
 
-      if (this.pasarelaModo === 'emision') {
-        this.guardarFacturaEnBackend('Pagada', this.pasarelaProveedor, refGenerada);
-      } else if (this.pasarelaModo === 'cobro_existente' && this.facturaACobrar && this.facturaACobrar.id) {
-        const idFact = this.facturaACobrar.id;
-        this.facturasService.pagarFacturaPasarela(idFact, {
-          pasarela: this.pasarelaProveedor,
-          referencia_pago: refGenerada,
-          id_metodo_pago: this.metodoPagoSeleccionadoId
-        }).subscribe({
-          next: async () => {
-            if (this.facturaSeleccionada && this.facturaSeleccionada.id === idFact) {
-              this.facturaSeleccionada.estado = 'Pagada';
-              this.facturaSeleccionada.pasarela = this.pasarelaProveedor;
-              this.facturaSeleccionada.referencia_pago = refGenerada;
-            }
-            const fItem = this.facturas.find(f => f.id === idFact);
-            if (fItem) {
-              fItem.estado = 'Pagada';
-              fItem.pasarela = this.pasarelaProveedor;
-              fItem.referencia_pago = refGenerada;
-            }
-            await this.mostrarToastSimple(`✅ ¡Pago procesado con éxito! Ref: ${refGenerada}`, 'success');
-            this.cdr.detectChanges();
-          },
-          error: async (err) => {
-            console.error('Error al registrar pago en backend:', err);
-            await this.mostrarToastSimple('Error al actualizar factura tras pago.', 'danger');
-          }
-        });
+        if (this.cobroActual.url_pago) {
+          window.open(this.cobroActual.url_pago, '_blank');
+        }
+
+        if (this.cobroActual.estado === 'PENDIENTE') {
+          this.iniciarPollingCobro(this.cobroActual.id);
+        } else if (this.cobroActual.estado === 'APROBADA') {
+          await this.onCobroConfirmadoExitoso(this.cobroActual);
+        }
+        this.cdr.detectChanges();
+      },
+      error: async (err) => {
+        this.procesandoPagoPasarela = false;
+        const msg = err?.error?.mensaje || 'No se pudo iniciar el cobro en la terminal / pasarela.';
+        await this.mostrarToastSimple(msg, 'danger');
+        this.cdr.detectChanges();
       }
-      this.cdr.detectChanges();
-    }, 1500);
+    });
+  }
+
+  private iniciarPollingCobro(idCobro: number): void {
+    this.detenerPollingCobro();
+    this.pollingStartedAt = Date.now();
+    this.pollingTimer = setInterval(() => {
+      // Detener después de 5 minutos máximo
+      if (Date.now() - this.pollingStartedAt > 5 * 60 * 1000) {
+        this.detenerPollingCobro();
+        return;
+      }
+      this.cobrosService.getCobro(idCobro).subscribe({
+        next: async (res) => {
+          if (!res?.cobro) return;
+          this.cobroActual = res.cobro;
+          if (res.factura) {
+            this.actualizarFacturaEnMemoria(res.factura);
+          }
+          if (res.cobro.estado !== 'PENDIENTE') {
+            this.detenerPollingCobro();
+            if (res.cobro.estado === 'APROBADA') {
+              await this.onCobroConfirmadoExitoso(res.cobro);
+            }
+          }
+          this.cdr.detectChanges();
+        },
+        error: () => {}
+      });
+    }, 3000);
+  }
+
+  private detenerPollingCobro(): void {
+    if (this.pollingTimer) {
+      clearInterval(this.pollingTimer);
+      this.pollingTimer = null;
+    }
+  }
+
+  simularResultadoActual(resultado: 'APROBADA' | 'RECHAZADA'): void {
+    if (!this.cobroActual) return;
+    this.procesandoPagoPasarela = true;
+    this.cdr.detectChanges();
+
+    this.cobrosService.simularCobro(this.cobroActual.id, resultado).subscribe({
+      next: async (res) => {
+        this.procesandoPagoPasarela = false;
+        this.detenerPollingCobro();
+        this.cobroActual = res.cobro;
+        if (res.factura) {
+          this.actualizarFacturaEnMemoria(res.factura);
+        }
+        if (res.cobro.estado === 'APROBADA') {
+          await this.onCobroConfirmadoExitoso(res.cobro);
+        } else {
+          await this.mostrarToastSimple('❌ Pago simulado como RECHAZADO. Puedes reintentar el cobro.', 'warning');
+        }
+        this.cdr.detectChanges();
+      },
+      error: async (err) => {
+        this.procesandoPagoPasarela = false;
+        const msg = err?.error?.mensaje || 'No se pudo simular el resultado del cobro.';
+        await this.mostrarToastSimple(msg, 'danger');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  cancelarCobroPendiente(): void {
+    if (!this.cobroActual) return;
+    this.procesandoPagoPasarela = true;
+    this.cdr.detectChanges();
+
+    this.cobrosService.cancelarCobro(this.cobroActual.id).subscribe({
+      next: async (res) => {
+        this.procesandoPagoPasarela = false;
+        this.detenerPollingCobro();
+        this.cobroActual = res.cobro;
+        await this.mostrarToastSimple('Cobro pendiente anulado.', 'medium');
+        this.cdr.detectChanges();
+      },
+      error: async (err) => {
+        this.procesandoPagoPasarela = false;
+        const msg = err?.error?.mensaje || 'No se pudo cancelar el cobro.';
+        await this.mostrarToastSimple(msg, 'danger');
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  reintentarCobro(): void {
+    this.detenerPollingCobro();
+    this.cobroActual = null;
+    this.cdr.detectChanges();
+  }
+
+  private async onCobroConfirmadoExitoso(cobro: CobroTransaccion): Promise<void> {
+    const ref = cobro.id_externo || cobro.referencia;
+    const prov = (cobro.proveedor || '').toUpperCase();
+    const eraEmision = this.pasarelaModo === 'emision';
+
+    if (this.facturaSeleccionada?.id) {
+      this.cargarCobrosDeFactura(this.facturaSeleccionada.id);
+    }
+
+    this.mostrarModalPasarela = false;
+    this.facturaACobrar = null;
+    this.cobroActual = null;
+
+    if (eraEmision) {
+      this.modalTitulo = '¡Factura Pagada y Emitida!';
+      this.modalMensaje = `Pago confirmado por ${prov} (Ref: ${ref}). La factura quedó en estado Pagada y el inventario fue actualizado.`;
+      this.mostrarModalConfirmacion = true;
+    } else {
+      await this.mostrarToastSimple(`✅ ¡Pago confirmado! Ref: ${ref}`, 'success');
+    }
+    this.cdr.detectChanges();
+  }
+
+  private actualizarFacturaEnMemoria(factActualizada: Factura): void {
+    if (this.facturaSeleccionada && this.facturaSeleccionada.id === factActualizada.id) {
+      this.facturaSeleccionada.estado = factActualizada.estado;
+      this.facturaSeleccionada.pasarela = factActualizada.pasarela;
+      this.facturaSeleccionada.referencia_pago = factActualizada.referencia_pago;
+    }
+    const item = this.facturas.find(f => f.id === factActualizada.id);
+    if (item) {
+      item.estado = factActualizada.estado;
+      item.pasarela = factActualizada.pasarela;
+      item.referencia_pago = factActualizada.referencia_pago;
+    }
   }
 
   // MODAL DETALLE DE FACTURA
   verDetalleFactura(fact: Factura): void {
     this.facturaSeleccionada = fact;
+    this.cobrosFacturaSeleccionada = [];
     this.cargandoDetalle = true;
     this.mostrarModalDetalle = true;
     this.cdr.detectChanges();
 
     if (fact.id) {
+      this.cargarCobrosDeFactura(fact.id);
       this.facturasService.getFacturaById(fact.id).pipe(
         finalize(() => {
           this.cargandoDetalle = false;
@@ -735,9 +976,20 @@ export class FacturasPage implements OnInit, OnDestroy {
     }
   }
 
+  private cargarCobrosDeFactura(idFactura: number): void {
+    this.cobrosService.listarCobrosPorFactura(idFactura).subscribe({
+      next: (lista) => {
+        this.cobrosFacturaSeleccionada = Array.isArray(lista) ? lista : [];
+        this.cdr.detectChanges();
+      },
+      error: () => {}
+    });
+  }
+
   cerrarModalDetalle(): void {
     this.mostrarModalDetalle = false;
     this.facturaSeleccionada = null;
+    this.cobrosFacturaSeleccionada = [];
     this.cdr.detectChanges();
   }
 
@@ -771,13 +1023,6 @@ export class FacturasPage implements OnInit, OnDestroy {
     this.subtotalVenta = 0;
     this.ivaVenta = 0;
     this.totalVenta = 0;
-
-    // Resetear formulario pasarela
-    this.numeroTarjeta = '';
-    this.expiracionTarjeta = '';
-    this.cvvTarjeta = '';
-    this.titularTarjeta = '';
-    this.telefonoPse = '';
 
     if (this.metodosPagoList.length > 0) {
       this.metodoPagoSeleccionadoId = this.metodosPagoList[0].id || 1;

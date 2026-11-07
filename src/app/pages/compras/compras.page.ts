@@ -5,6 +5,7 @@ import { AuthService } from '../../services/auth.service';
 import { ComprasService, Compra, ItemCompra } from '../../services/compras.service';
 import { ProveedoresService, Proveedor } from '../../services/proveedores.service';
 import { ProductosService, Producto } from '../../services/productos.service';
+import { MetodosPagoService, MetodoPago } from '../../services/metodos-pago.service';
 import { MenuStateService } from '../../services/menu-state.service';
 import { finalize } from 'rxjs/operators';
 import { Subscription } from 'rxjs';
@@ -21,6 +22,7 @@ export class ComprasPage implements OnInit, OnDestroy {
   // Catálogos
   proveedores: any[] = [];
   productos: any[] = [];
+  metodosPagoList: MetodoPago[] = [];
   cargandoCatalogos = false;
 
   // Listado de compras
@@ -34,6 +36,9 @@ export class ComprasPage implements OnInit, OnDestroy {
   // Formulario nueva orden de compra
   siguienteNumero = 'COMP-001';
   idProveedor: number | null = null;
+  idMetodoPago: number = 1;
+  metodoPagoSeleccionado: string = 'Efectivo';
+  referenciaPago: string = '';
 
   // Selección de producto para borrador
   idProductoSeleccionado: number | null = null;
@@ -74,6 +79,7 @@ export class ComprasPage implements OnInit, OnDestroy {
     private comprasService: ComprasService,
     private proveedoresService: ProveedoresService,
     private productosService: ProductosService,
+    private metodosPagoService: MetodosPagoService,
     private router: Router,
     private route: ActivatedRoute,
     private menuStateService: MenuStateService,
@@ -183,6 +189,21 @@ export class ComprasPage implements OnInit, OnDestroy {
       error: () => {}
     });
 
+    // Cargar métodos de pago disponibles
+    this.metodosPagoService.getMetodosPago(emp?.id).subscribe({
+      next: (res) => {
+        if (Array.isArray(res) && res.length > 0) {
+          this.metodosPagoList = res;
+          if (!this.metodoPagoSeleccionado || this.metodoPagoSeleccionado === 'Efectivo') {
+            this.metodoPagoSeleccionado = res[0].nombre || 'Efectivo';
+            this.idMetodoPago = res[0].id || 1;
+          }
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => {}
+    });
+
     // Cargar proveedores
     this.proveedoresService.getProveedores(1, 100).subscribe({
       next: (res) => {
@@ -224,6 +245,11 @@ export class ComprasPage implements OnInit, OnDestroy {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  onMetodoPagoChange(): void {
+    const encontrado = this.metodosPagoList.find(m => m.nombre === this.metodoPagoSeleccionado);
+    this.idMetodoPago = encontrado?.id || 1;
   }
 
   onProductoSeleccionadoChange(): void {
@@ -416,10 +442,15 @@ export class ComprasPage implements OnInit, OnDestroy {
 
     this.guardando = true;
 
+    const emp = this.authService.getEmpresaActiva();
     const payload: Partial<Compra> = {
       numero: this.siguienteNumero,
       id_proveedor: Number(this.idProveedor),
       id_usuario: this.usuario?.id || 1,
+      id_empresa: emp?.id || emp?.empresa_id || 1,
+      id_metodo_pago: this.idMetodoPago || 1,
+      metodo_pago: this.metodoPagoSeleccionado || 'Efectivo',
+      referencia_pago: this.referenciaPago ? this.referenciaPago.trim() : undefined,
       subtotal: this.subtotalNeto,
       iva: this.iva,
       descuento: Number(this.descuento) || 0,
@@ -468,6 +499,9 @@ export class ComprasPage implements OnInit, OnDestroy {
 
   private limpiarFormulario(): void {
     this.idProveedor = null;
+    this.idMetodoPago = this.metodosPagoList[0]?.id || 1;
+    this.metodoPagoSeleccionado = this.metodosPagoList[0]?.nombre || 'Efectivo';
+    this.referenciaPago = '';
     this.idProductoSeleccionado = null;
     this.costoUnitario = null;
     this.cantidad = 1;
@@ -479,20 +513,6 @@ export class ComprasPage implements OnInit, OnDestroy {
   }
 
   async verDetalleCompra(c: Compra): Promise<void> {
-    const rol = this.usuario?.rol || this.usuario?.rol_nombre || (this.authService.getRolId() === 1 ? 'Administrador' : '');
-    const esAdmin = rol === 'Administrador' || this.authService.getRolId() === 1;
-
-    if (!esAdmin) {
-      const toast = await this.toastController.create({
-        message: '🔒 Acceso Restringido: El detalle de órdenes de compra está reservado para el Administrador.',
-        duration: 3500,
-        color: 'warning',
-        position: 'top'
-      });
-      await toast.present();
-      return;
-    }
-
     this.compraSeleccionada = { ...c };
     this.mostrarModalDetalleCompra = true;
     this.cargandoDetalleCompra = true;

@@ -15,12 +15,16 @@ export interface MetodoPago {
   id_empresa?: number;
   es_global?: boolean;
   estado?: string;
-  pasarela?: string; // 'ninguna' | 'wompi' | 'mercadopago' | 'stripe' | 'bold' | 'payu' | 'epayco'
+  pasarela?: string; // 'ninguna' | 'wompi' | 'bold' | 'simulado' | 'mercadopago' | 'stripe' | 'payu' | 'epayco'
   api_key_publica?: string;
   api_key_privada?: string;
   webhook_secret?: string;
+  integrity_secret?: string;
   modo?: string; // 'sandbox' | 'produccion'
   tiene_llave_privada?: boolean;
+  tiene_webhook_secret?: boolean;
+  tiene_integrity_secret?: boolean;
+  integrado?: boolean;
 }
 
 @Injectable({
@@ -36,7 +40,8 @@ export class MetodosPagoService {
 
   getMetodosPago(empresaId?: number): Observable<MetodoPago[]> {
     const headers = this.authService.getAuthHeaders();
-    const empId = empresaId || this.authService.getEmpresaActiva()?.id;
+    const emp = this.authService.getEmpresaActiva();
+    const empId = empresaId || emp?.id || emp?.empresa_id || 1;
     const empParam = empId ? `?empresa_id=${empId}` : '';
     return this.http.get<MetodoPago[]>(`${this.apiUrl}/${empParam}`, { headers });
   }

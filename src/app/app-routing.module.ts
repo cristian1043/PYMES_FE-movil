@@ -30,37 +30,37 @@ const routes: Routes = [
   {
     path: 'productos',
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: [1, 3] },
+    data: { roles: [1, 2, 3] },
     loadChildren: () => import('./pages/productos/productos.module').then(m => m.ProductosPageModule)
   },
   {
     path: 'facturas',
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: [1, 2] },
+    data: { roles: [1, 2, 3] },
     loadChildren: () => import('./pages/facturas/facturas.module').then(m => m.FacturasPageModule)
   },
   {
     path: 'clientes',
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: [1, 2] },
+    data: { roles: [1, 2, 3] },
     loadChildren: () => import('./pages/clientes/clientes.module').then(m => m.ClientesPageModule)
   },
   {
     path: 'proveedores',
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: [1, 3] },
+    data: { roles: [1, 2, 3] },
     loadChildren: () => import('./pages/proveedores/proveedores.module').then(m => m.ProveedoresPageModule)
   },
   {
     path: 'compras',
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: [1, 3] },
+    data: { roles: [1, 2, 3] },
     loadChildren: () => import('./pages/compras/compras.module').then(m => m.ComprasPageModule)
   },
   {
     path: 'reportes',
     canActivate: [AuthGuard, RoleGuard],
-    data: { roles: [1, 3] },
+    data: { roles: [1, 2, 3] },
     loadChildren: () => import('./pages/reportes/reportes.module').then(m => m.ReportesPageModule)
   },
   {
@@ -74,6 +74,12 @@ const routes: Routes = [
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: [1] },
     loadChildren: () => import('./pages/empresa/empresa.module').then(m => m.EmpresaPageModule)
+  },
+  {
+    path: 'terminales',
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: [1, 2, 3] },
+    loadChildren: () => import('./pages/terminales/terminales.module').then(m => m.TerminalesPageModule)
   },
   {
     path: 'perfil',

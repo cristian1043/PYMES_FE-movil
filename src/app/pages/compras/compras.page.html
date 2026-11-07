@@ -140,6 +140,40 @@
             </select>
           </div>
 
+          <div class="form-group">
+            <label class="form-label">💳 Método de Pago (Con qué se canceló la mercancía) *</label>
+            <select
+              class="custom-input select-input"
+              [(ngModel)]="metodoPagoSeleccionado"
+              (change)="onMetodoPagoChange()"
+              name="metodoPagoSeleccionado">
+              <ng-container *ngIf="metodosPagoList && metodosPagoList.length > 0">
+                <option *ngFor="let m of metodosPagoList" [value]="m.nombre">
+                  💳 {{ m.nombre }} ({{ m.tipo || 'General' }}{{ m.banco ? ' - ' + m.banco : '' }})
+                </option>
+              </ng-container>
+              <ng-container *ngIf="!metodosPagoList || metodosPagoList.length === 0">
+                <option value="Efectivo">💵 Efectivo (Caja Principal)</option>
+                <option value="Transferencia Bancaria / Nequi">🏦 Transferencia Bancaria / Nequi</option>
+                <option value="Datáfono Bold (Tarjeta)">💳 Datáfono Bold (Tarjeta Débito / Crédito)</option>
+                <option value="Pasarela Wompi / PSE">🌐 Pasarela Wompi / PSE</option>
+              </ng-container>
+              <option value="Crédito con Proveedor (30 días)">📝 Crédito con Proveedor (Cuenta por Pagar)</option>
+              <option value="Consignación / Cheque Bancario">🏦 Consignación / Cheque Bancario</option>
+            </select>
+            <small class="field-hint">Medio con el que se pagó el dinero o mercancía al proveedor.</small>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">🧾 N° Comprobante / Referencia de Pago (Opcional)</label>
+            <input
+              type="text"
+              class="custom-input"
+              [(ngModel)]="referenciaPago"
+              name="referenciaPago"
+              placeholder="Ej: Comprobante PSE #94810, Recibo Caja, Factura Proveedor..." />
+          </div>
+
           <hr class="section-divider">
 
           <!-- 2. AGREGAR PRODUCTOS AL BORRADOR DE LA ORDEN -->
@@ -295,6 +329,10 @@
           <ion-label>
             <h2>Orden {{ c.numero || ('COMP-' + c.id) }}</h2>
             <p class="prov-label">{{ c.proveedor_nombre || ('Proveedor #' + c.id_proveedor) }}</p>
+            <p style="margin: 3px 0; font-size: 12px; color: #0369a1; font-weight: 600;">
+              💳 {{ c.metodo_pago || 'Efectivo' }}
+              <span *ngIf="c.referencia_pago" style="color: #64748b; font-weight: 400;"> • Ref: {{ c.referencia_pago }}</span>
+            </p>
             <ion-note color="medium" *ngIf="c.fecha">{{ c.fecha }}</ion-note>
           </ion-label>
           <div slot="end" class="ion-text-right">
@@ -392,6 +430,16 @@
           <div class="detail-row" *ngIf="compraSeleccionada.fecha">
             <span class="detail-label">Fecha de Compra</span>
             <span class="detail-value">{{ compraSeleccionada.fecha }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Método de Pago</span>
+            <span class="detail-value" style="color: #0369a1; font-weight: 700;">💳 {{ compraSeleccionada.metodo_pago || 'Efectivo' }}</span>
+          </div>
+
+          <div class="detail-row" *ngIf="compraSeleccionada.referencia_pago">
+            <span class="detail-label">Ref. / Comprobante</span>
+            <span class="detail-value"><code>{{ compraSeleccionada.referencia_pago }}</code></span>
           </div>
 
           <!-- Ítems Comprados -->

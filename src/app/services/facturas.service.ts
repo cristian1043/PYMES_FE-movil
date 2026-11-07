@@ -43,7 +43,8 @@ export class FacturasService {
 
   getFacturas(page: number = 1, perPage: number = 15, empresaId?: number): Observable<any> {
     const headers = this.authService.getAuthHeaders();
-    const empId = empresaId || this.authService.getEmpresaActiva()?.id;
+    const emp = this.authService.getEmpresaActiva();
+    const empId = empresaId || emp?.id || emp?.empresa_id || 1;
     const empParam = empId ? `&empresa_id=${empId}` : '';
     return this.http.get<any>(`${this.apiUrl}/?page=${page}&per_page=${perPage}${empParam}`, { headers });
   }
@@ -57,7 +58,7 @@ export class FacturasService {
     const headers = this.authService.getAuthHeaders();
     if (!data.id_empresa) {
       const emp = this.authService.getEmpresaActiva();
-      if (emp?.id) data.id_empresa = emp.id;
+      data.id_empresa = emp?.id || emp?.empresa_id || 1;
     }
     return this.http.post<Factura>(`${this.apiUrl}/`, data, { headers });
   }

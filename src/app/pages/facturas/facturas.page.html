@@ -45,9 +45,9 @@
         <div class="hub-icon-badge">
           <ion-icon name="receipt-outline"></ion-icon>
         </div>
-        <h2>Gestión de Facturación</h2>
+        <h2>Gestión de Ventas y Facturación</h2>
         <p>
-          Emite facturas de venta con productos reales, control de inventario y cobro digital seguro
+          Registra ventas y emite facturas con productos reales, control de inventario y cobro digital seguro
         </p>
       </div>
 
@@ -57,8 +57,8 @@
             <ion-icon name="add-circle-outline"></ion-icon>
           </div>
           <div class="action-info">
-            <h3>Crear Nueva Factura</h3>
-            <p>Selecciona cliente, añade productos de bodega, calcula IVA y cobra con pasarela</p>
+            <h3>Registrar Nueva Venta / Factura</h3>
+            <p>Selecciona cliente, añade productos de bodega, calcula IVA y cobra con datáfono o pasarela</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
         </div>
@@ -68,7 +68,7 @@
             <ion-icon name="list-outline"></ion-icon>
           </div>
           <div class="action-info">
-            <h3>Ver Historial de Facturas</h3>
+            <h3>Ver Historial de Ventas y Facturas</h3>
             <p>Consulta facturas emitidas, desglose de ítems, recaudos y cobra facturas pendientes</p>
           </div>
           <ion-icon name="chevron-forward-outline" class="action-arrow"></ion-icon>
@@ -311,19 +311,19 @@
                 [ngModel]="metodoPagoSeleccionadoId"
                 (ngModelChange)="onMetodoPagoChange($event)"
                 name="metodoPago">
-                <option *ngFor="let m of metodosPagoList" [value]="m.id">
+                <option *ngFor="let m of metodosPagoList" [ngValue]="m.id">
                   {{ m.nombre }}{{ m.banco ? ' (' + m.banco + (m.numero_cuenta ? ' - ' + m.numero_cuenta : '') + ')' : '' }}{{ m.pasarela && m.pasarela !== 'ninguna' ? ' 💳 ' + m.pasarela.toUpperCase() : '' }}
                 </option>
               </select>
             </div>
 
-            <!-- AVISO DE PASARELA SI ESTÁ SELECCIONADA -->
-            <div class="gateway-hint-box" *ngIf="metodoPago.toLowerCase().includes('tarjet') || metodoPago.toLowerCase().includes('pasarela') || metodoPago.toLowerCase().includes('wompi')">
+            <!-- AVISO DE PASARELA / TERMINAL SI ESTÁ SELECCIONADA -->
+            <div class="gateway-hint-box" *ngIf="esMetodoSeleccionadoIntegrado">
               <div class="gateway-hint-header">
                 <ion-icon name="card-outline"></ion-icon>
-                <span>Cobro Digital Automatizado</span>
+                <span>Cobro Automatizado en Terminal / Pasarela</span>
               </div>
-              <p>Al presionar el botón se abrirá la pasarela segura de pago para procesar la tarjeta o PSE del cliente.</p>
+              <p>Al emitir la factura se enviará el cobro directamente al datáfono (Bold) o se generará el link de pago (Wompi / PSE / Nequi), sin capturar datos sensibles de tarjeta.</p>
             </div>
 
             <div class="form-actions ion-margin-top">
@@ -331,10 +331,10 @@
                 expand="block"
                 type="submit"
                 color="primary"
-                [disabled]="guardando || !clienteNombre.trim() || itemsFactura.length === 0">
+                [disabled]="guardando || (itemsFactura.length === 0 && !idProductoSeleccionado)">
                 <ion-spinner *ngIf="guardando" name="crescent"></ion-spinner>
                 <span *ngIf="!guardando">
-                  {{ (metodoPago.toLowerCase().includes('tarjet') || metodoPago.toLowerCase().includes('pasarela') || metodoPago.toLowerCase().includes('wompi')) ? '💳 Pagar con Pasarela ($' + (totalVenta | number:'1.2-2') + ')' : '🧾 Emitir Factura ($' + (totalVenta | number:'1.2-2') + ')' }}
+                  {{ esMetodoSeleccionadoIntegrado ? '📠 Emitir y Cobrar en Terminal / Pasarela ($' + (totalVenta | number:'1.2-2') + ')' : '🧾 Emitir y Pagar Factura ($' + (totalVenta | number:'1.2-2') + ')' }}
                 </span>
               </ion-button>
             </div>
@@ -493,15 +493,30 @@
             <span class="detail-label">Total Liquidado</span>
             <span class="detail-value text-success font-bold font-large">${{ facturaSeleccionada.total | number:'1.2-2' }}</span>
           </div>
+
+          <!-- Historial de Transacciones / Intentos de Cobro -->
+          <div class="items-summary-block ion-margin-top" *ngIf="cobrosFacturaSeleccionada.length > 0">
+            <span class="detail-label" style="display: block; margin-bottom: 6px;">Historial de Cobros ({{ cobrosFacturaSeleccionada.length }})</span>
+            <div class="item-compra-mini" *ngFor="let c of cobrosFacturaSeleccionada" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 6px 10px; margin-bottom: 5px; font-size: 12px;">
+              <div style="display: flex; justify-content: space-between; font-weight: 700; color: #0f172a;">
+                <span>{{ c.canal === 'datafono' ? '📠 Datáfono' : '🌐 Link' }} ({{ c.proveedor | uppercase }})</span>
+                <span [style.color]="c.estado === 'APROBADA' ? '#16a34a' : (c.estado === 'PENDIENTE' ? '#d97706' : '#dc2626')">{{ c.estado }}</span>
+              </div>
+              <div style="display: flex; justify-content: space-between; color: #64748b; font-size: 11px;">
+                <span>Ref: <code>{{ c.referencia }}</code></span>
+                <span>{{ c.created_at }}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Botón de Cobro con Pasarela SOLO si está Pendiente y es pago digital/tarjeta -->
-        <div class="modal-buttons ion-margin-top" *ngIf="facturaSeleccionada.estado !== 'Pagada' && facturaSeleccionada.estado !== 'Cancelada' && (facturaSeleccionada.metodo_pago?.toLowerCase()?.includes('tarjet') || facturaSeleccionada.metodo_pago?.toLowerCase()?.includes('pasarela') || facturaSeleccionada.metodo_pago?.toLowerCase()?.includes('wompi'))">
+        <!-- Botón de Cobro con Terminal / Pasarela si la factura está pendiente de pago -->
+        <div class="modal-buttons ion-margin-top" *ngIf="facturaSeleccionada.estado !== 'Pagada' && facturaSeleccionada.estado !== 'Cancelada'">
           <button
             type="button"
             class="btn-modal btn-gateway-action"
-            (click)="abrirPasarelaCobro(facturaSeleccionada)">
-            💳 Cobrar con Pasarela de Pago
+            (click)="abrirPasarelaCobro(facturaSeleccionada, 'cobro_existente')">
+            📠 Cobrar en Datáfono / Link de Pago
           </button>
         </div>
 
@@ -526,170 +541,235 @@
       </div>
     </div>
 
-    <!-- MODAL DE CHECKOUT: PASARELA DE PAGOS SEGURA (WOMPI / PSE / TARJETA) -->
+    <!-- MODAL DE COBRO AUTOMATIZADO: DATÁFONO BOLD / LINK WOMPI / MODO SIMULADO -->
     <div class="custom-modal-backdrop" *ngIf="mostrarModalPasarela">
       <div class="custom-modal-card gateway-modal-card">
         <div class="modal-card-top-bar">
-          <span class="gateway-brand-badge">🔒 Pasarela de Pago Segura</span>
+          <span class="gateway-brand-badge">🔒 Cobro Automatizado PCI-DSS</span>
           <button type="button" class="close-btn-round" [disabled]="procesandoPagoPasarela" (click)="cerrarModalPasarela()">✕</button>
         </div>
 
         <div class="gateway-modal-header">
           <div class="gateway-logos-row">
-            <span class="gateway-brand-text">WOMPI / PSE</span>
-            <span class="gateway-security-tag">PCI-DSS 256-Bit</span>
+            <span class="gateway-brand-text">BOLD POS • WOMPI</span>
+            <span class="gateway-security-tag">Sin captura de tarjeta</span>
           </div>
-          <p class="gateway-charge-label">Total a Cobrar:</p>
+          <p class="gateway-charge-label">
+            Total a Cobrar ({{ facturaACobrar?.numero_factura || facturaACobrar?.numero || ('Factura #' + facturaACobrar?.id) }}):
+          </p>
           <h2 class="gateway-charge-amount">${{ montoAPagarPasarela | number:'1.2-2' }}</h2>
         </div>
 
-        <!-- Pestañas de Medio de Pago -->
-        <div class="gateway-tabs-row">
-          <button
-            type="button"
-            class="gateway-tab-btn"
-            [class.active]="tabPasarela === 'tarjeta'"
-            (click)="tabPasarela = 'tarjeta'">
-            💳 Tarjeta de Crédito / Débito
-          </button>
-          <button
-            type="button"
-            class="gateway-tab-btn"
-            [class.active]="tabPasarela === 'pse'"
-            (click)="tabPasarela = 'pse'">
-            📱 PSE / Billeteras Digitales
-          </button>
-        </div>
-
-        <!-- FORMULARIO 1: TARJETA DE CRÉDITO O DÉBITO -->
-        <div class="gateway-form-content" *ngIf="tabPasarela === 'tarjeta'">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #f0f9ff; padding: 6px 10px; border-radius: 8px; border: 1px dashed #7dd3fc;">
-            <span style="font-size: 11px; color: #0369a1; font-weight: 700;">Modo Sandbox / Pruebas</span>
+        <!-- PASO A: SELECCIÓN DE CANAL CUANDO AÚN NO SE HA ENVIADO EL COBRO -->
+        <div *ngIf="!cobroActual">
+          <div class="gateway-tabs-row">
             <button
               type="button"
-              (click)="autocompletarTarjetaPrueba()"
-              style="background: #0284c7; color: #ffffff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
-              ⚡ Llenar Tarjeta de Prueba
+              class="gateway-tab-btn"
+              [class.active]="canalCobro === 'datafono'"
+              (click)="canalCobro = 'datafono'">
+              📠 Cobrar en Datáfono
+            </button>
+            <button
+              type="button"
+              class="gateway-tab-btn"
+              [class.active]="canalCobro === 'link'"
+              (click)="canalCobro = 'link'">
+              🌐 Link Wompi (PSE / Nequi)
             </button>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Número de Tarjeta *</label>
-            <input
-              type="text"
-              class="custom-input"
-              [(ngModel)]="numeroTarjeta"
-              placeholder="4532 •••• •••• 8910"
-              maxlength="19" />
-          </div>
-
-          <div class="row-two-col">
-            <div class="form-group">
-              <label class="form-label">Vencimiento (MM/AA) *</label>
-              <input
-                type="text"
-                class="custom-input"
-                [(ngModel)]="expiracionTarjeta"
-                placeholder="12/28"
-                maxlength="5" />
+          <!-- OPCIÓN 1: DATÁFONO FÍSICO O SIMULADO -->
+          <div class="gateway-form-content" *ngIf="canalCobro === 'datafono'">
+            <div *ngIf="terminalesActivas.length > 0">
+              <div class="form-group">
+                <label class="form-label">Selecciona la Terminal (Datáfono) *</label>
+                <select class="custom-select" [(ngModel)]="idTerminalSeleccionada">
+                  <option *ngFor="let t of terminalesActivas" [ngValue]="t.id">
+                    📠 {{ t.nombre }} — {{ t.terminal_model || 'Smart Pro' }} ({{ t.proveedor === 'bold' ? 'BOLD REAL' : 'SIMULADO PRUEBAS' }})
+                  </option>
+                </select>
+              </div>
+              <div style="background: #f0f9ff; border: 1px dashed #7dd3fc; border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #0369a1; text-align: left;">
+                ⚡ El sistema enviará la orden de cobro por <strong>${{ montoAPagarPasarela | number:'1.2-2' }}</strong> directamente al datáfono para que el cajero no tenga que digitar el valor.
+              </div>
             </div>
-            <div class="form-group">
-              <label class="form-label">CVV / CVC *</label>
-              <input
-                type="password"
-                class="custom-input"
-                [(ngModel)]="cvvTarjeta"
-                placeholder="123"
-                maxlength="4" />
+
+            <div *ngIf="terminalesActivas.length === 0" style="background: #fff7ed; border: 1px dashed #fdba74; border-radius: 12px; padding: 14px; text-align: center;">
+              <p style="margin: 0 0 10px; font-size: 13px; color: #9a3412; font-weight: 600;">
+                No hay terminales de pago activas en esta empresa.
+              </p>
+              <button
+                *ngIf="esAdmin"
+                type="button"
+                (click)="irAConfigurarTerminales()"
+                style="background: #1e3c72; color: #ffffff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                ⚙️ Ir a Configurar Terminales
+              </button>
             </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Nombre del Titular *</label>
-            <input
-              type="text"
-              class="custom-input"
-              [(ngModel)]="titularTarjeta"
-              placeholder="Como aparece en la tarjeta" />
+          <!-- OPCIÓN 2: LINK DE PAGO ONLINE (WOMPI / SIMULADO) -->
+          <div class="gateway-form-content" *ngIf="canalCobro === 'link'">
+            <div *ngIf="metodosLinkDisponibles.length > 0">
+              <div class="form-group">
+                <label class="form-label">Pasarela Online *</label>
+                <select class="custom-select" [(ngModel)]="idMetodoLinkSeleccionado">
+                  <option *ngFor="let m of metodosLinkDisponibles" [ngValue]="m.id">
+                    🌐 {{ m.nombre }} ({{ (m.pasarela || 'simulado') | uppercase }})
+                  </option>
+                </select>
+              </div>
+              <div style="background: #f0fdf4; border: 1px dashed #86efac; border-radius: 10px; padding: 10px 12px; font-size: 12px; color: #166534; text-align: left;">
+                🔒 Se generará un link firmado para que el cliente pague con <strong>PSE, Nequi, QR Bancolombia o Tarjeta</strong> directamente en Wompi.
+              </div>
+            </div>
+
+            <div *ngIf="metodosLinkDisponibles.length === 0" style="background: #fff7ed; border: 1px dashed #fdba74; border-radius: 12px; padding: 14px; text-align: center;">
+              <p style="margin: 0 0 10px; font-size: 13px; color: #9a3412; font-weight: 600;">
+                No hay una pasarela Wompi o Simulada activa.
+              </p>
+              <button
+                *ngIf="esAdmin"
+                type="button"
+                (click)="irAConfigurarTerminales()"
+                style="background: #1e3c72; color: #ffffff; border: none; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                ⚙️ Configurar Pasarela
+              </button>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Número de Cuotas</label>
-            <select class="custom-select" [(ngModel)]="cuotasTarjeta">
-              <option [value]="1">1 Cuota (Sin intereses)</option>
-              <option [value]="2">2 Cuotas</option>
-              <option [value]="3">3 Cuotas</option>
-              <option [value]="6">6 Cuotas</option>
-              <option [value]="12">12 Cuotas</option>
-              <option [value]="24">24 Cuotas</option>
-              <option [value]="36">36 Cuotas</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- FORMULARIO 2: PSE Y BILLETERAS DIGITALES -->
-        <div class="gateway-form-content" *ngIf="tabPasarela === 'pse'">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: #f0f9ff; padding: 6px 10px; border-radius: 8px; border: 1px dashed #7dd3fc;">
-            <span style="font-size: 11px; color: #0369a1; font-weight: 700;">Modo Sandbox / Pruebas</span>
+          <!-- BOTONES DE INICIO DE COBRO -->
+          <div class="gateway-actions-footer ion-margin-top">
             <button
               type="button"
-              (click)="autocompletarPsePrueba()"
-              style="background: #0284c7; color: #ffffff; border: none; border-radius: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; cursor: pointer;">
-              ⚡ Llenar Datos PSE
+              class="btn-gateway-confirm"
+              (click)="iniciarCobroPasarela()"
+              [disabled]="procesandoPagoPasarela">
+              <ion-spinner *ngIf="procesandoPagoPasarela" name="crescent"></ion-spinner>
+              <span *ngIf="!procesandoPagoPasarela">
+                {{ canalCobro === 'datafono' ? '📠 Enviar Cobro al Datáfono' : '🌐 Generar Link de Pago' }} (${{ montoAPagarPasarela | number:'1.2-2' }})
+              </span>
             </button>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Banco / Billetera Digital *</label>
-            <select class="custom-select" [(ngModel)]="bancoPse">
-              <option value="Bancolombia">Bancolombia</option>
-              <option value="Nequi">Nequi</option>
-              <option value="Daviplata">Daviplata</option>
-              <option value="Davivienda">Davivienda</option>
-              <option value="Banco de Bogotá">Banco de Bogotá</option>
-              <option value="BBVA Colombia">BBVA Colombia</option>
-              <option value="Nu Colombia">Nu Bank</option>
-            </select>
-          </div>
-
-          <div class="row-two-col">
-            <div class="form-group">
-              <label class="form-label">Tipo de Persona</label>
-              <select class="custom-select" [(ngModel)]="tipoPersonaPse">
-                <option value="Natural">Persona Natural</option>
-                <option value="Juridica">Persona Jurídica</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Celular / Teléfono *</label>
-              <input
-                type="tel"
-                class="custom-input"
-                [(ngModel)]="telefonoPse"
-                placeholder="3001234567" />
-            </div>
+            <button
+              type="button"
+              class="btn-gateway-confirm"
+              style="background: #0f172a; color: #ffffff; margin-top: 6px;"
+              [disabled]="procesandoPagoPasarela"
+              (click)="confirmarPagoManualDirecto()">
+              💵 Confirmar Pago Directo en Caja (Efectivo / Transferencia)
+            </button>
+            <button
+              type="button"
+              class="btn-gateway-cancel"
+              [disabled]="procesandoPagoPasarela"
+              (click)="cerrarModalPasarela()">
+              Dejar Pendiente / Cerrar
+            </button>
           </div>
         </div>
 
-        <!-- BOTÓN DE CONFIRMACIÓN DE PAGO -->
-        <div class="gateway-actions-footer ion-margin-top">
-          <button
-            type="button"
-            class="btn-gateway-confirm"
-            (click)="procesarPagoPasarela()"
-            [disabled]="procesandoPagoPasarela">
-            <ion-spinner *ngIf="procesandoPagoPasarela" name="crescent"></ion-spinner>
-            <span *ngIf="!procesandoPagoPasarela">
-              🔒 Confirmar Pago (${{ montoAPagarPasarela | number:'1.2-2' }})
-            </span>
-          </button>
-          <button
-            type="button"
-            class="btn-gateway-cancel"
-            [disabled]="procesandoPagoPasarela"
-            (click)="cerrarModalPasarela()">
-            Cancelar
-          </button>
+        <!-- PASO B: PANTALLA DE ESPERA / CONFIRMACIÓN EN TIEMPO REAL -->
+        <div *ngIf="cobroActual" style="text-align: center; padding: 8px 4px;">
+          <div *ngIf="cobroActual.estado === 'PENDIENTE'" style="margin-bottom: 14px;">
+            <ion-spinner name="crescent" color="primary" style="width: 40px; height: 40px;"></ion-spinner>
+            <h4 style="margin: 8px 0 4px; font-size: 16px; font-weight: 800; color: #0f172a;">
+              {{ cobroActual.canal === 'datafono' ? 'Esperando pago en el datáfono…' : 'Esperando confirmación del pago…' }}
+            </h4>
+            <p style="margin: 0; font-size: 12px; color: #475569;">
+              {{ cobroActual.mensaje || 'La factura se marcará como Pagada automáticamente al aprobarse la transacción.' }}
+            </p>
+          </div>
+
+          <div *ngIf="cobroActual.estado !== 'PENDIENTE'" style="margin-bottom: 14px;">
+            <div style="font-size: 34px; margin-bottom: 4px;">
+              {{ cobroActual.estado === 'APROBADA' ? '✅' : '⚠️' }}
+            </div>
+            <h4 style="margin: 0 0 4px; font-size: 16px; font-weight: 800; color: #0f172a;">
+              Estado del Cobro: {{ cobroActual.estado }}
+            </h4>
+            <p style="margin: 0; font-size: 12px; color: #64748b;">
+              {{ cobroActual.mensaje }}
+            </p>
+          </div>
+
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; font-size: 12px; text-align: left;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="color: #64748b;">Referencia:</span>
+              <strong style="color: #0f2b5c; font-family: monospace;">{{ cobroActual.referencia }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #64748b;">Canal / Proveedor:</span>
+              <strong>{{ cobroActual.canal | uppercase }} • {{ cobroActual.proveedor | uppercase }}</strong>
+            </div>
+          </div>
+
+          <!-- Botón para reabrir el link si es cobro por link -->
+          <a
+            *ngIf="cobroActual.url_pago && cobroActual.estado === 'PENDIENTE'"
+            [href]="cobroActual.url_pago"
+            target="_blank"
+            rel="noopener"
+            style="display: block; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 700; text-decoration: none; margin-bottom: 12px;">
+            🔗 Abrir Checkout de Pago Nuevamente
+          </a>
+
+          <!-- CONTROLES DE SIMULACIÓN (SOLO EN MODO PRUEBAS / SIMULADO) -->
+          <div *ngIf="cobroActual.estado === 'PENDIENTE'" style="background: #fefce8; border: 1.5px dashed #facc15; border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+            <p style="margin: 0 0 8px; font-size: 12px; font-weight: 700; color: #854d0e;">
+              🧪 Confirmar o Simular Respuesta del Datáfono / Pasarela
+            </p>
+            <div style="display: flex; gap: 8px;">
+              <button
+                type="button"
+                [disabled]="procesandoPagoPasarela"
+                (click)="simularResultadoActual('APROBADA')"
+                style="flex: 1; background: #16a34a; color: #ffffff; border: none; border-radius: 9px; padding: 10px; font-size: 12px; font-weight: 800; cursor: pointer;">
+                ✅ Aprobar Pago
+              </button>
+              <button
+                type="button"
+                [disabled]="procesandoPagoPasarela"
+                (click)="simularResultadoActual('RECHAZADA')"
+                style="flex: 1; background: #dc2626; color: #ffffff; border: none; border-radius: 9px; padding: 10px; font-size: 12px; font-weight: 800; cursor: pointer;">
+                ❌ Simular Rechazo
+              </button>
+            </div>
+          </div>
+
+          <div class="gateway-actions-footer">
+            <button
+              *ngIf="cobroActual.estado === 'PENDIENTE'"
+              type="button"
+              class="btn-gateway-confirm"
+              style="background: #0f172a; color: #ffffff; margin-bottom: 6px;"
+              [disabled]="procesandoPagoPasarela"
+              (click)="confirmarPagoManualDirecto()">
+              💵 Confirmar Pago Directo en Caja (Efectivo / Transferencia)
+            </button>
+            <button
+              *ngIf="cobroActual.estado !== 'PENDIENTE' && cobroActual.estado !== 'APROBADA'"
+              type="button"
+              class="btn-gateway-confirm"
+              (click)="reintentarCobro()">
+              🔄 Reintentar con otro método / terminal
+            </button>
+            <button
+              *ngIf="cobroActual.estado === 'PENDIENTE'"
+              type="button"
+              class="btn-gateway-cancel"
+              style="background: #fee2e2; color: #b91c1c;"
+              [disabled]="procesandoPagoPasarela"
+              (click)="cancelarCobroPendiente()">
+              Cancelar cobro pendiente
+            </button>
+            <button
+              type="button"
+              class="btn-gateway-cancel"
+              (click)="cerrarModalPasarela()">
+              Cerrar ventana
+            </button>
+          </div>
         </div>
       </div>
     </div>

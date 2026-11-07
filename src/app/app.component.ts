@@ -38,22 +38,23 @@ export class AppComponent implements OnInit {
       items: [
         { title: 'Inicio / Pantalla Principal', url: '/inicio', icon: 'home-outline', roles: [1, 2, 3], requiereEmpresa: true },
         { title: 'Cambiar de Empresa / Espacio', url: '/seleccionar-empresa', icon: 'business-outline', roles: [1, 2, 3], requiereEmpresa: false },
-        { title: 'Productos e Inventario', url: '/productos', icon: 'cube-outline', roles: [1, 3], requiereEmpresa: true },
-        { title: 'Facturas y Ventas', url: '/facturas', icon: 'document-text-outline', roles: [1, 2], requiereEmpresa: true },
-        { title: 'Gestión de Compras', url: '/compras', icon: 'cart-outline', roles: [1, 3], requiereEmpresa: true },
+        { title: 'Ventas y Facturación', url: '/facturas', icon: 'document-text-outline', roles: [1, 2, 3], requiereEmpresa: true },
+        { title: 'Gestión de Compras', url: '/compras', icon: 'cart-outline', roles: [1, 2, 3], requiereEmpresa: true },
+        { title: 'Productos e Inventario', url: '/productos', icon: 'cube-outline', roles: [1, 2, 3], requiereEmpresa: true },
       ]
     },
     {
       titulo: 'Directorio de Relaciones',
       items: [
-        { title: 'Clientes', url: '/clientes', icon: 'people-outline', roles: [1, 2], requiereEmpresa: true },
-        { title: 'Proveedores', url: '/proveedores', icon: 'bus-outline', roles: [1, 3], requiereEmpresa: true },
+        { title: 'Clientes', url: '/clientes', icon: 'people-outline', roles: [1, 2, 3], requiereEmpresa: true },
+        { title: 'Proveedores', url: '/proveedores', icon: 'bus-outline', roles: [1, 2, 3], requiereEmpresa: true },
       ]
     },
     {
       titulo: 'Analítica y Administración',
       items: [
-        { title: 'Reportes y Métricas', url: '/reportes', icon: 'bar-chart-outline', roles: [1, 3], requiereEmpresa: true },
+        { title: 'Reportes y Métricas', url: '/reportes', icon: 'bar-chart-outline', roles: [1, 2, 3], requiereEmpresa: true },
+        { title: 'Terminales y Pasarelas', url: '/terminales', icon: 'card-outline', roles: [1, 2, 3], requiereEmpresa: true },
         { title: 'Gestión de Usuarios', url: '/usuarios', icon: 'shield-checkmark-outline', roles: [1], requiereEmpresa: true },
         { title: 'Configuración Empresa', url: '/empresa', icon: 'settings-outline', roles: [1], requiereEmpresa: true },
       ]

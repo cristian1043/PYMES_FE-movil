@@ -157,20 +157,22 @@ export class AuthService {
   }
 
   getRolId(): number {
+    const u = this.getUsuario();
+    // Si es Administrador del Sistema global, conserva siempre nivel 1
+    if (u) {
+      const rolStr = (u.rol || '').toLowerCase();
+      if (Number(u.id_rol) === 1 || Number(u.rol_id) === 1 || rolStr.includes('admin')) {
+        return 1;
+      }
+    }
+
     // Si hay una empresa activa seleccionada, tiene prioridad el rol asignado en dicha empresa
     const emp = this.getEmpresaActiva();
     if (emp && emp.rol_id !== undefined && emp.rol_id !== null) {
       return Number(emp.rol_id);
     }
 
-    const u = this.getUsuario();
     if (!u) return 0;
-
-    // Si es Administrador del Sistema global, conserva nivel 1
-    const rolStr = (u.rol || '').toLowerCase();
-    if (Number(u.id_rol) === 1 || Number(u.rol_id) === 1 || rolStr.includes('admin')) {
-      return 1;
-    }
 
     // Usuario independiente (sin empresa activa seleccionada): 0 (sin rol operativo)
     return 0;
@@ -239,8 +241,9 @@ export class AuthService {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
     const emp = this.getEmpresaActiva();
-    if (emp && emp.id) {
-      headers = headers.set('X-Empresa-ID', String(emp.id));
+    const empId = emp?.id || emp?.empresa_id;
+    if (empId) {
+      headers = headers.set('X-Empresa-ID', String(empId));
     }
     return headers;
   }

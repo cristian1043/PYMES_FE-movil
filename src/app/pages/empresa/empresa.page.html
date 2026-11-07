@@ -127,6 +127,29 @@
         </ion-card-content>
       </ion-card>
 
+      <!-- ACCESO RÁPIDO A TERMINALES DE PAGO Y PASARELAS -->
+      <ion-card class="custom-card-touch">
+        <ion-card-header class="card-header-gradient">
+          <div class="header-title-wrap">
+            <div class="icon-circle">
+              <ion-icon name="card-outline"></ion-icon>
+            </div>
+            <div>
+              <h2 class="card-title-text">Terminales de Pago y Pasarelas</h2>
+              <p class="card-subtitle-text">Datáfonos Bold, links Wompi y modo pruebas</p>
+            </div>
+          </div>
+        </ion-card-header>
+        <ion-card-content class="card-content-padding">
+          <p style="font-size: 13px; color: #475569; margin: 0 0 12px; line-height: 1.45;">
+            Administra los datáfonos vinculados a cada caja, configura las llaves de Bold o Wompi y ejecuta conciliaciones de cobros pendientes.
+          </p>
+          <button type="button" class="btn-submit-touch" (click)="irATerminales()">
+            📠 Gestionar Terminales y Pasarelas
+          </button>
+        </ion-card-content>
+      </ion-card>
+
       <!-- TARJETA 2: ESTADO OPERATIVO DE LA EMPRESA (Reflejo del Front Web) -->
       <ion-card class="custom-card-touch card-danger-zone">
         <ion-card-header class="header-danger-zone">

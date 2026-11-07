@@ -116,7 +116,7 @@ export class SeleccionarEmpresaPage implements OnInit {
               empresasData.forEach((emp, index) => {
                 const vinc = vinculaciones[index] || {};
                 const estadoVinc = vinc.estado || 'No Vinculado';
-                const rolVinc = Number(vinc.rol_id || 2);
+                const rolVinc = esSuperAdmin ? 1 : Number(vinc.rol_id || 2);
 
                 // Solo el Super Administrador de la plataforma ve todas las empresas.
                 // Cualquier otro usuario (incluyendo administradores de una empresa específica)
@@ -175,10 +175,10 @@ export class SeleccionarEmpresaPage implements OnInit {
       return;
     }
 
-    // 2. Bloqueo si la vinculación del trabajador ha sido desactivada
-    if (!esSuperAdmin && emp.vinculacion_estado === 'Desvinculado') {
+    // 2. Bloqueo si el trabajador no tiene una vinculación Activa en la empresa
+    if (!esSuperAdmin && emp.vinculacion_estado !== 'Activo') {
       const toast = await this.toastController.create({
-        message: '⛔ Acceso Denegado: Tu vinculación en esta empresa ha sido desactivada.',
+        message: '⛔ Acceso Denegado: No tienes una vinculación activa en esta empresa.',
         duration: 4000,
         color: 'warning',
         position: 'top'

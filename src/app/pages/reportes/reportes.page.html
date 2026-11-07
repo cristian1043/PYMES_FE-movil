@@ -179,7 +179,7 @@
             </span>
           </div>
           <div class="item-card-body">
-            <p class="date-txt">📅 {{ f.fecha }}</p>
+            <p class="date-txt">📅 {{ f.fecha }} • 💳 <strong>{{ f.metodo_pago || 'Efectivo' }}</strong></p>
             <div class="details-row">
               <span>Subtotal: ${{ f.subtotal | number:'1.2-2' }}</span>
               <span>IVA: ${{ f.iva | number:'1.2-2' }}</span>
@@ -452,6 +452,11 @@
           <div class="detail-row" *ngIf="facturaSeleccionada.fecha">
             <span class="detail-label">Fecha</span>
             <span class="detail-value">{{ facturaSeleccionada.fecha }}</span>
+          </div>
+
+          <div class="detail-row">
+            <span class="detail-label">Método de Pago</span>
+            <span class="detail-value" style="color: #0369a1; font-weight: 700;">💳 {{ facturaSeleccionada.metodo_pago || 'Efectivo' }}</span>
           </div>
 
           <div class="detail-row" *ngIf="facturaSeleccionada.subtotal">
