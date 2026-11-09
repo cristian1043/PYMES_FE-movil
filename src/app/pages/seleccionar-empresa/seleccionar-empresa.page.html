@@ -118,6 +118,10 @@
         <div class="company-card-body">
           <h3 class="company-name">{{ emp.nombre }}</h3>
           <p class="company-nit"><strong>NIT:</strong> {{ emp.nit }}</p>
+          <p style="font-size: 12px; font-weight: 700; color: #15803d; margin: 4px 0 8px;">
+            💎 {{ emp.plan_membresia || 'Plan PYME Mensual' }} · $19.900 COP/mes
+            <span *ngIf="emp.dias_restantes_membresia !== undefined">({{ emp.dias_restantes_membresia }}d)</span>
+          </p>
 
           <div class="company-extra-info" *ngIf="emp.direccion || emp.telefono">
             <p *ngIf="emp.telefono" class="info-row">

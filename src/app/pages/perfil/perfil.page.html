@@ -242,10 +242,21 @@
           <ion-card-content>
             <ion-grid class="ion-no-padding">
               <ion-row>
+                <!-- ID Único de Cuenta (Solo lectura) -->
+                <ion-col size="12" size-md="6">
+                  <div class="custom-form-group">
+                    <label class="form-label">ID de Cuenta 🔒</label>
+                    <div class="input-with-icon readonly-input">
+                      <ion-icon name="finger-print-outline"></ion-icon>
+                      <input type="text" [value]="'#' + (usuario?.id || '')" readonly class="custom-input" />
+                    </div>
+                  </div>
+                </ion-col>
+
                 <!-- Tipo de Documento -->
                 <ion-col size="12" size-md="6">
                   <div class="custom-form-group">
-                    <label class="form-label">Tipo de Documento</label>
+                    <label class="form-label">Tipo de Documento 🔒</label>
                     <div class="input-with-icon readonly-input">
                       <ion-icon name="card-outline"></ion-icon>
                       <input type="text" [value]="form.tipo_documento" readonly class="custom-input" />
@@ -256,7 +267,7 @@
                 <!-- Número de Documento -->
                 <ion-col size="12" size-md="6">
                   <div class="custom-form-group">
-                    <label class="form-label">Número de Documento</label>
+                    <label class="form-label">Número de Documento 🔒</label>
                     <div class="input-with-icon readonly-input">
                       <ion-icon name="id-card-outline"></ion-icon>
                       <input
@@ -269,9 +280,9 @@
                 </ion-col>
 
                 <!-- Usuario (@username) - Solo lectura -->
-                <ion-col size="12">
+                <ion-col size="12" size-md="6">
                   <div class="custom-form-group">
-                    <label class="form-label">Identificador del Sistema (@username)</label>
+                    <label class="form-label">Identificador del Sistema (@username) 🔒</label>
                     <div class="input-with-icon readonly-input">
                       <ion-icon name="at-outline"></ion-icon>
                       <input
@@ -456,6 +467,107 @@
           </ion-button>
         </div>
       </form>
+
+      <!-- SECCIÓN 5: ZONA DE PELIGRO — ELIMINAR CUENTA CON VERIFICACIÓN EN DOS PASOS (2FA) -->
+      <ion-card class="form-section-card ion-margin-bottom" style="border: 1.5px solid #fecaca;">
+        <ion-card-header class="section-card-header" (click)="toggleSeccionEliminarCuenta()" style="cursor: pointer; background: #fef2f2;">
+          <div class="section-title-wrapper" style="justify-content: space-between; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="section-icon">⚠️</span>
+              <div>
+                <ion-card-title style="color: #991b1b;">Eliminar Cuenta (Verificación en 2 Pasos)</ion-card-title>
+                <ion-card-subtitle style="color: #b91c1c;">
+                  {{ mostrarEliminarCuenta ? 'Ocultar eliminación de cuenta' : 'Toca aquí si deseas eliminar tu cuenta permanentemente' }}
+                </ion-card-subtitle>
+              </div>
+            </div>
+            <ion-button fill="clear" size="small" color="danger">
+              <ion-icon [name]="mostrarEliminarCuenta ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            </ion-button>
+          </div>
+        </ion-card-header>
+
+        <ion-card-content *ngIf="mostrarEliminarCuenta" style="padding-top: 16px;">
+          <!-- PASO 1: Confirmar Contraseña Actual -->
+          <div *ngIf="pasoEliminacion === 1">
+            <p style="font-size: 0.88rem; color: #7f1d1d; margin-bottom: 12px;">
+              <strong>Paso 1 de 2:</strong> Verifica tu identidad ingresando tu contraseña actual para generar tu código de seguridad de 6 dígitos.
+            </p>
+            <div class="custom-form-group">
+              <label class="form-label">Contraseña Actual <span class="required-asterisk">*</span></label>
+              <div class="input-with-icon">
+                <ion-icon name="lock-closed-outline"></ion-icon>
+                <input
+                  type="password"
+                  name="passwordEliminacion"
+                  class="custom-input"
+                  [(ngModel)]="passwordEliminacion"
+                  placeholder="Ingresa tu contraseña actual" />
+              </div>
+            </div>
+            <ion-button
+              expand="block"
+              color="danger"
+              type="button"
+              class="ion-margin-top"
+              [disabled]="eliminandoCuenta"
+              (click)="solicitarCodigoEliminacion()">
+              <ion-spinner *ngIf="eliminandoCuenta" name="crescent"></ion-spinner>
+              <span *ngIf="!eliminandoCuenta">🔐 Solicitar Código de Verificación (Paso 1/2)</span>
+            </ion-button>
+          </div>
+
+          <!-- PASO 2: Confirmar Código de 6 Dígitos -->
+          <div *ngIf="pasoEliminacion === 2">
+            <div *ngIf="codigoEliminacionGenerado" style="background: #fffbeb; border: 2px dashed #f59e0b; border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 14px;">
+              <div style="font-size: 0.75rem; font-weight: 700; color: #92400e; text-transform: uppercase;">
+                🔑 Código de Seguridad (Paso 2 de 2)
+              </div>
+              <div style="font-size: 1.6rem; font-weight: 800; letter-spacing: 6px; color: #b45309; font-family: monospace; margin: 6px 0;">
+                {{ codigoEliminacionGenerado }}
+              </div>
+              <button type="button" (click)="usarCodigoEliminacionGenerado()" style="background: #d97706; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+                ✨ Insertar código automáticamente
+              </button>
+            </div>
+
+            <div class="custom-form-group">
+              <label class="form-label">Código de Verificación (6 dígitos) <span class="required-asterisk">*</span></label>
+              <div class="input-with-icon">
+                <ion-icon name="key-outline"></ion-icon>
+                <input
+                  type="text"
+                  maxlength="6"
+                  name="codigoEliminacion"
+                  class="custom-input ion-text-center"
+                  [(ngModel)]="codigoEliminacion"
+                  placeholder="000000"
+                  style="font-weight: 800; letter-spacing: 5px; font-size: 1.1rem;" />
+              </div>
+            </div>
+
+            <ion-button
+              expand="block"
+              color="danger"
+              type="button"
+              class="ion-margin-top"
+              [disabled]="eliminandoCuenta"
+              (click)="confirmarEliminacionCuenta()">
+              <ion-spinner *ngIf="eliminandoCuenta" name="crescent"></ion-spinner>
+              <span *ngIf="!eliminandoCuenta">🗑️ Confirmar y Eliminar Mi Cuenta Definitivamente</span>
+            </ion-button>
+
+            <ion-button
+              expand="block"
+              fill="clear"
+              color="medium"
+              type="button"
+              (click)="pasoEliminacion = 1">
+              ← Volver al Paso 1
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
     </div>
   </ion-content>
 </ion-page>

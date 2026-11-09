@@ -107,5 +107,12 @@
         </div>
       </div>
     </div>
+
+    <!-- Botón Circular Flotante en la Esquina Inferior Derecha: Información Personal del Usuario/Cliente -->
+    <ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="usuario">
+      <ion-fab-button color="primary" (click)="irAModulo('/perfil')" title="Mi Información Personal y Cuenta">
+        <ion-icon name="person-circle-outline" style="font-size: 2rem;"></ion-icon>
+      </ion-fab-button>
+    </ion-fab>
   </ion-content>
 </ion-page>

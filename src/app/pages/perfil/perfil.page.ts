@@ -49,6 +49,14 @@ export class PerfilPage implements OnInit {
   // Control para visibilidad de campos de contraseña
   mostrarCambioPassword = false;
 
+  // Control para eliminación de cuenta en 2 pasos (2FA)
+  mostrarEliminarCuenta = false;
+  pasoEliminacion = 1;
+  passwordEliminacion = '';
+  codigoEliminacion = '';
+  codigoEliminacionGenerado = '';
+  eliminandoCuenta = false;
+
   constructor(
     private authService: AuthService,
     private usuariosService: UsuariosService,
@@ -333,6 +341,94 @@ export class PerfilPage implements OnInit {
     } else {
       actualizarDatosGenerales();
     }
+  }
+
+  toggleSeccionEliminarCuenta(): void {
+    this.mostrarEliminarCuenta = !this.mostrarEliminarCuenta;
+    if (!this.mostrarEliminarCuenta) {
+      this.pasoEliminacion = 1;
+      this.passwordEliminacion = '';
+      this.codigoEliminacion = '';
+      this.codigoEliminacionGenerado = '';
+    }
+    this.cdr.detectChanges();
+  }
+
+  usarCodigoEliminacionGenerado(): void {
+    if (this.codigoEliminacionGenerado) {
+      this.codigoEliminacion = this.codigoEliminacionGenerado;
+      this.cdr.detectChanges();
+    }
+  }
+
+  solicitarCodigoEliminacion(): void {
+    if (!this.passwordEliminacion || !this.passwordEliminacion.trim()) {
+      this.mostrarToast('Ingresa tu contraseña actual para continuar con el Paso 1.', 'warning');
+      return;
+    }
+
+    this.eliminandoCuenta = true;
+    this.cdr.detectChanges();
+
+    this.authService.solicitarEliminacionCuenta(this.passwordEliminacion).pipe(
+      finalize(() => {
+        this.eliminandoCuenta = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: (res: any) => {
+        if (res && res.exito) {
+          this.pasoEliminacion = 2;
+          this.codigoEliminacionGenerado = res.codigo || '';
+          this.codigoEliminacion = '';
+          this.cdr.detectChanges();
+          this.mostrarToast(
+            this.codigoEliminacionGenerado
+              ? `Paso 1 verificado. Código 2FA generado: ${this.codigoEliminacionGenerado}`
+              : (res.mensaje || 'Código de verificación enviado.'),
+            'warning'
+          );
+        } else {
+          this.mostrarToast(res?.mensaje || 'No se pudo solicitar el código de eliminación.', 'danger');
+        }
+      },
+      error: (err: any) => {
+        const msg = err?.error?.mensaje || 'Contraseña actual incorrecta.';
+        this.mostrarToast(msg, 'danger');
+      }
+    });
+  }
+
+  confirmarEliminacionCuenta(): void {
+    const codigoTrim = (this.codigoEliminacion || '').trim();
+    if (!codigoTrim || codigoTrim.length < 6) {
+      this.mostrarToast('Ingresa el código de verificación de 6 dígitos.', 'warning');
+      return;
+    }
+
+    this.eliminandoCuenta = true;
+    this.cdr.detectChanges();
+
+    this.authService.confirmarEliminacionCuenta(codigoTrim).pipe(
+      finalize(() => {
+        this.eliminandoCuenta = false;
+        this.cdr.detectChanges();
+      })
+    ).subscribe({
+      next: async (res: any) => {
+        if (res && res.exito) {
+          this.authService.logout();
+          await this.mostrarToast(res.mensaje || 'Tu cuenta ha sido eliminada permanentemente.', 'success');
+          this.router.navigate(['/login'], { replaceUrl: true });
+        } else {
+          this.mostrarToast(res?.mensaje || 'Código de verificación inválido.', 'danger');
+        }
+      },
+      error: (err: any) => {
+        const msg = err?.error?.mensaje || 'Código de verificación inválido o expirado.';
+        this.mostrarToast(msg, 'danger');
+      }
+    });
   }
 
   private async mostrarToast(mensaje: string, color: 'success' | 'warning' | 'danger' | 'medium'): Promise<void> {

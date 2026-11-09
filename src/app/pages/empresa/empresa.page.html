@@ -127,6 +127,165 @@
         </ion-card-content>
       </ion-card>
 
+      <!-- TARJETA MEMBRESÍA EMPRESARIAL ($19.900 COP / MES) -->
+      <ion-card class="custom-card-touch card-membresia">
+        <ion-card-header class="card-header-membresia">
+          <div class="header-title-wrap">
+            <div class="icon-circle icon-diamond">
+              <ion-icon name="diamond-outline"></ion-icon>
+            </div>
+            <div>
+              <h2 class="card-title-text">Membresía PYMEsoft</h2>
+              <p class="card-subtitle-text">{{ empresa.plan_membresia || 'Plan PYME Mensual' }} · $19.900 COP / mes</p>
+            </div>
+          </div>
+          <span
+            class="status-badge"
+            [ngClass]="empresa.membresia_activa !== false ? 'badge-active' : 'badge-inactive'">
+            {{ empresa.membresia_activa !== false ? ('🟢 Activa (' + (empresa.dias_restantes_membresia ?? 30) + 'd)') : '⚠️ Vencida' }}
+          </span>
+        </ion-card-header>
+
+        <ion-card-content class="card-content-padding">
+          <!-- Banner de Precio y Vigencia -->
+          <div class="membresia-price-banner">
+            <div>
+              <span class="membresia-plan-tag">SUSCRIPCIÓN MENSUAL (30 DÍAS)</span>
+              <h3 class="membresia-price-value">$19.900 <small>COP / mes</small></h3>
+              <p class="membresia-vencimiento" *ngIf="empresa.fecha_vencimiento_membresia">
+                📅 Vigente hasta: <strong>{{ empresa.fecha_vencimiento_membresia }}</strong>
+              </p>
+            </div>
+          </div>
+
+          <!-- Selector de Tecnología de Cobro -->
+          <div class="membresia-channel-tabs">
+            <button
+              type="button"
+              class="channel-tab-btn"
+              [class.active]="canalMembresia === 'link'"
+              (click)="canalMembresia = 'link'">
+              🌐 Link Wompi / PSE / Nequi
+            </button>
+            <button
+              type="button"
+              class="channel-tab-btn"
+              [class.active]="canalMembresia === 'datafono'"
+              (click)="canalMembresia = 'datafono'">
+              📟 Datáfono Bold
+            </button>
+            <button
+              type="button"
+              class="channel-tab-btn"
+              [class.active]="canalMembresia === 'manual'"
+              (click)="canalMembresia = 'manual'">
+              💵 Pago Directo
+            </button>
+          </div>
+
+          <!-- Configuración según el canal elegido -->
+          <div class="form-group-touch" *ngIf="canalMembresia === 'link' && metodosLink.length > 0">
+            <label class="form-label-touch">Pasarela Online (PSE, Nequi, Tarjeta, QR)</label>
+            <select class="input-touch" [(ngModel)]="idMetodoMembresia" name="metodoMembresia">
+              <option *ngFor="let m of metodosLink" [ngValue]="m.id">
+                🌐 {{ m.nombre }} ({{ (m.pasarela || 'simulado') | uppercase }})
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group-touch" *ngIf="canalMembresia === 'datafono' && terminalesActivas.length > 0">
+            <label class="form-label-touch">Terminal / Datáfono POS</label>
+            <select class="input-touch" [(ngModel)]="idTerminalMembresia" name="terminalMembresia">
+              <option *ngFor="let t of terminalesActivas" [ngValue]="t.id">
+                📟 {{ t.nombre }} ({{ (t.proveedor || 'simulado') | uppercase }})
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group-touch" *ngIf="canalMembresia === 'manual'">
+            <label class="form-label-touch">Comprobante / Referencia de Transferencia (Opcional)</label>
+            <input
+              type="text"
+              class="input-touch"
+              [(ngModel)]="referenciaManualMembresia"
+              name="refManualMembresia"
+              placeholder="Ej: NEQUI-981234 / Comprobante" />
+          </div>
+
+          <!-- Botón Principal de Cobro de Membresía ($19.900 COP) -->
+          <button
+            type="button"
+            class="btn-membresia-pay"
+            [disabled]="procesandoMembresia"
+            (click)="iniciarPagoMembresia()">
+            <ion-spinner *ngIf="procesandoMembresia" name="crescent"></ion-spinner>
+            <span *ngIf="!procesandoMembresia">
+              💳 Pagar / Renovar Membresía ($19.900 COP)
+            </span>
+          </button>
+
+          <!-- Panel de Cobro Pendiente y Simulador Sandbox -->
+          <div class="membresia-pending-box" *ngIf="cobroMembresiaActual && cobroMembresiaActual.estado === 'PENDIENTE'">
+            <div class="pending-header">
+              <span>⏳ Cobro en Proceso: <code>{{ cobroMembresiaActual.referencia }}</code></span>
+              <strong>$19.900 COP</strong>
+            </div>
+            <p class="pending-msg">{{ cobroMembresiaActual.mensaje || 'Esperando confirmación de la pasarela...' }}</p>
+
+            <div class="pending-actions">
+              <button
+                type="button"
+                *ngIf="cobroMembresiaActual.url_pago"
+                class="btn-pending-action btn-checkout"
+                (click)="abrirCheckoutMembresia(cobroMembresiaActual.url_pago)">
+                🔗 Abrir Checkout
+              </button>
+              <button
+                type="button"
+                class="btn-pending-action btn-approve"
+                [disabled]="procesandoMembresia"
+                (click)="simularResultadoMembresia(cobroMembresiaActual.id, 'APROBADA')">
+                ✅ Simular Aprobado
+              </button>
+              <button
+                type="button"
+                class="btn-pending-action btn-reject"
+                [disabled]="procesandoMembresia"
+                (click)="simularResultadoMembresia(cobroMembresiaActual.id, 'RECHAZADA')">
+                ❌ Rechazar
+              </button>
+            </div>
+          </div>
+
+          <!-- Historial Reciente de Pagos de Membresía -->
+          <div class="membresia-history" *ngIf="pagosMembresia.length > 0">
+            <h4 class="history-title">📋 Historial de Cobros de Membresía</h4>
+            <div class="history-item" *ngFor="let pm of pagosMembresia | slice:0:5">
+              <div>
+                <div class="history-ref">
+                  <code>{{ pm.referencia }}</code>
+                  <span class="history-provider">{{ (pm.proveedor || 'simulado') | uppercase }}</span>
+                </div>
+                <div class="history-date">
+                  {{ pm.created_at }} · ${{ (pm.monto || 19900) | number:'1.0-0' }} COP
+                </div>
+              </div>
+              <div class="history-right">
+                <span
+                  class="history-badge"
+                  [ngClass]="{
+                    'hb-aprobada': pm.estado === 'APROBADA',
+                    'hb-pendiente': pm.estado === 'PENDIENTE',
+                    'hb-rechazada': pm.estado !== 'APROBADA' && pm.estado !== 'PENDIENTE'
+                  }">
+                  {{ pm.estado }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
       <!-- ACCESO RÁPIDO A TERMINALES DE PAGO Y PASARELAS -->
       <ion-card class="custom-card-touch">
         <ion-card-header class="card-header-gradient">

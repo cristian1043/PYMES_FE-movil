@@ -268,5 +268,17 @@ export class AuthService {
       password_nueva: passwordNueva
     });
   }
+
+  solicitarEliminacionCuenta(passwordActual: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/eliminar-cuenta-solicitar`, {
+      password_actual: passwordActual
+    }, { headers: this.getAuthHeaders() });
+  }
+
+  confirmarEliminacionCuenta(codigo: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/auth/eliminar-cuenta-confirmar`, {
+      codigo
+    }, { headers: this.getAuthHeaders() });
+  }
 }
 

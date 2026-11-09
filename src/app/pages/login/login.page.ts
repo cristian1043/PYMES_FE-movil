@@ -25,6 +25,8 @@ export class LoginPage implements OnInit {
   recuperando = false;
   recuperarError = '';
   mensajePaso2 = '';
+  codigoGenerado = '';
+  enviadoSmtp = false;
 
   constructor(
     private authService: AuthService,
@@ -69,7 +71,16 @@ export class LoginPage implements OnInit {
     this.recuperarConfirmarPassword = '';
     this.recuperarError = '';
     this.mensajePaso2 = '';
+    this.codigoGenerado = '';
+    this.enviadoSmtp = false;
     this.cdr.detectChanges();
+  }
+
+  usarCodigoGenerado(): void {
+    if (this.codigoGenerado) {
+      this.recuperarCodigo = this.codigoGenerado;
+      this.cdr.detectChanges();
+    }
   }
 
   cerrarModalRecuperar(): void {
@@ -101,11 +112,15 @@ export class LoginPage implements OnInit {
         if (res && res.exito) {
           this.pasoRecuperacion = 2;
           this.recuperarCodigo = '';
-          this.mensajePaso2 = `Se ha generado la solicitud para ${res.email_enmascarado || idTrim}. Revisa el código OTP recibido.`;
+          this.codigoGenerado = res.codigo || '';
+          this.enviadoSmtp = !!res.enviado_smtp;
+          this.mensajePaso2 = res.mensaje || `Se ha generado la solicitud para ${res.email_enmascarado || idTrim}. Revisa el código OTP recibido.`;
           this.cdr.detectChanges();
           const toast = await this.toastController.create({
-            message: '¡Código de verificación generado y despachado!',
-            duration: 3500,
+            message: this.codigoGenerado
+              ? `¡Código de verificación generado: ${this.codigoGenerado}!`
+              : '¡Código de verificación generado y despachado!',
+            duration: 4500,
             color: 'success',
             position: 'top'
           });

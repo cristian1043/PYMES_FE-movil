@@ -137,6 +137,18 @@
             </p>
           </div>
 
+          <div *ngIf="codigoGenerado" style="background: #eff6ff; border: 2px dashed #3b82f6; border-radius: 12px; padding: 14px; text-align: center; margin-bottom: 16px;">
+            <div style="font-size: 0.75rem; font-weight: 700; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.5px;">
+              🔑 Tu Código de Verificación (6 dígitos)
+            </div>
+            <div style="font-size: 1.7rem; font-weight: 800; letter-spacing: 6px; color: #1e3a8a; font-family: monospace; margin: 6px 0;">
+              {{ codigoGenerado }}
+            </div>
+            <button type="button" (click)="usarCodigoGenerado()" style="background: #2563eb; color: #fff; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.8rem; font-weight: 600; cursor: pointer;">
+              ✨ Insertar código automáticamente
+            </button>
+          </div>
+
           <div class="form-group">
             <label class="form-label">
               <ion-icon name="checkmark-circle-outline"></ion-icon> Código OTP (6 dígitos)
